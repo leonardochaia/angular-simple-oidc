@@ -1,0 +1,11 @@
+{
+  "name": "angular-simple-oidc",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@angular/common": "^8.1.2",
+    "@angular/core": "^8.1.2"
+  },
+  "dependencies": {
+    "jsrsasign": "^8.0.12"
+  }
+}
