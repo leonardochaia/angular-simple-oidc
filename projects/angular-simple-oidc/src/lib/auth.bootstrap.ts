@@ -11,7 +11,8 @@ export function simpleOidcInitializer(
   window: Window) {
   return () => {
 
-    if (window.location.pathname.includes(config.configuration.tokenCallbackRoute)) {
+    if (config.configuration.enableAuthorizationCallbackAppInitializer
+      && window.location.pathname.includes(config.configuration.tokenCallbackRoute)) {
       console.info('Attempting token callback..');
       // Will do a callback, if the url has a code and state parameter.
       return oidcCodeFlowClient

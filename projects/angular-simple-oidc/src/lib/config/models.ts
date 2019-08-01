@@ -51,4 +51,12 @@ export interface AuthConfig {
      * The URL of the discovery document.
      */
     discoveryDocumentUrl?: string;
+
+    /**
+     * Ann APP_INITIALIZER is configured which triggers the
+     * Authorization Callback whenever the route matches the
+     * @tokenCallbackRoute
+     * It can be disabled using this boolean.
+     */
+    enableAuthorizationCallbackAppInitializer?: boolean;
 }

@@ -8,7 +8,8 @@ const DEFAULT_CONFIG: Partial<AuthConfig> = {
   tokenValidation: {
     disableIdTokenIATValidation: false,
     idTokenIATOffsetAllowed: 10 // seconds
-  }
+  },
+  enableAuthorizationCallbackAppInitializer: true
 };
 
 @Injectable({
