@@ -11,7 +11,7 @@ export class TokenStorageService {
     }
 
     protected get storage() {
-        return this.config.configuration.storage;
+        return localStorage;
     }
 
     protected readonly localStateSubject = new BehaviorSubject<LocalState>(this.getCurrentLocalState());

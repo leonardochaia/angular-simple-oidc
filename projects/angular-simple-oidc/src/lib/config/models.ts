@@ -28,11 +28,6 @@ export interface AuthConfig {
      */
     tokenCallbackRoute?: string;
 
-    /**
-     * Storage for storing tokens, state challenges,
-     */
-    storage?: Storage;
-
     /** DANGER ZONE:
      * Allows to tweak token validation behaviour
      * WARNING: This may deviate from the OIDC spec.

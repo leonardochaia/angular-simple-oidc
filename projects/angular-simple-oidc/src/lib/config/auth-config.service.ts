@@ -3,7 +3,6 @@ import { AuthConfig, AuthConfigRequiredFields } from './models';
 import { AUTH_CONFIG } from '../constants';
 
 const DEFAULT_CONFIG: Partial<AuthConfig> = {
-  storage: localStorage,
   discoveryDocumentUrl: `/.well-known/openid-configuration`,
   tokenCallbackRoute: 'oidc-token-callback',
   tokenValidation: {
