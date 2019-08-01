@@ -1,0 +1,10 @@
+{
+  "name": "angular-oidc-ngrx",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@angular/common": "^8",
+    "@angular/core": "^8",
+    "@ngrx/store": "^8",
+    "@ngrx/effects": "^8"
+  }
+}

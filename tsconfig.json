@@ -21,16 +21,19 @@
     "paths": {
       "angular-simple-oidc": [
         "./projects/angular-simple-oidc/src/public-api"
-        // "dist/angular-simple-oidc"
       ],
       "angular-simple-oidc/*": [
         "./projects/angular-simple-oidc/src/*"
-        // "./projects/angular-simple-oic/src/*"
-        // "dist/angular-simple-oidc/*"
+      ],
+      "angular-oidc-ngrx": [
+        "./projects/angular-oidc-ngrx/src/public-api"
+      ],
+      "angular-oidc-ngrx/*": [
+        "./projects/angular-oidc-ngrx/src/*"
       ]
-    },
+    }
   },
-    "angularCompilerOptions": {
+  "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,
     "strictInjectionParameters": true
   }
