@@ -13,6 +13,7 @@ import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-
 import { OidcCodeFlowClient } from './token/oidc-code-flow-client.service';
 import { AuthGuard } from './guards/auth.guard';
 import { AuthService } from './auth.service';
+import { TokenUrlService } from './token/token-url.service';
 
 @NgModule({
   imports: [
@@ -27,6 +28,7 @@ import { AuthService } from './auth.service';
     },
     SIMPLE_OIDC_APP_INITIALIZER,
     TokenCryptoService,
+    TokenUrlService,
     TokenStorageService,
     TokenHelperService,
     TokenValidationService,
