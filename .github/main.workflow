@@ -6,10 +6,12 @@ workflow "Run tests on push" {
 action "Install packages" {
   uses = "Borales/actions-yarn@master"
   args = "install"
+  runs = "yarn"
 }
 
 action "Run tests" {
-  uses = "Borales/actions-yarn@master"
+  uses = "ianwalter/puppeteer@v2.0.0"
   needs = ["Install packages"]
   args = "test-lib-ci"
+  runs = "yarn"
 }
