@@ -7,7 +7,7 @@ import { AuthConfigService } from '../config/auth-config.service';
 import { TokenStorageService } from './token-storage.service';
 import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
 import { ValidationResult } from './validation-result';
-import { DecodedIdentityToken } from './models';
+import { DecodedIdentityToken, LocalState } from './models';
 import { JWTKeys } from '../discovery-document/models';
 
 /**
@@ -357,6 +357,23 @@ export class TokenValidationService {
 
         if (slices.length !== expectedSliceAmount) {
             return ValidationResult.idTokenInvalidNoDots(idToken, expectedSliceAmount);
+        }
+
+        return ValidationResult.NoErrors;
+    }
+
+    /**
+     * Validates the local state against the
+     * returned state from the IDP to make sure it matches
+     */
+    public validateAuthorizeCallback(localState: LocalState, state: string, code: string) {
+        if (state !== localState.state) {
+            return ValidationResult.stateValidationFailed(`LocalState: ${localState.state}
+            ReturnedState: ${state}`)
+        }
+
+        if (!code || !code.length) {
+            return ValidationResult.authorizeCallbackWithoutCode;
         }
 
         return ValidationResult.NoErrors;

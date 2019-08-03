@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpParams, HttpClient, HttpHeaders } from '@angular/common/http';
 import { WINDOW_REF } from '../constants';
-import { of, BehaviorSubject, combineLatest } from 'rxjs';
+import { of, BehaviorSubject, combineLatest, throwError } from 'rxjs';
 import { tap, switchMap, take } from 'rxjs/operators';
 import { TokenEndpointResponse, LocalState } from './models';
 import { TokenStorageService } from './token-storage.service';
@@ -10,6 +10,7 @@ import { AuthConfigService } from '../config/auth-config.service';
 import { urlJoin } from '../utils/url-join';
 import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
 import { TokenUrlService } from './token-url.service';
+import { ValidationResult } from './validation-result';
 
 // @dynamic
 @Injectable()
@@ -63,49 +64,39 @@ export class OidcCodeFlowClient {
     }
 
     public codeFlowCallback() {
-        const params = new HttpParams({
-            fromString: this.window.location.href.split('?')[1],
-        });
-        const code = params.get('code');
-        const state = params.get('state');
-        // const sessionState = params.get('session_state');
+        const { code, state, error } = this.tokenUrl
+            .parseAuthorizeCallbackParamsFromUrl(this.window.location.href);
 
-        if (code && state) {
-            const localState$ = this.tokenStorage.currentState$.pipe(take(1));
-            const discoveryDocument$ = this.discoveryDocumentClient.current$.pipe(take(1));
-            return combineLatest(localState$, discoveryDocument$)
-                .pipe(
-                    switchMap(([localState, discoveryDocument]) => {
-                        // TODO: this validation should be moved to the validation service.
-                        // we need to add an authorization code validation step
-                        if (state !== localState.state) {
-                            throw new Error(`Invalid state.
-                            State returned from Identity Provider does not match local stored state.
-                            Are you performing multiple authorize calls at the same time?
-                            LocalState: ${localState.state}
-                            ReturnedState: ${state}`);
-                        } else {
-                            console.info(`Obtained authorization code: ${code}`);
-                            return this.tokenStorage.storeAuthorizationCode(code)
-                                .pipe(
-                                    switchMap((freshState) => this.requestToken(freshState,
-                                        discoveryDocument.token_endpoint)),
-                                    tap(result => {
-                                        this.codeFlowResultsSubject.next(result);
-                                        this.changeUrl(localState.preRedirectUrl);
-                                    })
-                                );
-                        }
-                    }),
-                );
-        } else {
-            const error = params.get('error');
-            if (error) {
-                throw new Error(`Identity Provider returned an error after redirection: ${error}`);
-            } else {
-                throw new Error(`Window URL has invalid code or state`);
-            }
+        if (typeof error === 'string')
+            return throwError(`Identity Provider returned an error after redirection: ${error}`);
+
+        if (typeof code !== 'string' || typeof state !== 'string') {
+            return throwError(`Window URL has invalid code or state`);
         }
+
+        const localState$ = this.tokenStorage.currentState$.pipe(take(1));
+        const discoveryDocument$ = this.discoveryDocumentClient.current$.pipe(take(1));
+        return combineLatest(localState$, discoveryDocument$)
+            .pipe(
+                switchMap(([localState, discoveryDocument]) => {
+                    const codeValidationResult = this.tokenValidation
+                        .validateAuthorizeCallback(localState, state, code);
+                    if (codeValidationResult != ValidationResult.NoErrors) {
+                        return throwError(codeValidationResult);
+                    }
+
+                    console.info(`Obtained authorization code: ${code}`);
+                    return this.tokenStorage.storeAuthorizationCode(code)
+                        .pipe(
+                            switchMap((freshState) => this.requestToken(freshState,
+                                discoveryDocument.token_endpoint)),
+                            tap(result => {
+                                this.codeFlowResultsSubject.next(result);
+                                this.changeUrl(localState.preRedirectUrl);
+                            })
+                        );
+                }),
+            );
     }
 
     protected requestToken(localState: LocalState, tokenEndpointUrl: string) {

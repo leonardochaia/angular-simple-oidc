@@ -90,4 +90,30 @@ export class TokenUrlService {
             url,
         };
     }
+
+    public parseAuthorizeCallbackParamsFromUrl(url: string) {
+        if (!url || !url.length) {
+            throw new Error(`url is required`);
+        }
+        const paramsError = new Error(`url has no params`);
+
+        if (!url.includes('?')) {
+            throw paramsError;
+        }
+
+        const params = new HttpParams({
+            fromString: url.split('?')[1],
+        });
+
+        if (!params.keys().length) {
+            throw paramsError;
+        }
+
+        return {
+            code: params.get('code'),
+            state: params.get('state'),
+            error: params.get('error'),
+            sessionState: params.get('session_state')
+        };
+    }
 }
