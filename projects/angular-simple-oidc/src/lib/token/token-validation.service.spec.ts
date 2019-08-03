@@ -6,7 +6,7 @@ import { TokenCryptoService } from './token-crypto.service';
 import { of } from 'rxjs';
 import { AuthConfigService } from '../config/auth-config.service';
 import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
-import { DecodedIdentityToken } from './models';
+import { DecodedIdentityToken, LocalState } from './models';
 import { AuthConfig } from '../config/models';
 import { JWTKeys } from '../discovery-document/models';
 import { ValidationResult } from './validation-result';
@@ -800,4 +800,57 @@ describe('TokenValidationService', () => {
     ));
   });
 
+  describe('Validate authorization callback', () => {
+    it('returns no error when states matches', async(
+      inject([TokenValidationService],
+        (tokenValidation: TokenValidationService) => {
+          const state = 'a';
+          const localState = {
+            state: 'a'
+          } as LocalState;
+          const code = 'abc';
+          const output = tokenValidation.validateAuthorizeCallback(localState, state, code);
+          expect(output.success).toBeTruthy();
+        })
+    ));
+
+    it('returns error when states do not match', async(
+      inject([TokenValidationService],
+        (tokenValidation: TokenValidationService) => {
+          const state = 'a';
+          const localState = {
+            state: 'abc'
+          } as LocalState;
+          const code = 'abc';
+          const output = tokenValidation.validateAuthorizeCallback(localState, state, code);
+          expect(output.errorCode).toBe(ValidationResult.stateValidationFailed().errorCode)
+        })
+    ));
+
+    it('returns error when no code', async(
+      inject([TokenValidationService],
+        (tokenValidation: TokenValidationService) => {
+          const state = 'a';
+          const localState = {
+            state: 'a'
+          } as LocalState;
+          const code = null;
+          const output = tokenValidation.validateAuthorizeCallback(localState, state, code);
+          expect(output.errorCode).toBe(ValidationResult.authorizeCallbackWithoutCode.errorCode)
+        })
+    ));
+
+    it('returns error when no code', async(
+      inject([TokenValidationService],
+        (tokenValidation: TokenValidationService) => {
+          const state = 'a';
+          const localState = {
+            state: 'a'
+          } as LocalState;
+          const code = '';
+          const output = tokenValidation.validateAuthorizeCallback(localState, state, code);
+          expect(output.errorCode).toBe(ValidationResult.authorizeCallbackWithoutCode.errorCode)
+        })
+    ));
+  });
 });

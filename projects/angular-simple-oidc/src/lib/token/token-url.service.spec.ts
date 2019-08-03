@@ -50,4 +50,45 @@ describe('TokenUrlService', () => {
     });
 
   });
+
+  describe('parseAuthorizeCallbackParamsFromUrl', () => {
+    it('throws if no url is provided', () => {
+      const url = '';
+      expect(() => tokenUrl.parseAuthorizeCallbackParamsFromUrl(url))
+        .toThrowError(/url(.*)required/);
+    })
+
+    it('throws if no url is provided', () => {
+      const url = null;
+      expect(() => tokenUrl.parseAuthorizeCallbackParamsFromUrl(url))
+        .toThrowError(/url(.*)required/);
+    })
+
+    it('throws if url has no params', () => {
+      const url = 'http://example.com';
+      expect(() => tokenUrl.parseAuthorizeCallbackParamsFromUrl(url))
+        .toThrowError(/params(.*)/);
+    })
+
+    it('throws if url has no params', () => {
+      const url = 'http://example.com?';
+      expect(() => tokenUrl.parseAuthorizeCallbackParamsFromUrl(url))
+        .toThrowError(/params(.*)/);
+    })
+
+    it('parses params correctly', () => {
+      const code = 'code-abc';
+      const state = 'state-okei';
+      const error = 'error-wuey';
+      const sessionState = 'sess-state-123';
+      const url = `http://example.com/oauth?code=${code}&state=${state}&error=${error}&session_state=${sessionState}`;
+
+      const output = tokenUrl.parseAuthorizeCallbackParamsFromUrl(url);
+
+      expect(output.code).toEqual(code);
+      expect(output.state).toEqual(state);
+      expect(output.error).toEqual(error);
+      expect(output.sessionState).toEqual(sessionState);
+    });
+  });
 });

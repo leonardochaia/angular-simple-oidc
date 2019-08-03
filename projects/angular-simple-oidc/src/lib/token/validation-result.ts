@@ -43,6 +43,12 @@ export class ValidationResult {
         errorCode: 'incorrect-signature'
     };
 
+    public static readonly authorizeCallbackWithoutCode: ValidationResult = {
+        success: false,
+        message: 'Authorize callback was redirected without an authorization code',
+        errorCode: 'authorize-callback-no-authorization-code'
+    };
+
     public static readonly idTokenInvalid = (idToken = '') => ({
         success: false,
         message: `Identity token is invalid or empty
@@ -91,11 +97,20 @@ export class ValidationResult {
 
     public static readonly nonceValidationFailed = (exp = '') => ({
         success: false,
-        message: `Nonce validation failed.
+        message: `Invalid nonce.
     Provided nonce does not match local stored nonce.
     Are you performing multiple authorize calls at the same time?
     ${exp}`,
         errorCode: 'nonce-validation-failed'
+    } as ValidationResult)
+
+    public static readonly stateValidationFailed = (exp = '') => ({
+        success: false,
+        message: `Invalid state.
+    Provided state does not match local stored state.
+    Are you performing multiple authorize calls at the same time?
+    ${exp}`,
+        errorCode: 'state-validation-failed'
     } as ValidationResult)
 
     public static readonly atHashValidationFailed = (exp = '') => ({
