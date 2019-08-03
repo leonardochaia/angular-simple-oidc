@@ -28,7 +28,7 @@ export class AuthConfigService {
     // AUTH_CONFIG is a multi providers
     // so that multiple modules can provider configurations
     // we merge them all into one
-    this.configuration = Object.assign(DEFAULT_CONFIG, ...configurations);
+    this.configuration = Object.assign({}, DEFAULT_CONFIG, ...configurations);
 
     this.validateConfiguration();
     this.sanitizeConfiguration();

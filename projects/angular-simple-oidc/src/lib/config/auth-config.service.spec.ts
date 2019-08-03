@@ -5,8 +5,6 @@ import { AuthConfig } from './models';
 
 function configureService(...configs: AuthConfig[]) {
 
-  TestBed.resetTestingModule();
-
   TestBed.configureTestingModule({
     providers: [
       ...configs.map(c => ({
