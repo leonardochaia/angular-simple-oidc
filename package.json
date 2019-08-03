@@ -9,7 +9,8 @@
     "lint": "ng lint",
     "e2e": "ng e2e",
     "build-lib": "ng build angular-simple-oidc --watch",
-    "test-lib": "ng test angular-simple-oidc --watch --code-coverage"
+    "test-lib": "ng test angular-simple-oidc --watch --code-coverage",
+    "test-lib-ci": "ng test angular-simple-oidc --watch=false --browsers ChromeHeadlessNoSandbox --source-map=false --code-coverage"
   },
   "private": true,
   "dependencies": {
@@ -53,6 +54,7 @@
     "karma-jasmine-html-reporter": "^1.4.0",
     "ng-packagr": "^5.1.0",
     "protractor": "~5.4.0",
+    "puppeteer": "^1.19.0",
     "ts-node": "~7.0.0",
     "tsickle": "^0.35.0",
     "tslint": "~5.15.0",
