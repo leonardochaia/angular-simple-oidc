@@ -4,12 +4,12 @@ workflow "Run tests on push" {
 }
 
 action "Install packages" {
-  uses = "Borales/actions-yarn"
+  uses = "Borales/actions-yarn@master"
   args = "install"
 }
 
 action "Run tests" {
-  uses = "Borales/actions-yarn"
+  uses = "Borales/actions-yarn@master"
   needs = ["Install packages"]
   args = "test-lib-ci"
 }
