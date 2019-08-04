@@ -12,11 +12,11 @@ export class AuthGuard implements CanActivate {
   public canActivate(
     next: ActivatedRouteSnapshot,
     state: RouterStateSnapshot) {
-    return this.auth.accessToken$
+    return this.auth.isLoggedIn$
       .pipe(
         take(1),
-        switchMap(accessToken => {
-          if (!accessToken) {
+        switchMap(authenticated => {
+          if (!authenticated) {
             console.info('Route requires auth, starting login');
             return this.auth.startCodeFlow()
               // return false so that route change does not happen

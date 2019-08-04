@@ -18,6 +18,19 @@ export class TokenHelperService {
         return date;
     }
 
+    public isTokenExpired(expiresAt: number) {
+        return new Date().getTime() > expiresAt;
+    }
+
+    public getExpirationFromExpiresIn(expiresIn: number) {
+        const now = new Date();
+        // expires_in = access token expiration in seconds (optional)
+        // 3.2.2.5.  Successful Authentication Response 
+        // https://openid.net/specs/openid-connect-core-1_0.html#TokenResponse
+        now.setSeconds(now.getSeconds() + expiresIn);
+        return now;
+    }
+
     public getHeaderFromToken(idToken: string) {
         return this.getTokenSlice(idToken, 0) as IdentityTokenHeader;
     }
