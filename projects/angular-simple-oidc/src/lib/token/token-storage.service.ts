@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { TokenStorageKeys, TokenEndpointResponse, LocalState } from './models';
 import { of, BehaviorSubject } from 'rxjs';
 import { AuthConfigService } from '../config/auth-config.service';
+import { TokenHelperService } from './token-helper.service';
 
 @Injectable()
 export class TokenStorageService {
@@ -16,7 +17,10 @@ export class TokenStorageService {
 
     protected readonly localStateSubject = new BehaviorSubject<LocalState>(this.getCurrentLocalState());
 
-    constructor(protected readonly config: AuthConfigService) { }
+    constructor(
+        protected readonly config: AuthConfigService,
+        protected readonly tokenHelper: TokenHelperService,
+    ) { }
 
     public storePreAuthorizationState(authState: {
         nonce: string,
@@ -51,9 +55,15 @@ export class TokenStorageService {
     }
 
     public storeTokens(tokens: TokenEndpointResponse) {
-        this.storage.setItem(TokenStorageKeys.AccessToken, tokens.access_token);
-        this.storage.setItem(TokenStorageKeys.AccessTokenExpiration, tokens.expires_in.toString());
         this.storage.setItem(TokenStorageKeys.IdentityToken, tokens.id_token);
+
+        this.storage.setItem(TokenStorageKeys.AccessToken, tokens.access_token);
+        if (tokens.expires_in) {
+            this.storage.setItem(TokenStorageKeys.AccessTokenExpiration,
+                this.tokenHelper.getExpirationFromExpiresIn(tokens.expires_in)
+                    .getTime().toString());
+        }
+
         const state = this.getCurrentLocalState();
         this.localStateSubject.next(state);
         return of(state);

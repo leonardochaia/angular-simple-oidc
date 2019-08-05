@@ -11,6 +11,7 @@ import { urlJoin } from '../utils/url-join';
 import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
 import { TokenUrlService } from './token-url.service';
 import { ValidationResult } from './validation-result';
+import { TokenHelperService } from './token-helper.service';
 
 // @dynamic
 @Injectable()
@@ -34,8 +35,9 @@ export class OidcCodeFlowClient {
         protected readonly discoveryDocumentClient: OidcDiscoveryDocClient,
         protected readonly tokenStorage: TokenStorageService,
         protected readonly tokenValidation: TokenValidationService,
-        protected readonly tokenUrl: TokenUrlService) {
-    }
+        protected readonly tokenUrl: TokenUrlService,
+        protected readonly tokenHelper: TokenHelperService,
+    ) { }
 
     public startCodeFlow() {
         return this.discoveryDocumentClient.current$
@@ -122,6 +124,8 @@ export class OidcCodeFlowClient {
                 switchMap((response: TokenEndpointResponse) => {
                     console.info(`Token request succeed
                     AccessToken: ${response.access_token}
+                    AccessTokenExpiresIn: ${response.expires_in} seconds
+                    AccessTokenExpiresAt: ${this.tokenHelper.getExpirationFromExpiresIn(response.expires_in)}
                     IdentityToken: ${response.id_token}`);
 
                     if (response.error) {

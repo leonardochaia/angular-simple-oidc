@@ -23,6 +23,39 @@ describe('TokenHelperService', () => {
         expect(tokenHelperService).toBeTruthy();
     });
 
+    describe('isTokenExpired', () => {
+        it('returns true if token is expired', () => {
+            const expiresAt = new Date();
+            expiresAt.setMinutes(-10);
+            const output = tokenHelperService.isTokenExpired(expiresAt.getTime());
+            expect(output).toBeTruthy();
+        });
+
+        it('returns true if token is expired', () => {
+            const expiresAt = new Date();
+            expiresAt.setMinutes(-1);
+            const output = tokenHelperService.isTokenExpired(expiresAt.getTime());
+            expect(output).toBeTruthy();
+        });
+
+        it('returns false if token is not expired', () => {
+            const expiresAt = new Date();
+            expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+            const output = tokenHelperService.isTokenExpired(expiresAt.getTime());
+            expect(output).toBeFalsy();
+        });
+    });
+
+    describe('getExpirationFromExpiresIn', () => {
+        it('returns correct date', () => {
+            const expiresIn = 60;
+            const output = tokenHelperService.getExpirationFromExpiresIn(expiresIn);
+            const expected = new Date();
+            expected.setSeconds(expected.getSeconds() + expiresIn);
+            expect(output.getTime()).toEqual(expected.getTime());
+        });
+    });
+
     describe('convertTokenClaimToDate', () => {
         it('returns null if null is provided', () => {
             const result = tokenHelperService.convertTokenClaimToDate(null);
