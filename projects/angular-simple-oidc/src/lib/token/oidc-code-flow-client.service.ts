@@ -1,9 +1,8 @@
 import { Injectable, Inject } from '@angular/core';
-import { HttpParams, HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { WINDOW_REF } from '../constants';
-import { of, BehaviorSubject, combineLatest, throwError } from 'rxjs';
-import { tap, switchMap, take } from 'rxjs/operators';
-import { TokenEndpointResponse, LocalState } from './models';
+import { of, throwError } from 'rxjs';
+import { tap, switchMap, take, map } from 'rxjs/operators';
 import { TokenStorageService } from './token-storage.service';
 import { TokenValidationService } from './token-validation.service';
 import { AuthConfigService } from '../config/auth-config.service';
@@ -12,16 +11,11 @@ import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc
 import { TokenUrlService } from './token-url.service';
 import { ValidationResult } from './validation-result';
 import { TokenHelperService } from './token-helper.service';
+import { TokenEndpointClientService } from './token-endpoint-client.service';
 
 // @dynamic
 @Injectable()
 export class OidcCodeFlowClient {
-
-    public get codeFlowResults$() {
-        return this.codeFlowResultsSubject.asObservable();
-    }
-
-    protected readonly codeFlowResultsSubject = new BehaviorSubject<TokenEndpointResponse>(null);
 
     protected get authConfig() {
         return this.config.configuration;
@@ -37,6 +31,7 @@ export class OidcCodeFlowClient {
         protected readonly tokenValidation: TokenValidationService,
         protected readonly tokenUrl: TokenUrlService,
         protected readonly tokenHelper: TokenHelperService,
+        protected readonly tokenEndpointClient: TokenEndpointClientService,
     ) { }
 
     public startCodeFlow() {
@@ -58,9 +53,6 @@ export class OidcCodeFlowClient {
                         preRedirectUrl: this.window.location.href
                     }).pipe(tap(() => {
                         this.changeUrl(result.url);
-                        // return from(new Promise(() => {
-                        //     // will never be resolved.
-                        // }));
                     }));
                 }));
     }
@@ -69,31 +61,30 @@ export class OidcCodeFlowClient {
         const { code, state, error } = this.tokenUrl
             .parseAuthorizeCallbackParamsFromUrl(this.window.location.href);
 
-        if (typeof error === 'string')
+        if (typeof error === 'string') {
             return throwError(`Identity Provider returned an error after redirection: ${error}`);
-
+        }
         if (typeof code !== 'string' || typeof state !== 'string') {
             return throwError(`Window URL has invalid code or state`);
         }
 
-        const localState$ = this.tokenStorage.currentState$.pipe(take(1));
-        const discoveryDocument$ = this.discoveryDocumentClient.current$.pipe(take(1));
-        return combineLatest(localState$, discoveryDocument$)
+        return this.tokenStorage.currentState$.pipe(take(1))
             .pipe(
-                switchMap(([localState, discoveryDocument]) => {
+                switchMap(localState => {
                     const codeValidationResult = this.tokenValidation
                         .validateAuthorizeCallback(localState, state, code);
-                    if (codeValidationResult != ValidationResult.NoErrors) {
+                    if (codeValidationResult !== ValidationResult.NoErrors) {
                         return throwError(codeValidationResult);
                     }
 
                     console.info(`Obtained authorization code: ${code}`);
                     return this.tokenStorage.storeAuthorizationCode(code)
                         .pipe(
-                            switchMap((freshState) => this.requestToken(freshState,
-                                discoveryDocument.token_endpoint)),
-                            tap(result => {
-                                this.codeFlowResultsSubject.next(result);
+                            switchMap((freshState) =>
+                                this.requestTokenWithAuthCode(
+                                    freshState.authorizationCode,
+                                    freshState.codeVerifier)),
+                            tap(() => {
                                 this.changeUrl(localState.preRedirectUrl);
                             })
                         );
@@ -101,49 +92,50 @@ export class OidcCodeFlowClient {
             );
     }
 
-    protected requestToken(localState: LocalState, tokenEndpointUrl: string) {
-        if (!localState.authorizationCode) {
-            throw new Error(`Expected authorization code to be in sotrage`);
-        }
+    protected requestTokenWithAuthCode(
+        code: string,
+        codeVerifier: string) {
 
-        const payload = this.tokenUrl.createTokenRequestPayload({
+        const payload = this.tokenUrl.createAuthorizationCodeRequestPayload({
             clientId: this.authConfig.clientId,
             clientSecret: this.authConfig.clientSecret,
             scope: this.authConfig.scope,
             redirectUri: this.config.baseUrl,
-            grantType: 'authorization_code',
-            code: localState.authorizationCode,
-            codeVerifier: localState.codeVerifier
+            code: code,
+            codeVerifier: codeVerifier
         });
 
-        const headers: HttpHeaders = new HttpHeaders()
-            .set('Content-Type', 'application/x-www-form-urlencoded');
-
-        return this.http.post(tokenEndpointUrl, payload, { headers: headers })
+        return this.tokenEndpointClient.call(payload)
             .pipe(
-                switchMap((response: TokenEndpointResponse) => {
-                    console.info(`Token request succeed
-                    AccessToken: ${response.access_token}
-                    AccessTokenExpiresIn: ${response.expires_in} seconds
-                    AccessTokenExpiresAt: ${this.tokenHelper.getExpirationFromExpiresIn(response.expires_in)}
-                    IdentityToken: ${response.id_token}`);
-
-                    if (response.error) {
-                        throw new Error(response.error);
-                    } else {
-                        return this.tokenValidation.validateIdToken(response.id_token, response.access_token)
-                            .pipe(
-                                tap(() => this.tokenStorage.clearPreAuthorizationState()),
-                                switchMap(validationResult => {
-                                    if (validationResult.success) {
-                                        console.info('Token validation succeeded. Persisting tokens.');
-                                        this.tokenStorage.storeTokens(response);
-                                        return of(response);
-                                    } else {
-                                        throw new Error(validationResult.message);
-                                    }
-                                }));
+                switchMap(result => {
+                    console.info('Validating identity token..');
+                    return this.tokenValidation.validateIdToken(result.idToken, result.decodedIdToken)
+                        .pipe(switchMap(validationResult => {
+                            if (validationResult.success) {
+                                return of(result);
+                            } else {
+                                return throwError(validationResult);
+                            }
+                        }));
+                }),
+                switchMap(result => {
+                    console.info('Validating access token..');
+                    const validation = this.tokenValidation
+                        .validateAccessToken(result.accessToken, result.decodedIdToken.at_hash);
+                    if (!validation.success) {
+                        return throwError(validation);
                     }
+
+                    return of(result);
+                }),
+                tap(() => {
+                    console.info('Clearing pre-authorize state..');
+                    this.tokenStorage.clearPreAuthorizationState();
+                }),
+                switchMap(result => {
+                    console.info('Storing tokens..');
+                    return this.tokenStorage.storeTokens(result)
+                        .pipe(map(() => result));
                 })
             );
     }

@@ -19,11 +19,14 @@ export interface IdentityTokenHeader {
     kid: string;
 }
 
-export interface TokenEndpointResponse {
-    access_token?: string;
-    expires_in?: number;
-    id_token?: string;
+export interface TokenRequestResult {
+    accessToken?: string;
+    accessTokenExpiresIn?: number;
+    accessTokenExpiresAt?: number;
+    idToken?: string;
+    decodedIdToken?: DecodedIdentityToken;
     error?: string;
+    refreshToken?: string;
 }
 
 export enum TokenStorageKeys {

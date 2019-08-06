@@ -27,14 +27,7 @@ export class TokenValidationService {
         protected readonly tokenCrypto: TokenCryptoService,
     ) { }
 
-    public validateIdToken(idToken: string, accessToken: string): Observable<ValidationResult> {
-
-        // Validate the idToken's is a JWT.
-        let decodedIdToken = this.tokenHelper.getPayloadFromToken(idToken);
-        const formatValidationResult = this.validateIdTokenFormat(idToken);
-        if (!formatValidationResult.success) {
-            return of(formatValidationResult);
-        }
+    public validateIdToken(idToken: string, decodedIdToken: DecodedIdentityToken): Observable<ValidationResult> {
 
         // For validations, we need the local stored state
         const localState$ = this.tokenStorage.currentState$
@@ -60,7 +53,6 @@ export class TokenValidationService {
                     () => this.validateIdTokenIssuer(decodedIdToken, discoveryDocument.issuer),
                     () => this.validateIdTokenAud(decodedIdToken),
                     () => this.validateIdTokenExpiration(decodedIdToken),
-                    () => this.validateIdentityTokenAtHash(accessToken, decodedIdToken.at_hash)
                 ];
 
                 return runValidations(validations);
@@ -83,26 +75,26 @@ export class TokenValidationService {
     /**
      * Access Token Validation
      * Hash the octets of the ASCII representation of the access_token with the hash algorithm specified in JWA
-     * for the alg Header Parameter of the ID Token's JOSE Header. 
+     * for the alg Header Parameter of the ID Token's JOSE Header.
      * For instance, if the alg is RS256, the hash algorithm used is SHA-256.
      * Take the left- most half of the hash and base64url- encode it.
-     * The value of at_hash in the ID Token MUST match the value produced in the previous step 
+     * The value of at_hash in the ID Token MUST match the value produced in the previous step
      * if at_hash is present in the ID Token
     */
-    public validateIdentityTokenAtHash(accessToken: string, atHash: string): ValidationResult {
+    public validateAccessToken(accessToken: string, idTokenAtHash: string): ValidationResult {
         // The at_hash is optional for the code flow
-        if (!atHash) {
-            console.info(`No "at_hash" in Identity Token: Skipping verification.`);
+        if (!idTokenAtHash) {
+            console.info(`No "at_hash" in Identity Token: Skipping access token validation.`);
             return ValidationResult.NoErrors;
         }
 
         const accessTokenHash = this.tokenCrypto.sha256b64First128Bits(accessToken);
-        const valid = atHash === accessTokenHash;
+        const valid = idTokenAtHash === accessTokenHash;
 
         if (valid) {
             return ValidationResult.NoErrors;
         } else {
-            return ValidationResult.atHashValidationFailed(`at_hash: ${atHash}
+            return ValidationResult.atHashValidationFailed(`at_hash: ${idTokenAtHash}
             Local: ${accessTokenHash}`);
         }
     }
@@ -130,11 +122,11 @@ export class TokenValidationService {
     }
 
     /**
-     * The Client MUST validate the signature of the ID Token according to JWS using the algorithm 
-     * specified in the alg Header Parameter of the JOSE Header. 
+     * The Client MUST validate the signature of the ID Token according to JWS using the algorithm
+     * specified in the alg Header Parameter of the JOSE Header.
      * The Client MUST use the keys provided by the Issuer.
      * The alg value SHOULD be RS256.
-     * Validation of tokens using other signing algorithms is described in the 
+     * Validation of tokens using other signing algorithms is described in the
      * OpenID Connect Core 1.0 specification.
      */
     public validateIdTokenSignature(idToken: string, jwtkeys: JWTKeys): ValidationResult {
@@ -353,7 +345,7 @@ export class TokenValidationService {
     public validateAuthorizeCallback(localState: LocalState, state: string, code: string) {
         if (state !== localState.state) {
             return ValidationResult.stateValidationFailed(`LocalState: ${localState.state}
-            ReturnedState: ${state}`)
+            ReturnedState: ${state}`);
         }
 
         if (!code || !code.length) {

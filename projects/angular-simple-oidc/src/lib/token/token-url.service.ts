@@ -8,31 +8,39 @@ export class TokenUrlService {
 
     constructor(protected readonly tokenCrypto: TokenCryptoService) { }
 
-    public createTokenRequestPayload(params: {
+    public createAuthorizationCodeRequestPayload(params: {
         clientId: string,
         clientSecret: string,
-        scope: string,
+        scope?: string,
         redirectUri: string,
-        grantType: 'authorization_code' | 'refresh_token',
         codeVerifier: string,
         code: string,
-        refreshToken?: string,
         acrValues?: string,
     }) {
-        const httpParams = new HttpParams()
+        let httpParams = new HttpParams()
             .set('client_id', params.clientId)
             .set('client_secret', params.clientSecret)
-            .set('scope', params.scope)
-            .set('redirect_uri', params.redirectUri)
-            .set('grant_type', params.grantType)
+            .set('grant_type', 'authorization_code')
             .set('code_verifier', params.codeVerifier)
             .set('code', params.code)
-            .set('refresh_token', params.refreshToken)
-            .set('acr_values', params.acrValues)
+            .set('redirect_uri', params.redirectUri);
 
-        console.info(`Generating TokenRequest Payload:
+        if (params.scope) {
+            httpParams = httpParams
+                .set('scope', params.scope);
+        }
+
+        if (params.acrValues) {
+            httpParams = httpParams
+                .set('acr_values', params.acrValues);
+        }
+
+        console.info(`Generating Authorization Code Payload:
         CodeVerifier: ${httpParams.get('code_verifier')}
-        Code: ${httpParams.get('code')}`);
+            Code: ${httpParams.get('code')}
+            ${httpParams}`);
+
+
         return httpParams.toString();
     }
 

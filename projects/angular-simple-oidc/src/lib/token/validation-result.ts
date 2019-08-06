@@ -124,7 +124,7 @@ export class ValidationResult {
     public static readonly issValidationFailed = (exp = '') => ({
         success: false,
         message: `Issuer (iss) validation failed.
-    Provided iss does not match hash of access token.
+    Provided iss does not discovery document's issuer.
     ${exp}`,
         errorCode: 'iss-validation-failed'
     } as ValidationResult)

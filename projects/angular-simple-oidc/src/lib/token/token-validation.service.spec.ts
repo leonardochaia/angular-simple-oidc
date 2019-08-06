@@ -569,7 +569,7 @@ describe('TokenValidationService', () => {
 
             tokenCryptoSpy.sha256b64First128Bits.and.returnValue(atHash);
 
-            const output = tokenValidation.validateIdentityTokenAtHash(accessToken, atHash);
+            const output = tokenValidation.validateAccessToken(accessToken, atHash);
             expect(output.success).toBeTruthy();
           })
       ));
@@ -579,7 +579,7 @@ describe('TokenValidationService', () => {
           (tokenValidation: TokenValidationService) => {
             const accessToken = 'myAccessToken';
 
-            const output = tokenValidation.validateIdentityTokenAtHash(accessToken, 'fakehashF');
+            const output = tokenValidation.validateAccessToken(accessToken, 'fakehashF');
             expect(output.errorCode).toBe(ValidationResult.atHashValidationFailed().errorCode);
           })
       ));
@@ -589,7 +589,7 @@ describe('TokenValidationService', () => {
           (tokenValidation: TokenValidationService) => {
             const accessToken = 'myAccessToken';
 
-            const output = tokenValidation.validateIdentityTokenAtHash(accessToken, null);
+            const output = tokenValidation.validateAccessToken(accessToken, null);
             expect(output.success).toBeTruthy();
           })
       ));
@@ -621,15 +621,14 @@ describe('TokenValidationService', () => {
 
   describe('Validation runner', () => {
     const validatorFns: (keyof TokenValidationService)[] = [
-      'validateIdTokenFormat',
       'validateIdTokenSignature',
       'validateIdTokenNonce',
       'validateIdTokenRequiredFields',
       'validateIdTokenIssuedAt',
       'validateIdTokenIssuer',
       'validateIdTokenAud',
-      'validateIdTokenExpiration',
-      'validateIdentityTokenAtHash'];
+      'validateIdTokenExpiration'
+    ];
 
     it('should run all validation functions', async(
       inject([TokenValidationService],
@@ -642,11 +641,9 @@ describe('TokenValidationService', () => {
           currnetStateSpy.and.returnValue(of({} as any));
           discoveryDocSpy.and.returnValue(of({}));
           jwtKeysSpy.and.returnValue(of({}));
-          spyOn(TestBed.get(TokenHelperService), 'getPayloadFromToken').and.returnValue(decodedIdToken);
 
           const idToken = 'idToken';
-          const accessToken = 'accessToken';
-          tokenValidation.validateIdToken(idToken, accessToken)
+          tokenValidation.validateIdToken(idToken, decodedIdToken)
             .subscribe(output => {
               expect(output.success).toBeTruthy();
               for (const validationFn of validatorFns) {

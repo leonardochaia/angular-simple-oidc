@@ -14,6 +14,7 @@ import { OidcCodeFlowClient } from './token/oidc-code-flow-client.service';
 import { AuthGuard } from './guards/auth.guard';
 import { AuthService } from './auth.service';
 import { TokenUrlService } from './token/token-url.service';
+import { TokenEndpointClientService } from './token/token-endpoint-client.service';
 
 @NgModule({
   imports: [
@@ -26,12 +27,12 @@ import { TokenUrlService } from './token/token-url.service';
       provide: WINDOW_REF,
       useValue: window
     },
-    SIMPLE_OIDC_APP_INITIALIZER,
     TokenCryptoService,
     TokenUrlService,
     TokenStorageService,
     TokenHelperService,
     TokenValidationService,
+    TokenEndpointClientService,
     AuthConfigService,
     OidcDiscoveryDocClient,
     OidcCodeFlowClient,
@@ -54,7 +55,8 @@ export class AngularSimpleOidcModule {
           provide: AUTH_CONFIG,
           useValue: config,
           multi: true
-        }
+        },
+        SIMPLE_OIDC_APP_INITIALIZER,
       ]
     };
   }

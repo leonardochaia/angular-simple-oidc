@@ -91,4 +91,163 @@ describe('TokenUrlService', () => {
       expect(output.sessionState).toEqual(sessionState);
     });
   });
+
+  describe('createRefreshTokenRequestPayload', () => {
+    it('creates refresh token url properly', () => {
+      const clientId = 'client.id';
+      const secret = 'secret';
+      const scope = 'scopes';
+      const refreshToken = 'refresh-token';
+      const acr = 'acr';
+      const output = tokenUrl.createRefreshTokenRequestPayload({
+        clientId: clientId,
+        clientSecret: secret,
+        scope: scope,
+        refreshToken: refreshToken,
+        acrValues: acr
+      });
+
+      expect(output).toContain(`client_id=${clientId}`);
+      expect(output).toContain(`client_secret=${secret}`);
+      expect(output).toContain(`scope=${scope}`);
+      expect(output).toContain(`refresh_token=${refreshToken}`);
+      expect(output).toContain(`acr_values=${acr}`);
+      expect(output).toContain(`grant_type=refresh_token`);
+    });
+
+    it('creates refresh token url without scope properly', () => {
+      const clientId = 'client.id';
+      const secret = 'secret';
+      const refreshToken = 'refresh-token';
+      const acr = 'acr';
+      const output = tokenUrl.createRefreshTokenRequestPayload({
+        clientId: clientId,
+        clientSecret: secret,
+        refreshToken: refreshToken,
+        acrValues: acr
+      });
+
+      expect(output).toContain(`client_id=${clientId}`);
+      expect(output).toContain(`client_secret=${secret}`);
+      expect(output).toContain(`refresh_token=${refreshToken}`);
+      expect(output).toContain(`acr_values=${acr}`);
+      expect(output).toContain(`grant_type=refresh_token`);
+    });
+
+    it('creates refresh token url without acr_values properly', () => {
+      const clientId = 'client.id';
+      const secret = 'secret';
+      const refreshToken = 'refresh-token';
+      const output = tokenUrl.createRefreshTokenRequestPayload({
+        clientId: clientId,
+        clientSecret: secret,
+        refreshToken: refreshToken,
+      });
+
+      expect(output).toContain(`client_id=${clientId}`);
+      expect(output).toContain(`client_secret=${secret}`);
+      expect(output).toContain(`refresh_token=${refreshToken}`);
+      expect(output).toContain(`grant_type=refresh_token`);
+    });
+  });
+
+
+  describe('createAuthorizationCodeRequestPayload', () => {
+    it('creates authorization code url properly', () => {
+      const clientId = 'client.id';
+      const secret = 'secret';
+      const scope = 'scopes';
+      const code = 'auth-code';
+      const codeVerifier = 'code-verifier';
+      const redirectUri = 'redirectUri';
+      const acr = 'acr';
+      const output = tokenUrl.createAuthorizationCodeRequestPayload({
+        clientId: clientId,
+        clientSecret: secret,
+        scope: scope,
+        code: code,
+        codeVerifier: codeVerifier,
+        redirectUri: redirectUri,
+        acrValues: acr
+      });
+
+      expect(output).toContain(`client_id=${clientId}`);
+      expect(output).toContain(`client_secret=${secret}`);
+      expect(output).toContain(`scope=${scope}`);
+      expect(output).toContain(`code=${code}`);
+      expect(output).toContain(`code_verifier=${codeVerifier}`);
+      expect(output).toContain(`redirect_uri=${redirectUri}`);
+      expect(output).toContain(`acr_values=${acr}`);
+      expect(output).toContain(`grant_type=authorization_code`);
+    });
+
+    it('creates authorization code url without scope properly', () => {
+      const clientId = 'client.id';
+      const secret = 'secret';
+      const code = 'auth-code';
+      const codeVerifier = 'code-verifier';
+      const redirectUri = 'redirectUri';
+      const acr = 'acr';
+      const output = tokenUrl.createAuthorizationCodeRequestPayload({
+        clientId: clientId,
+        clientSecret: secret,
+        code: code,
+        codeVerifier: codeVerifier,
+        redirectUri: redirectUri,
+        acrValues: acr
+      });
+
+      expect(output).toContain(`client_id=${clientId}`);
+      expect(output).toContain(`client_secret=${secret}`);
+      expect(output).toContain(`code=${code}`);
+      expect(output).toContain(`code_verifier=${codeVerifier}`);
+      expect(output).toContain(`redirect_uri=${redirectUri}`);
+      expect(output).toContain(`acr_values=${acr}`);
+      expect(output).toContain(`grant_type=authorization_code`);
+    });
+
+    it('creates authorization code url without acr_values properly', () => {
+      const clientId = 'client.id';
+      const secret = 'secret';
+      const code = 'auth-code';
+      const codeVerifier = 'code-verifier';
+      const redirectUri = 'redirectUri';
+      const output = tokenUrl.createAuthorizationCodeRequestPayload({
+        clientId: clientId,
+        clientSecret: secret,
+        code: code,
+        codeVerifier: codeVerifier,
+        redirectUri: redirectUri,
+      });
+
+      expect(output).toContain(`client_id=${clientId}`);
+      expect(output).toContain(`client_secret=${secret}`);
+      expect(output).toContain(`code=${code}`);
+      expect(output).toContain(`code_verifier=${codeVerifier}`);
+      expect(output).toContain(`redirect_uri=${redirectUri}`);
+      expect(output).toContain(`grant_type=authorization_code`);
+    });
+
+    it('redirect_uri is URLEncoded', () => {
+      const clientId = 'client.id';
+      const secret = 'secret';
+      const code = 'auth-code';
+      const codeVerifier = 'code-verifier';
+      const redirectUri = 'http://example.com/identity token encoded';
+      const output = tokenUrl.createAuthorizationCodeRequestPayload({
+        clientId: clientId,
+        clientSecret: secret,
+        code: code,
+        codeVerifier: codeVerifier,
+        redirectUri: redirectUri,
+      });
+
+      expect(output).toContain(`client_id=${clientId}`);
+      expect(output).toContain(`client_secret=${secret}`);
+      expect(output).toContain(`code=${code}`);
+      expect(output).toContain(`code_verifier=${codeVerifier}`);
+      expect(output).toContain(`redirect_uri=${encodeURI(redirectUri)}`);
+      expect(output).toContain(`grant_type=authorization_code`);
+    });
+  });
 });
