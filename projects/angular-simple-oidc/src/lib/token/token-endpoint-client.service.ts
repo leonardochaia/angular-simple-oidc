@@ -42,9 +42,9 @@ export class TokenEndpointClientService {
                             errorCode: response.error
                         } as ValidationResult;
                     }
-                    let expiresAt: number;
+                    let expiresAt: Date;
                     if (response.expires_in) {
-                        expiresAt = this.tokenHelper.getExpirationFromExpiresIn(response.expires_in).getTime();
+                        expiresAt = this.tokenHelper.getExpirationFromExpiresIn(response.expires_in);
                     }
 
                     let decodedToken: DecodedIdentityToken;
@@ -60,7 +60,7 @@ export class TokenEndpointClientService {
                     const result: TokenRequestResult = {
                         accessToken: response.access_token,
                         accessTokenExpiresIn: response.expires_in,
-                        accessTokenExpiresAt: expiresAt,
+                        accessTokenExpiresAt: expiresAt ? expiresAt.getTime() : null,
                         error: response.error,
                         idToken: response.id_token,
                         refreshToken: response.refresh_token,
@@ -70,9 +70,9 @@ export class TokenEndpointClientService {
                     console.info(`Token request succeed
                     AccessToken: ${result.accessToken}
                     AccessTokenExpiresIn: ${result.accessTokenExpiresIn} seconds
-                    AccessTokenExpiresAt: ${result.accessTokenExpiresAt}
+                    AccessTokenExpiresAt: ${expiresAt}
                     RefreshToken: ${result.refreshToken || 'no refresh token'}
-                    IdentityToken: ${JSON.stringify(result.decodedIdToken)}`);
+                    IdentityToken: ${decodedToken ? JSON.stringify(decodedToken) : 'no id token'}`);
 
                     return result;
                 })
