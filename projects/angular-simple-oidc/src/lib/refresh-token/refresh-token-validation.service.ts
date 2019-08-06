@@ -40,7 +40,7 @@ export class RefreshTokenValidationService {
      */
     public validateIssuer(originalIdToken: DecodedIdentityToken, newIdToken: DecodedIdentityToken) {
         if (originalIdToken.iss === newIdToken.iss) {
-            return RefreshTokenValidationResult.noErrors;
+            return ValidationResult.noErrors;
         } else {
             return RefreshTokenValidationResult.issValidationFailed(
                 `OriginalIdTokenIssuer: ${originalIdToken.iss}
@@ -53,7 +53,7 @@ export class RefreshTokenValidationService {
      */
     public validateSubject(originalIdToken: DecodedIdentityToken, newIdToken: DecodedIdentityToken) {
         if (originalIdToken.sub === newIdToken.sub) {
-            return RefreshTokenValidationResult.noErrors;
+            return ValidationResult.noErrors;
         } else {
             return RefreshTokenValidationResult.subValidationFailed(
                 `OriginalIdTokenSubject: ${originalIdToken.sub}
@@ -66,7 +66,7 @@ export class RefreshTokenValidationService {
      */
     public validateIssuedAt(originalIdToken: DecodedIdentityToken, newIdToken: DecodedIdentityToken) {
         if (newIdToken.iat >= originalIdToken.iat) {
-            return RefreshTokenValidationResult.noErrors;
+            return ValidationResult.noErrors;
         } else {
             return RefreshTokenValidationResult.iatValidationFailed(
                 `OriginalIdTokenIissuedAt: ${originalIdToken.iat}
@@ -79,7 +79,7 @@ export class RefreshTokenValidationService {
      */
     public validateAudience(originalIdToken: DecodedIdentityToken, newIdToken: DecodedIdentityToken) {
         if (originalIdToken.aud === newIdToken.aud) {
-            return RefreshTokenValidationResult.noErrors;
+            return ValidationResult.noErrors;
         } else {
             return RefreshTokenValidationResult.audValidationFailed(
                 `OriginalIdTokenAudience: ${originalIdToken.aud}
@@ -92,12 +92,12 @@ export class RefreshTokenValidationService {
      * the time of the original authentication - not the time that the new ID token is issued,
      */
     public validateAuthTime(originalIdToken: DecodedIdentityToken, newIdToken: DecodedIdentityToken) {
-        if (newIdToken.auth_time) {
-            return RefreshTokenValidationResult.noErrors;
+        if (!newIdToken.auth_time) {
+            return ValidationResult.noErrors;
         }
 
         if (originalIdToken.auth_time === newIdToken.auth_time) {
-            return RefreshTokenValidationResult.noErrors;
+            return ValidationResult.noErrors;
         } else {
             return RefreshTokenValidationResult.authTimeValidationFailed(
                 `OriginalIdTokenAuthTime: ${originalIdToken.auth_time}
@@ -112,7 +112,7 @@ export class RefreshTokenValidationService {
      */
     public validateAuthorizedParty(originalIdToken: DecodedIdentityToken, newIdToken: DecodedIdentityToken) {
         if (originalIdToken.azp === newIdToken.azp) {
-            return RefreshTokenValidationResult.noErrors;
+            return ValidationResult.noErrors;
         } else {
             return RefreshTokenValidationResult.azpValidationFailed(
                 `OriginalIdTokenAuthorizedParty: ${originalIdToken.azp}

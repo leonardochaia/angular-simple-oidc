@@ -3,10 +3,6 @@ import { ValidationResult } from '../token/validation-result';
 // @dynamic
 export class RefreshTokenValidationResult {
 
-    public static readonly noErrors: ValidationResult = {
-        success: true,
-    };
-
     public static readonly missingJWTKeys: ValidationResult = {
         success: false,
         message: 'Provided keys are empty or invalid.',
