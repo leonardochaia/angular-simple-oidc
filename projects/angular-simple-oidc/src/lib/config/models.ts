@@ -1,5 +1,6 @@
+import { TokenValidationConfig } from '../token/models';
 
-export const AuthConfigRequiredFields: (keyof AuthConfig)[] = ["clientId", "scope", "openIDProviderUrl"];
+export const AuthConfigRequiredFields: (keyof AuthConfig)[] = ['clientId', 'scope', 'openIDProviderUrl'];
 
 export interface AuthConfig {
     /** The URL to the OpenID Provider (OP).
@@ -32,19 +33,7 @@ export interface AuthConfig {
      * Allows to tweak token validation behaviour
      * WARNING: This may deviate from the OIDC spec.
      */
-    tokenValidation?: {
-        /**
-         * Disable token IAT validation.
-         * Prevents timezone errors
-         */
-        disableIdTokenIATValidation?: boolean;
-
-        /**
-         * Offset allowed if IAT is enabled
-         * in seconds
-         */
-        idTokenIATOffsetAllowed?: number;
-    }
+    tokenValidation?: TokenValidationConfig;
 
     /**
      * Relative from @openIDProviderUrl

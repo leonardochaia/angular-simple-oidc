@@ -119,7 +119,7 @@ describe('TokenValidationService', () => {
       it('aud should match string', async(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
-            const output = tokenValidation.validateIdTokenAud(decodedIdToken);
+            const output = tokenValidation.validateIdTokenAud(decodedIdToken, authConfig.clientId);
             expect(output.success).toBeTruthy();
           })
       ));
@@ -128,7 +128,7 @@ describe('TokenValidationService', () => {
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.aud = 'myaudience';
-            const output = tokenValidation.validateIdTokenAud(decodedIdToken);
+            const output = tokenValidation.validateIdTokenAud(decodedIdToken, authConfig.clientId);
             expect(output.errorCode).toBe(ValidationResult.audValidationFailed().errorCode);
           })
       ));
@@ -137,7 +137,7 @@ describe('TokenValidationService', () => {
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.aud = [authConfig.clientId, 'test.client2'];
-            const output = tokenValidation.validateIdTokenAud(decodedIdToken);
+            const output = tokenValidation.validateIdTokenAud(decodedIdToken, authConfig.clientId);
             expect(output.success).toBeTruthy();
           })
       ));
@@ -146,7 +146,7 @@ describe('TokenValidationService', () => {
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.aud = ['another.client.no.match'];
-            const output = tokenValidation.validateIdTokenAud(decodedIdToken);
+            const output = tokenValidation.validateIdTokenAud(decodedIdToken, authConfig.clientId);
             expect(output.errorCode).toBe(ValidationResult.audValidationFailed().errorCode);
           })
       ));
@@ -460,7 +460,7 @@ describe('TokenValidationService', () => {
             authConfig.tokenValidation = { disableIdTokenIATValidation: true };
             decodedIdToken.iat = Date.now() / 1000 - 1 * 1000;
 
-            const output = tokenValidation.validateIdTokenIssuedAt(decodedIdToken);
+            const output = tokenValidation.validateIdTokenIssuedAt(decodedIdToken, authConfig.tokenValidation);
             expect(output.success).toBeTruthy();
           })
       ));
@@ -506,13 +506,13 @@ describe('TokenValidationService', () => {
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.iat = Date.now() / 1000 - 900;
             {
-              const output = tokenValidation.validateIdTokenIssuedAt(decodedIdToken);
+              const output = tokenValidation.validateIdTokenIssuedAt(decodedIdToken, authConfig.tokenValidation);
               expect(output.errorCode).toBe(ValidationResult.iatValidationFailed().errorCode);
             }
             {
               authConfig.tokenValidation.idTokenIATOffsetAllowed = 1000;
 
-              const output = tokenValidation.validateIdTokenIssuedAt(decodedIdToken);
+              const output = tokenValidation.validateIdTokenIssuedAt(decodedIdToken, authConfig.tokenValidation);
               expect(output.success).toBeTruthy();
             }
           })
@@ -524,13 +524,13 @@ describe('TokenValidationService', () => {
             {
               decodedIdToken.iat = Date.now() / 1000 - 100 * 1000;
 
-              const output = tokenValidation.validateIdTokenIssuedAt(decodedIdToken);
+              const output = tokenValidation.validateIdTokenIssuedAt(decodedIdToken, authConfig.tokenValidation);
               expect(output.errorCode).toBe(ValidationResult.iatValidationFailed().errorCode);
             }
             {
               decodedIdToken.iat = Date.now() / 1000;
 
-              const output = tokenValidation.validateIdTokenIssuedAt(decodedIdToken);
+              const output = tokenValidation.validateIdTokenIssuedAt(decodedIdToken, authConfig.tokenValidation);
               expect(output.success).toBeTruthy();
             }
           })
@@ -645,6 +645,7 @@ describe('TokenValidationService', () => {
           }
           const idToken = 'idToken';
           const output = tokenValidation.validateIdToken(
+            authConfig.clientId,
             idToken, decodedIdToken, 'nonce', {} as any, {} as any);
           expect(output.success).toBeTruthy();
           for (const validationFn of validatorFns) {

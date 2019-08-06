@@ -57,3 +57,17 @@ export interface LocalState {
     refreshToken: string;
     preRedirectUrl: string;
 }
+
+export interface TokenValidationConfig {
+    /**
+     * Disable token IAT validation.
+     * Helps prevents timezone errors
+     */
+    disableIdTokenIATValidation?: boolean;
+
+    /**
+     * Offset allowed if IAT is enabled
+     * in seconds
+     */
+    idTokenIATOffsetAllowed?: number;
+}
