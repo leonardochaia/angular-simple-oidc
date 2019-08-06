@@ -1,7 +1,7 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
-import { WINDOW_REF, AUTH_CONFIG } from './constants';
+import { WINDOW_REF, AUTH_CONFIG, LOCAL_STORAGE_REF } from './constants';
 import { AuthConfig } from './config/models';
 import { AuthConfigService } from './config/auth-config.service';
 import { SIMPLE_OIDC_APP_INITIALIZER } from './auth.bootstrap';
@@ -26,6 +26,10 @@ import { TokenEndpointClientService } from './token/token-endpoint-client.servic
     {
       provide: WINDOW_REF,
       useValue: window
+    },
+    {
+      provide: LOCAL_STORAGE_REF,
+      useValue: localStorage
     },
     TokenCryptoService,
     TokenUrlService,

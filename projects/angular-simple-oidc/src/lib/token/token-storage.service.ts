@@ -1,12 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import {
     TokenStorageKeys, LocalState,
     TokenRequestResult, DecodedIdentityToken
 } from './models';
 import { of, BehaviorSubject } from 'rxjs';
-import { AuthConfigService } from '../config/auth-config.service';
-import { TokenHelperService } from './token-helper.service';
+import { LOCAL_STORAGE_REF } from '../constants';
 
+// @dynamic
 @Injectable()
 export class TokenStorageService {
 
@@ -15,14 +15,14 @@ export class TokenStorageService {
     }
 
     protected get storage() {
-        return localStorage;
+        return this.localStorage;
     }
 
     protected readonly localStateSubject = new BehaviorSubject<LocalState>(this.getCurrentLocalState());
 
     constructor(
-        protected readonly config: AuthConfigService,
-        protected readonly tokenHelper: TokenHelperService,
+        @Inject(LOCAL_STORAGE_REF)
+        private readonly localStorage: Storage
     ) { }
 
     public storePreAuthorizationState(authState: {
@@ -106,6 +106,6 @@ export class TokenStorageService {
 
     protected readJSON<T>(key: string) {
         const json = this.storage.getItem(key);
-        return JSON.parse(json) as T;
+        return json ? JSON.parse(json) as T : null;
     }
 }
