@@ -9,6 +9,7 @@ import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc
 import { ValidationResult } from './validation-result';
 import { DecodedIdentityToken, LocalState } from './models';
 import { JWTKeys } from '../discovery-document/models';
+import { runValidations } from './token-validations-runner';
 
 /**
  * Implements Identity and Access tokens validations according to the
@@ -62,24 +63,7 @@ export class TokenValidationService {
                     () => this.validateIdentityTokenAtHash(accessToken, decodedIdToken.at_hash)
                 ];
 
-                // If a validation does not return a valid result,
-                // or a falsy result, we stop the loop and return.
-                for (const fn of validations) {
-                    const output = fn();
-                    if (!output) {
-                        return {
-                            success: false,
-                            message: `${fn.toString()} unexpectedly failed to produce a valid output.`
-                        };
-                    }
-
-                    if (!output.success) {
-                        return output;
-                    }
-                }
-
-                // No errors where produced so far
-                return ValidationResult.NoErrors;
+                return runValidations(validations);
             }));
     }
 
