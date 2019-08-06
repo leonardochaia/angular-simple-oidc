@@ -636,7 +636,7 @@ describe('TokenValidationService', () => {
 
           for (const validationFn of validatorFns) {
             spyOn(tokenValidation, validationFn)
-              .and.returnValue(ValidationResult.NoErrors);
+              .and.returnValue(ValidationResult.noErrors);
           }
           currnetStateSpy.and.returnValue(of({} as any));
           discoveryDocSpy.and.returnValue(of({}));
@@ -746,7 +746,7 @@ describe('TokenValidationService', () => {
           } as LocalState;
           const code = 'abc';
           const output = tokenValidation.validateAuthorizeCallback(localState, state, code);
-          expect(output.errorCode).toBe(ValidationResult.stateValidationFailed().errorCode)
+          expect(output.errorCode).toBe(ValidationResult.stateValidationFailed().errorCode);
         })
     ));
 
@@ -759,7 +759,7 @@ describe('TokenValidationService', () => {
           } as LocalState;
           const code = null;
           const output = tokenValidation.validateAuthorizeCallback(localState, state, code);
-          expect(output.errorCode).toBe(ValidationResult.authorizeCallbackWithoutCode.errorCode)
+          expect(output.errorCode).toBe(ValidationResult.authorizeCallbackWithoutCode.errorCode);
         })
     ));
 
@@ -772,7 +772,7 @@ describe('TokenValidationService', () => {
           } as LocalState;
           const code = '';
           const output = tokenValidation.validateAuthorizeCallback(localState, state, code);
-          expect(output.errorCode).toBe(ValidationResult.authorizeCallbackWithoutCode.errorCode)
+          expect(output.errorCode).toBe(ValidationResult.authorizeCallbackWithoutCode.errorCode);
         })
     ));
   });

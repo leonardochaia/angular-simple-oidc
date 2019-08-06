@@ -8,7 +8,7 @@ export interface ValidationResult {
 // @dynamic
 export class ValidationResult {
 
-    public static readonly NoErrors: ValidationResult = {
+    public static readonly noErrors: ValidationResult = {
         success: true,
     };
 

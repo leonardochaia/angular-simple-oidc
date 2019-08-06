@@ -69,7 +69,7 @@ export class TokenValidationService {
             DiscoveryDocument Issuer: ${discoveryDocumentIssuer}`);
         }
 
-        return ValidationResult.NoErrors;
+        return ValidationResult.noErrors;
     }
 
     /**
@@ -85,14 +85,14 @@ export class TokenValidationService {
         // The at_hash is optional for the code flow
         if (!idTokenAtHash) {
             console.info(`No "at_hash" in Identity Token: Skipping access token validation.`);
-            return ValidationResult.NoErrors;
+            return ValidationResult.noErrors;
         }
 
         const accessTokenHash = this.tokenCrypto.sha256b64First128Bits(accessToken);
         const valid = idTokenAtHash === accessTokenHash;
 
         if (valid) {
-            return ValidationResult.NoErrors;
+            return ValidationResult.noErrors;
         } else {
             return ValidationResult.atHashValidationFailed(`at_hash: ${idTokenAtHash}
             Local: ${accessTokenHash}`);
@@ -113,7 +113,7 @@ export class TokenValidationService {
 
         const valid = aud.includes(this.config.configuration.clientId);
         if (valid) {
-            return ValidationResult.NoErrors;
+            return ValidationResult.noErrors;
         } else {
             return ValidationResult.audValidationFailed(`
             IdentityToken Audience: ${JSON.stringify(dataIdToken.aud)}
@@ -181,7 +181,7 @@ export class TokenValidationService {
                     console.info(`Identity token's header contained 'kid' ${kid}
                     but key signature was validated using key ${key.kid}`);
                 }
-                return ValidationResult.NoErrors;
+                return ValidationResult.noErrors;
             }
         }
 
@@ -209,7 +209,7 @@ export class TokenValidationService {
         const nowWithOffset = new Date().valueOf() - offsetSeconds * 1000;
         const tokenNotExpired = tokenExpirationValue > nowWithOffset;
         if (tokenNotExpired) {
-            return ValidationResult.NoErrors;
+            return ValidationResult.noErrors;
         } else {
             return ValidationResult.tokenExpired(`${tokenExpirationDate} (${idToken.exp}
             Max: ${new Date(nowWithOffset)}
@@ -225,7 +225,7 @@ export class TokenValidationService {
     public validateIdTokenIssuedAt(idToken: DecodedIdentityToken): ValidationResult {
 
         if (this.config.configuration.tokenValidation.disableIdTokenIATValidation) {
-            return ValidationResult.NoErrors;
+            return ValidationResult.noErrors;
         }
 
         const numberOutput = this.validateTokenNumericClaim(idToken, 'iat');
@@ -241,7 +241,7 @@ export class TokenValidationService {
         const maxIATOffsetAllowed = this.config.configuration.tokenValidation.idTokenIATOffsetAllowed || 5;
         const valid = new Date().valueOf() - idTokenIATDate.valueOf() < maxIATOffsetAllowed * 1000;
         if (valid) {
-            return ValidationResult.NoErrors;
+            return ValidationResult.noErrors;
         } else {
             return ValidationResult.iatValidationFailed(`iat < offset:
             ${new Date().valueOf() - idTokenIATDate.valueOf()} < ${maxIATOffsetAllowed * 1000}`);
@@ -260,7 +260,7 @@ export class TokenValidationService {
             ReturnedNonce: ${idToken.nonce}`);
         }
 
-        return ValidationResult.NoErrors;
+        return ValidationResult.noErrors;
     }
 
     /**
@@ -301,7 +301,7 @@ export class TokenValidationService {
                 return ValidationResult.claimRequired(key);
             }
         }
-        return ValidationResult.NoErrors;
+        return ValidationResult.noErrors;
     }
 
     /**
@@ -316,7 +316,7 @@ export class TokenValidationService {
             }
         }
 
-        return ValidationResult.NoErrors;
+        return ValidationResult.noErrors;
     }
 
     /**
@@ -335,7 +335,7 @@ export class TokenValidationService {
             return ValidationResult.idTokenInvalidNoDots(idToken, expectedSliceAmount);
         }
 
-        return ValidationResult.NoErrors;
+        return ValidationResult.noErrors;
     }
 
     /**
@@ -352,6 +352,6 @@ export class TokenValidationService {
             return ValidationResult.authorizeCallbackWithoutCode;
         }
 
-        return ValidationResult.NoErrors;
+        return ValidationResult.noErrors;
     }
 }

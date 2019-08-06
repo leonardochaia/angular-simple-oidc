@@ -68,12 +68,13 @@ export class OidcCodeFlowClient {
             return throwError(`Window URL has invalid code or state`);
         }
 
-        return this.tokenStorage.currentState$.pipe(take(1))
+        return this.tokenStorage.currentState$
             .pipe(
+                take(1),
                 switchMap(localState => {
                     const codeValidationResult = this.tokenValidation
                         .validateAuthorizeCallback(localState, state, code);
-                    if (codeValidationResult !== ValidationResult.NoErrors) {
+                    if (codeValidationResult !== ValidationResult.noErrors) {
                         return throwError(codeValidationResult);
                     }
 

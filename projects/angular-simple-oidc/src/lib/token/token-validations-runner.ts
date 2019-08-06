@@ -17,5 +17,5 @@ export function runValidations(validations: (() => ValidationResult)[]) {
     }
 
     // No errors where produced
-    return ValidationResult.NoErrors;
+    return ValidationResult.noErrors;
 }

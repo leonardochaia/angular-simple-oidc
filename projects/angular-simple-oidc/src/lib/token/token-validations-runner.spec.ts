@@ -5,7 +5,7 @@ describe('TokenValidationRunner', () => {
 
   it('should run all validation functions', () => {
     const validatorSpy = jasmine.createSpy();
-    validatorSpy.and.returnValue(ValidationResult.NoErrors);
+    validatorSpy.and.returnValue(ValidationResult.noErrors);
 
     const validations: (() => ValidationResult)[] = [
       validatorSpy
@@ -24,9 +24,9 @@ describe('TokenValidationRunner', () => {
       jasmine.createSpy(),
     ];
 
-    spies[0].and.returnValue(ValidationResult.NoErrors);
+    spies[0].and.returnValue(ValidationResult.noErrors);
     spies[1].and.returnValue(ValidationResult.missingJWTKeys);
-    spies[2].and.returnValue(ValidationResult.NoErrors);
+    spies[2].and.returnValue(ValidationResult.noErrors);
 
     const validations: (() => ValidationResult)[] = spies;
 
@@ -45,9 +45,9 @@ describe('TokenValidationRunner', () => {
       jasmine.createSpy(),
     ];
 
-    spies[0].and.returnValue(ValidationResult.NoErrors);
+    spies[0].and.returnValue(ValidationResult.noErrors);
     spies[1].and.returnValue(null);
-    spies[2].and.returnValue(ValidationResult.NoErrors);
+    spies[2].and.returnValue(ValidationResult.noErrors);
 
     const validations: (() => ValidationResult)[] = spies;
     expect(() => runValidations(validations))
