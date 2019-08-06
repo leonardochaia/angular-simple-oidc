@@ -21,4 +21,6 @@ export {
     TokenRequestResult
 } from './lib/token/models';
 
-export { urlJoin } from './lib/utils/url-join'
+export { RefreshTokenModule } from './lib/refresh-token/refresh-token.module';
+export { RefreshTokenClient } from './lib/refresh-token/refresh-token-client.service';
+export { RefreshTokenValidationService } from './lib/refresh-token/refresh-token-validation.service';

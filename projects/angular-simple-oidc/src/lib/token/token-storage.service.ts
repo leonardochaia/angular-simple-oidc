@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
-import { TokenStorageKeys, TokenEndpointResponse, LocalState } from './models';
+import {
+    TokenStorageKeys, LocalState,
+    TokenRequestResult, DecodedIdentityToken
+} from './models';
 import { of, BehaviorSubject } from 'rxjs';
 import { AuthConfigService } from '../config/auth-config.service';
 import { TokenHelperService } from './token-helper.service';
@@ -54,14 +57,25 @@ export class TokenStorageService {
         return of(state);
     }
 
-    public storeTokens(tokens: TokenEndpointResponse) {
-        this.storage.setItem(TokenStorageKeys.IdentityToken, tokens.id_token);
+    public storeOriginalIdToken(idToken: string) {
+        this.storage.setItem(TokenStorageKeys.OriginalIdentityToken, idToken);
+        const state = this.getCurrentLocalState();
+        this.localStateSubject.next(state);
+        return of(state);
+    }
 
-        this.storage.setItem(TokenStorageKeys.AccessToken, tokens.access_token);
-        if (tokens.expires_in) {
+    public storeTokens(tokens: TokenRequestResult) {
+        this.storage.setItem(TokenStorageKeys.IdentityToken, tokens.idToken);
+        this.storeJSON(TokenStorageKeys.IdentityTokenDecoded, tokens.decodedIdToken);
+
+        this.storage.setItem(TokenStorageKeys.AccessToken, tokens.accessToken);
+        if (tokens.accessTokenExpiresAt) {
             this.storage.setItem(TokenStorageKeys.AccessTokenExpiration,
-                this.tokenHelper.getExpirationFromExpiresIn(tokens.expires_in)
-                    .getTime().toString());
+                tokens.accessTokenExpiresAt.toString());
+        }
+
+        if (tokens.refreshToken) {
+            this.storage.setItem(TokenStorageKeys.RefreshToken, tokens.refreshToken);
         }
 
         const state = this.getCurrentLocalState();
@@ -70,15 +84,28 @@ export class TokenStorageService {
     }
 
     protected getCurrentLocalState() {
-        return {
+        const state: LocalState = {
             nonce: this.storage.getItem(TokenStorageKeys.Nonce),
             state: this.storage.getItem(TokenStorageKeys.State),
             codeVerifier: this.storage.getItem(TokenStorageKeys.CodeVerifier),
             authorizationCode: this.storage.getItem(TokenStorageKeys.AuthorizationCode),
             identityToken: this.storage.getItem(TokenStorageKeys.IdentityToken),
+            originalIdentityToken: this.storage.getItem(TokenStorageKeys.OriginalIdentityToken),
             accessToken: this.storage.getItem(TokenStorageKeys.AccessToken),
-            accessTokenExpiration: parseInt(this.storage.getItem(TokenStorageKeys.AccessTokenExpiration)),
+            accessTokenExpiration: parseInt(this.storage.getItem(TokenStorageKeys.AccessTokenExpiration), 10),
+            refreshToken: this.storage.getItem(TokenStorageKeys.RefreshToken),
             preRedirectUrl: this.storage.getItem(TokenStorageKeys.PreRedirectUrl),
-        } as LocalState;
+            decodedIdentityToken: this.readJSON<DecodedIdentityToken>(TokenStorageKeys.IdentityTokenDecoded)
+        };
+        return state;
+    }
+
+    protected storeJSON<T>(key: string, obj: T) {
+        this.storage.setItem(key, JSON.stringify(obj));
+    }
+
+    protected readJSON<T>(key: string) {
+        const json = this.storage.getItem(key);
+        return JSON.parse(json) as T;
     }
 }

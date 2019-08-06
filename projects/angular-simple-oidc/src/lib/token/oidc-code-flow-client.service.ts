@@ -137,7 +137,12 @@ export class OidcCodeFlowClient {
                     console.info('Storing tokens..');
                     return this.tokenStorage.storeTokens(result)
                         .pipe(map(() => result));
-                })
+                }),
+                switchMap(result => {
+                    console.info('Storing original Identity Token..');
+                    return this.tokenStorage.storeOriginalIdToken(result.idToken)
+                        .pipe(map(() => result));
+                }),
             );
     }
 

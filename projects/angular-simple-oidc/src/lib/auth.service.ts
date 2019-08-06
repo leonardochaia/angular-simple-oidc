@@ -30,6 +30,20 @@ export class AuthService {
             .pipe(map(s => s.accessTokenExpiration));
     }
 
+    public get refreshToken$() {
+        return this.tokenStorage.currentState$
+            .pipe(map(s => s.refreshToken));
+    }
+
+    public get identityToken$() {
+        return this.tokenStorage.currentState$
+            .pipe(map(s => s.identityToken));
+    }
+
+    public get identityTokenDecoded$() {
+        return this.tokenStorage.currentState$
+            .pipe(map(s => s.decodedIdentityToken));
+    }
     constructor(
         protected readonly oidcClient: OidcCodeFlowClient,
         protected readonly tokenHelper: TokenHelperService,

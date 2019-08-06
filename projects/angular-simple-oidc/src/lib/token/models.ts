@@ -1,5 +1,6 @@
 export interface DecodedIdentityToken {
     iss: string;
+    azp?: string;
     aud: string | string[];
     exp: number;
     nbf: number;
@@ -34,8 +35,11 @@ export enum TokenStorageKeys {
     State = 'simple.oidc.state',
     CodeVerifier = 'simple.oidc.code-verifier',
     AuthorizationCode = 'simple.oidc.authorization-code',
+    OriginalIdentityToken = 'simple.oidc.original-identity-token',
     IdentityToken = 'simple.oidc.identity-token',
+    IdentityTokenDecoded = 'simple.oidc.identity-token-decoded',
     AccessToken = 'simple.oidc.access-token',
+    RefreshToken = 'simple.oidc.refresh-token',
     AccessTokenExpiration = 'simple.oidc.access-token-expiration',
     PreRedirectUrl = 'simple.oidc.pre-redirect-url',
 }
@@ -46,7 +50,10 @@ export interface LocalState {
     codeVerifier: string;
     authorizationCode: string;
     identityToken: string;
+    originalIdentityToken: string;
+    decodedIdentityToken: DecodedIdentityToken;
     accessToken: string;
     accessTokenExpiration: number;
+    refreshToken: string;
     preRedirectUrl: string;
 }

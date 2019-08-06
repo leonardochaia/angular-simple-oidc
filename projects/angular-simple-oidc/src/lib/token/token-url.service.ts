@@ -36,10 +36,40 @@ export class TokenUrlService {
         }
 
         console.info(`Generating Authorization Code Payload:
-        CodeVerifier: ${httpParams.get('code_verifier')}
+            CodeVerifier: ${httpParams.get('code_verifier')}
             Code: ${httpParams.get('code')}
             ${httpParams}`);
 
+
+        return httpParams.toString();
+    }
+
+    public createRefreshTokenRequestPayload(params: {
+        clientId: string,
+        clientSecret: string,
+        scope?: string,
+        refreshToken: string,
+        acrValues?: string,
+    }) {
+        let httpParams = new HttpParams()
+            .set('client_id', params.clientId)
+            .set('client_secret', params.clientSecret)
+            .set('grant_type', 'refresh_token')
+            .set('refresh_token', params.refreshToken);
+
+        if (params.scope) {
+            httpParams = httpParams
+                .set('scope', params.scope);
+        }
+
+        if (params.acrValues) {
+            httpParams = httpParams
+                .set('acr_values', params.acrValues);
+        }
+
+        console.info(`Generating Refresh Token Payload:
+            RefreshToken: ${httpParams.get('refresh_token')}
+            ${httpParams}`);
 
         return httpParams.toString();
     }
