@@ -19,13 +19,8 @@ function spyOnGet<T>(obj: T, property: keyof T) {
 
 describe('TokenValidationService', () => {
   let tokenCryptoSpy: jasmine.SpyObj<TokenCryptoService>;
-  let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
   let configServiceSpy: jasmine.SpyObj<AuthConfigService>;
-  let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
-  let discoveryDocSpy: jasmine.Spy<InferableFunction>;
-  let jwtKeysSpy: jasmine.Spy<InferableFunction>;
   let configSpy: jasmine.Spy<InferableFunction>;
-  let currnetStateSpy: jasmine.Spy<InferableFunction>;
 
   let decodedIdToken: DecodedIdentityToken;
   let authConfig: AuthConfig;
@@ -33,9 +28,7 @@ describe('TokenValidationService', () => {
 
   beforeEach(() => {
     tokenCryptoSpy = jasmine.createSpyObj('TokenCryptoService', ['sha256b64First128Bits', 'verifySignature']);
-    tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', ['obtainLocalAuthorizationState']);
     configServiceSpy = jasmine.createSpyObj('AuthConfigService', ['configuration']);
-    discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', ['current$']);
 
     decodedIdToken = {
       iss: 'http://auth.example.com',
@@ -81,24 +74,12 @@ describe('TokenValidationService', () => {
           useClass: TokenHelperService,
         },
         {
-          provide: TokenStorageService,
-          useValue: tokenStorageSpy,
-        },
-        {
           provide: AuthConfigService,
           useValue: configServiceSpy,
-        },
-        {
-          provide: OidcDiscoveryDocClient,
-          useValue: discoveryDocClientSpy,
         },
         TokenValidationService
       ]
     });
-
-    discoveryDocSpy = spyOnGet(TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient, 'current$');
-    jwtKeysSpy = spyOnGet(TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient, 'jwtKeys$');
-    currnetStateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
 
     configSpy = spyOnGet(TestBed.get(AuthConfigService) as AuthConfigService, 'configuration')
       .and.returnValue(authConfig);
@@ -662,18 +643,13 @@ describe('TokenValidationService', () => {
             spyOn(tokenValidation, validationFn)
               .and.returnValue(ValidationResult.noErrors);
           }
-          currnetStateSpy.and.returnValue(of({} as any));
-          discoveryDocSpy.and.returnValue(of({}));
-          jwtKeysSpy.and.returnValue(of({}));
-
           const idToken = 'idToken';
-          tokenValidation.validateIdToken(idToken, decodedIdToken)
-            .subscribe(output => {
-              expect(output.success).toBeTruthy();
-              for (const validationFn of validatorFns) {
-                expect(tokenValidation[validationFn]).toHaveBeenCalled();
-              }
-            });
+          const output = tokenValidation.validateIdToken(
+            idToken, decodedIdToken, 'nonce', {} as any, {} as any);
+          expect(output.success).toBeTruthy();
+          for (const validationFn of validatorFns) {
+            expect(tokenValidation[validationFn]).toHaveBeenCalled();
+          }
         })
     ));
   });

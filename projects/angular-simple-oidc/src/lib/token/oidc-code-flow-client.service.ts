@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { WINDOW_REF } from '../constants';
-import { of, throwError } from 'rxjs';
+import { of, throwError, combineLatest } from 'rxjs';
 import { tap, switchMap, take, map } from 'rxjs/operators';
 import { TokenStorageService } from './token-storage.service';
 import { TokenValidationService } from './token-validation.service';
@@ -110,14 +110,35 @@ export class OidcCodeFlowClient {
             .pipe(
                 switchMap(result => {
                     console.info('Validating identity token..');
-                    return this.tokenValidation.validateIdToken(result.idToken, result.decodedIdToken)
-                        .pipe(switchMap(validationResult => {
-                            if (validationResult.success) {
-                                return of(result);
-                            } else {
-                                return throwError(validationResult);
-                            }
-                        }));
+
+                    // For validations, we need the local stored state
+                    const localState$ = this.tokenStorage.currentState$
+                        .pipe(take(1));
+
+                    // The discovery document for issuer
+                    const discoveryDocument$ = this.discoveryDocumentClient.current$
+                        .pipe(take(1));
+
+                    // JWT Keys to validate id token signature
+                    const jwtKeys$ = this.discoveryDocumentClient.jwtKeys$
+                        .pipe(take(1));
+
+                    return combineLatest(localState$, discoveryDocument$, jwtKeys$)
+                        .pipe(
+                            map(([localState, discoveryDocument, jwtKeys]) => {
+                                const validationResult = this.tokenValidation.validateIdToken(result.idToken,
+                                    result.decodedIdToken,
+                                    localState.nonce,
+                                    discoveryDocument,
+                                    jwtKeys);
+
+                                if (!validationResult.success) {
+                                    throw validationResult;
+                                }
+
+                                return result;
+                            }));
+
                 }),
                 switchMap(result => {
                     console.info('Validating access token..');

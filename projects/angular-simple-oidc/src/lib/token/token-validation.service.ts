@@ -8,7 +8,7 @@ import { TokenStorageService } from './token-storage.service';
 import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
 import { ValidationResult } from './validation-result';
 import { DecodedIdentityToken, LocalState } from './models';
-import { JWTKeys } from '../discovery-document/models';
+import { JWTKeys, DiscoveryDocument } from '../discovery-document/models';
 import { runValidations } from './token-validations-runner';
 
 /**
@@ -21,42 +21,30 @@ import { runValidations } from './token-validations-runner';
 export class TokenValidationService {
     constructor(
         protected readonly tokenHelper: TokenHelperService,
-        protected readonly tokenStorage: TokenStorageService,
         protected readonly config: AuthConfigService,
-        protected readonly discoveryDocumentClient: OidcDiscoveryDocClient,
         protected readonly tokenCrypto: TokenCryptoService,
     ) { }
 
-    public validateIdToken(idToken: string, decodedIdToken: DecodedIdentityToken): Observable<ValidationResult> {
+    public validateIdToken(
+        idToken: string,
+        decodedIdToken: DecodedIdentityToken,
+        nonce: string,
+        discoveryDocument: DiscoveryDocument,
+        jwtKeys: JWTKeys) {
 
-        // For validations, we need the local stored state
-        const localState$ = this.tokenStorage.currentState$
-            .pipe(take(1));
+        // Apply all validation as defined on
+        // https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
+        const validations: (() => ValidationResult)[] = [
+            () => this.validateIdTokenSignature(idToken, jwtKeys),
+            () => this.validateIdTokenNonce(decodedIdToken, nonce),
+            () => this.validateIdTokenRequiredFields(decodedIdToken),
+            () => this.validateIdTokenIssuedAt(decodedIdToken),
+            () => this.validateIdTokenIssuer(decodedIdToken, discoveryDocument.issuer),
+            () => this.validateIdTokenAud(decodedIdToken),
+            () => this.validateIdTokenExpiration(decodedIdToken),
+        ];
 
-        // The discovery document for issuer
-        const discoveryDocument$ = this.discoveryDocumentClient.current$
-            .pipe(take(1));
-
-        // JWT Keys to validate id token signature
-        const jwtKeys$ = this.discoveryDocumentClient.jwtKeys$
-            .pipe(take(1));
-
-        return combineLatest(localState$, discoveryDocument$, jwtKeys$).pipe(
-            map(([localState, discoveryDocument, jwtKeys]) => {
-                // Apply all validation as defined on
-                // https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
-                const validations: (() => ValidationResult)[] = [
-                    () => this.validateIdTokenSignature(idToken, jwtKeys),
-                    () => this.validateIdTokenNonce(decodedIdToken, localState.nonce),
-                    () => this.validateIdTokenRequiredFields(decodedIdToken),
-                    () => this.validateIdTokenIssuedAt(decodedIdToken),
-                    () => this.validateIdTokenIssuer(decodedIdToken, discoveryDocument.issuer),
-                    () => this.validateIdTokenAud(decodedIdToken),
-                    () => this.validateIdTokenExpiration(decodedIdToken),
-                ];
-
-                return runValidations(validations);
-            }));
+        return runValidations(validations);
     }
 
     /**
