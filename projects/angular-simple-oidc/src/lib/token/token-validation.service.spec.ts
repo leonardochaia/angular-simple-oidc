@@ -272,6 +272,30 @@ describe('TokenValidationService', () => {
           })
       ));
 
+      it('should try other keys if no key with kid is found', async(
+        inject([TokenValidationService],
+          (tokenValidation: TokenValidationService) => {
+            const idToken = 'idtoken';
+
+            dummyKeys.keys[0].kid = 'k0';
+            dummyKeys.keys.push({
+              ...dummyKeys.keys[0],
+              kid: 'k1'
+            });
+
+            spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken')
+              .and.returnValue({
+                alg: 'RS256',
+                kid: 'invalid-kid'
+              });
+            tokenCryptoSpy.verifySignature.and.returnValue(true);
+
+            const output = tokenValidation.validateIdTokenSignature(idToken, dummyKeys);
+            expect(output.success).toBeTruthy();
+            expect(tokenCryptoSpy.verifySignature).toHaveBeenCalledWith(dummyKeys.keys[0], idToken);
+          })
+      ));
+
       it('should try all keys until one succeeds', async(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {

@@ -170,7 +170,7 @@ export class TokenValidationService {
                 but no key with that kid was found on JWT Keys.
                 Will still try to validate using other keys, if any.
                 kid: ${header.kid},
-                ValidKeys kids: ${JSON.stringify(keysToTry.map(k => k.kid))}`)
+                ValidKeys kids: ${JSON.stringify(keysToTry.map(k => k.kid))}`);
             }
         }
 

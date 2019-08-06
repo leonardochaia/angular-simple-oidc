@@ -38,15 +38,51 @@ describe('TokenUrlService', () => {
 
     it('throw if required params are missing', () => {
       expect(() => {
-        tokenUrl.createAuthorizeUrl("http://example.com", null);
+        tokenUrl.createAuthorizeUrl('http://example.com', null);
       }).toThrowError(/params(.*)required/);
     });
 
     it('throw if required params are missing', () => {
       expect(() => {
-        tokenUrl.createAuthorizeUrl("http://example.com", {
+        tokenUrl.createAuthorizeUrl('http://example.com', {
         } as any);
       }).toThrowError(/clientId(.*)required/);
+    });
+
+    it('uses tokenCrypto to obtain state', () => {
+      const expected = 'S123';
+      tokenCryptoSpy.generateState.and.returnValue(expected);
+      tokenCryptoSpy.generateCodesForCodeVerification.and.returnValue({
+        codeVerifier: 'verifier',
+        codeChallenge: 'challenge',
+        method: 'S256'
+      });
+
+      const output = tokenUrl.createAuthorizeUrl('http://example.com', {
+        clientId: 'myclient',
+        redirectUri: 'redirecturi',
+        scope: 'scope',
+        responseType: 'code'
+      });
+      expect(output.state).toEqual(expected);
+    });
+
+    it('uses tokenCrypto to obtain nonce', () => {
+      const expected = 'N123';
+      tokenCryptoSpy.generateNonce.and.returnValue(expected);
+      tokenCryptoSpy.generateCodesForCodeVerification.and.returnValue({
+        codeVerifier: 'verifier',
+        codeChallenge: 'challenge',
+        method: 'S256'
+      });
+
+      const output = tokenUrl.createAuthorizeUrl('http://example.com', {
+        clientId: 'myclient',
+        redirectUri: 'redirecturi',
+        scope: 'scope',
+        responseType: 'code'
+      });
+      expect(output.nonce).toEqual(expected);
     });
 
   });
@@ -56,25 +92,25 @@ describe('TokenUrlService', () => {
       const url = '';
       expect(() => tokenUrl.parseAuthorizeCallbackParamsFromUrl(url))
         .toThrowError(/url(.*)required/);
-    })
+    });
 
     it('throws if no url is provided', () => {
       const url = null;
       expect(() => tokenUrl.parseAuthorizeCallbackParamsFromUrl(url))
         .toThrowError(/url(.*)required/);
-    })
+    });
 
     it('throws if url has no params', () => {
       const url = 'http://example.com';
       expect(() => tokenUrl.parseAuthorizeCallbackParamsFromUrl(url))
         .toThrowError(/params(.*)/);
-    })
+    });
 
     it('throws if url has no params', () => {
       const url = 'http://example.com?';
       expect(() => tokenUrl.parseAuthorizeCallbackParamsFromUrl(url))
         .toThrowError(/params(.*)/);
-    })
+    });
 
     it('parses params correctly', () => {
       const code = 'code-abc';

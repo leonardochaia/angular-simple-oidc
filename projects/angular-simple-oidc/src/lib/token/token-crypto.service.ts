@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { hextob64u, KEYUTIL, KJUR } from 'jsrsasign';
+import { JWTKey } from '../discovery-document/models';
 
 @Injectable()
 export class TokenCryptoService {
@@ -15,7 +16,7 @@ export class TokenCryptoService {
         return hextob64u(hash);
     }
 
-    public verifySignature(key: any, message: string): boolean {
+    public verifySignature(key: JWTKey, message: string): boolean {
         const pk = KEYUTIL.getKey(key);
         return KJUR.jws.JWS.verify(message, pk, ['RS256']);
     }

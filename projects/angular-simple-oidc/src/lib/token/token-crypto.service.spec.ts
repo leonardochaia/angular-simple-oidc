@@ -10,9 +10,7 @@ describe('TokenCryptoService', () => {
                 TokenCryptoService
             ],
         });
-    });
 
-    beforeEach(() => {
         tokenCrypto = TestBed.get(TokenCryptoService);
     });
 
