@@ -11,6 +11,7 @@ import { AngularSimpleOidcCoreModule } from './core/angular-simple-oidc-core.mod
 import { TokenStorageService } from './token-storage.service';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
 import { HttpClientModule } from '@angular/common/http';
+import { RefreshTokenClient } from './refresh-token-client.service';
 
 @NgModule({
   imports: [
@@ -31,6 +32,7 @@ import { HttpClientModule } from '@angular/common/http';
     TokenEndpointClientService,
     OidcDiscoveryDocClient,
     OidcCodeFlowClient,
+    RefreshTokenClient,
 
     AuthService,
     AuthGuard,
