@@ -3,7 +3,7 @@ import { TokenHelperService } from './token-helper.service';
 import { TokenCryptoService } from './token-crypto.service';
 import { ValidationResult } from './validation-result';
 import { DecodedIdentityToken, LocalState, TokenValidationConfig } from './models';
-import { JWTKeys, DiscoveryDocument } from '../discovery-document/models';
+import { JWTKeys, DiscoveryDocument } from './models';
 import { runValidations } from './token-validations-runner';
 
 /**

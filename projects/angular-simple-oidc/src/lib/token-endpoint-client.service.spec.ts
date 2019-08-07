@@ -1,13 +1,13 @@
-import { TestBed, fakeAsync, flush, flushMicrotasks } from '@angular/core/testing';
+import { TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
-import { TokenHelperService } from './token-helper.service';
-import { TokenValidationService } from './token-validation.service';
-import { DiscoveryDocument } from '../discovery-document/models';
+import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
+import { TokenHelperService } from './token/token-helper.service';
+import { TokenValidationService } from './token/token-validation.service';
+import { DiscoveryDocument } from './token/models';
 import { of, throwError } from 'rxjs';
-import { TokenRequestResult, DecodedIdentityToken } from './models';
-import { ValidationResult } from './validation-result';
+import { TokenRequestResult, DecodedIdentityToken } from './token/models';
+import { ValidationResult } from './token/validation-result';
 
 function spyOnGet<T>(obj: T, property: keyof T) {
     Object.defineProperty(obj, property, { get: () => null });

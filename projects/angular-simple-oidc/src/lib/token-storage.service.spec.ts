@@ -1,7 +1,7 @@
 import { TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { TokenStorageService } from './token-storage.service';
-import { LOCAL_STORAGE_REF } from '../constants';
-import { TokenStorageKeys, LocalState, DecodedIdentityToken, TokenRequestResult } from './models';
+import { LOCAL_STORAGE_REF } from './constants';
+import { TokenStorageKeys, LocalState, DecodedIdentityToken, TokenRequestResult } from './token/models';
 
 class FakeStorage implements Storage {
     [name: string]: any;

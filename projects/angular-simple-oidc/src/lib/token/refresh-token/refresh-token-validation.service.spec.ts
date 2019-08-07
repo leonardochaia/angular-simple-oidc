@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { RefreshTokenValidationService } from './refresh-token-validation.service';
-import { DecodedIdentityToken } from '../token/models';
+import { DecodedIdentityToken } from '../models';
 import { RefreshTokenValidationResult } from './refresh-token-validation-result';
-import { ValidationResult } from '../token/validation-result';
+import { ValidationResult } from '../validation-result';
 
 describe('RefreshTokenValidationService', () => {
     let refreshTokenValidation: RefreshTokenValidationService;

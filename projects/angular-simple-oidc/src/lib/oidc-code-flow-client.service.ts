@@ -1,14 +1,14 @@
 import { Injectable, Inject } from '@angular/core';
-import { WINDOW_REF } from '../constants';
+import { WINDOW_REF } from './constants';
 import { of, throwError, combineLatest } from 'rxjs';
 import { tap, switchMap, take, map } from 'rxjs/operators';
 import { TokenStorageService } from './token-storage.service';
-import { TokenValidationService } from './token-validation.service';
-import { AuthConfigService } from '../config/auth-config.service';
-import { urlJoin } from '../utils/url-join';
-import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
-import { TokenUrlService } from './token-url.service';
-import { ValidationResult } from './validation-result';
+import { TokenValidationService } from './token/token-validation.service';
+import { AuthConfigService } from './config/auth-config.service';
+import { urlJoin } from './utils/url-join';
+import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
+import { TokenUrlService } from './token/token-url.service';
+import { ValidationResult } from './token/validation-result';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
 
 // @dynamic
