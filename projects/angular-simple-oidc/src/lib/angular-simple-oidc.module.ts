@@ -7,7 +7,7 @@ import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-
 import { OidcCodeFlowClient } from './oidc-code-flow-client.service';
 import { AuthGuard } from './guards/auth.guard';
 import { AuthService } from './auth.service';
-import { AngularSimpleOidcCoreModule } from './token/angular-simple-oidc-core.module';
+import { AngularSimpleOidcCoreModule } from './core/angular-simple-oidc-core.module';
 import { TokenStorageService } from './token-storage.service';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
 import { HttpClientModule } from '@angular/common/http';

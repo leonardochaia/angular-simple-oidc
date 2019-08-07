@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@angular/core';
 import {
     TokenStorageKeys, LocalState,
     TokenRequestResult, DecodedIdentityToken
-} from './token/models';
+} from './core/models';
 import { of, BehaviorSubject } from 'rxjs';
 import { LOCAL_STORAGE_REF } from './constants';
 

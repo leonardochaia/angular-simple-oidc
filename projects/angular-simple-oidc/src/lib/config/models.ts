@@ -1,4 +1,4 @@
-import { TokenValidationConfig } from '../token/models';
+import { TokenValidationConfig } from '../core/models';
 
 export const AuthConfigRequiredFields: (keyof AuthConfig)[] = ['clientId', 'scope', 'openIDProviderUrl'];
 

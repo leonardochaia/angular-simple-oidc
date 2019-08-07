@@ -8,8 +8,8 @@ import {
     TokenUrlService, TokenHelperService,
 } from 'angular-simple-oidc';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
-import { RefreshTokenValidationService } from './token/refresh-token/refresh-token-validation.service';
-import { TokenValidationService } from './token/token-validation.service';
+import { RefreshTokenValidationService } from './core/refresh-token/refresh-token-validation.service';
+import { TokenValidationService } from './core/token-validation.service';
 
 @Injectable()
 export class RefreshTokenClient {
