@@ -1,3 +1,23 @@
 <h1>Angular Simple OIDC</h1>
+<p>
+  Only authenticated users can see this component due to the AuthGuard.
+</p>
 
-<!-- <soidc-debugging></soidc-debugging> -->
+<ul>
+  <li>Authenticated (has token && not expired): {{isLoggedIn$ | async}}</li>
+  <li>
+    Access Token: {{accessToken$ | async}}
+    <ul>
+      <li>Expiration: {{accessTokenExpiration$ | async}}</li>
+    </ul>
+  </li>
+  <li>
+    Refresh Token: {{refreshToken$ | async}}
+    <button (click)="doTokenRefresh()">Refresh Now</button>
+  </li>
+  <li>
+    Identity token:
+    <textarea [value]="identityToken$ | async" style="display:block; width: 100%;" readonly></textarea>
+    <pre>{{identityTokenDecoded$ | async | json}}</pre>
+  </li>
+</ul>

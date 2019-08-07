@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <title>AngularSimpleOidc</title>
@@ -7,8 +8,61 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <style>
+    .initial-loading .loader {
+      border: 16px solid #f3f3f3;
+      /* Light grey */
+      border-top: 16px solid #3498db;
+      /* Blue */
+      border-radius: 50%;
+      width: 120px;
+      height: 120px;
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .initial-loading .container {
+      margin: calc(50% - 220px) auto;
+      width: 120px;
+    }
+
+    .initial-loading {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      opacity: 0;
+      position: absolute;
+      background: #333;
+      text-align: center;
+      z-index: -1;
+      transition: opacity .1s ease-out;
+    }
+
+    soidc-root:empty+.initial-loading {
+      opacity: 1;
+      z-index: 100;
+    }
+
+  </style>
 </head>
+
 <body>
   <soidc-root></soidc-root>
+  <div class="initial-loading">
+    <div class="container">
+      <div class="loader"></div>
+    </div>
+  </div>
 </body>
+
 </html>

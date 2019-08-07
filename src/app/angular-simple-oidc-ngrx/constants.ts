@@ -1,1 +1,0 @@
-export const FEATURE_STATE_NAME = 'simpleOidc';
