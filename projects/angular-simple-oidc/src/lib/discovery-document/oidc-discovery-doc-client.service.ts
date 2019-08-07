@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { DiscoveryDocument, JWTKeys } from './models';
+import { DiscoveryDocument, JWTKeys } from '../core/models';
 import { urlJoin } from '../utils/url-join';
 import { AuthConfigService } from '../config/auth-config.service';
 
@@ -50,8 +50,7 @@ export class OidcDiscoveryDocClient {
         protected readonly http: HttpClient) { }
 
     public requestDiscoveryDocument() {
-        return this.http
-            .get<DiscoveryDocument>(this.discoveryDocumentAbsoluteEndpoint)
+        return this.http.get<DiscoveryDocument>(this.discoveryDocumentAbsoluteEndpoint);
     }
 
     public requestJWTKeys(doc: DiscoveryDocument) {

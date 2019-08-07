@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { DecodedIdentityToken } from '../token/models';
+import { DecodedIdentityToken } from '../models';
 import { RefreshTokenValidationResult } from './refresh-token-validation-result';
-import { ValidationResult } from '../token/validation-result';
-import { runValidations } from '../token/token-validations-runner';
+import { ValidationResult } from '../validation-result';
+import { runValidations } from '../token-validations-runner';
 
 /**
  * its iss Claim Value MUST be the same as in the ID Token issued when the original authentication occurred,

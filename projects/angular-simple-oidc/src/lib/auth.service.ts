@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { TokenStorageService } from './token/token-storage.service';
+import { TokenStorageService } from './token-storage.service';
 import { map } from 'rxjs/operators';
-import { OidcCodeFlowClient } from './token/oidc-code-flow-client.service';
-import { TokenHelperService } from './token/token-helper.service';
+import { OidcCodeFlowClient } from './oidc-code-flow-client.service';
+import { TokenHelperService } from './core/token-helper.service';
+import { RefreshTokenClient } from './refresh-token-client.service';
 
 @Injectable()
 export class AuthService {
@@ -44,13 +45,19 @@ export class AuthService {
         return this.tokenStorage.currentState$
             .pipe(map(s => s.decodedIdentityToken));
     }
+
     constructor(
         protected readonly oidcClient: OidcCodeFlowClient,
         protected readonly tokenHelper: TokenHelperService,
-        protected readonly tokenStorage: TokenStorageService
+        protected readonly tokenStorage: TokenStorageService,
+        protected readonly refreshTokenClient: RefreshTokenClient,
     ) { }
 
     public startCodeFlow() {
         return this.oidcClient.startCodeFlow();
+    }
+
+    public refreshAccesstoken() {
+        return this.refreshTokenClient.requestTokenWithRefreshCode();
     }
 }

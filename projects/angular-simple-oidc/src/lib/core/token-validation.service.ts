@@ -1,14 +1,9 @@
 import { Injectable } from '@angular/core';
 import { TokenHelperService } from './token-helper.service';
-import { take, map } from 'rxjs/operators';
-import { Observable, combineLatest, of } from 'rxjs';
 import { TokenCryptoService } from './token-crypto.service';
-import { AuthConfigService } from '../config/auth-config.service';
-import { TokenStorageService } from './token-storage.service';
-import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
 import { ValidationResult } from './validation-result';
-import { DecodedIdentityToken, LocalState } from './models';
-import { JWTKeys, DiscoveryDocument } from '../discovery-document/models';
+import { DecodedIdentityToken, LocalState, TokenValidationConfig } from './models';
+import { JWTKeys, DiscoveryDocument } from './models';
 import { runValidations } from './token-validations-runner';
 
 /**
@@ -21,16 +16,17 @@ import { runValidations } from './token-validations-runner';
 export class TokenValidationService {
     constructor(
         protected readonly tokenHelper: TokenHelperService,
-        protected readonly config: AuthConfigService,
         protected readonly tokenCrypto: TokenCryptoService,
     ) { }
 
     public validateIdToken(
+        thisClientId: string,
         idToken: string,
         decodedIdToken: DecodedIdentityToken,
         nonce: string,
         discoveryDocument: DiscoveryDocument,
-        jwtKeys: JWTKeys) {
+        jwtKeys: JWTKeys,
+        tokenValidationConfig?: TokenValidationConfig) {
 
         // Apply all validation as defined on
         // https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
@@ -38,9 +34,9 @@ export class TokenValidationService {
             () => this.validateIdTokenSignature(idToken, jwtKeys),
             () => this.validateIdTokenNonce(decodedIdToken, nonce),
             () => this.validateIdTokenRequiredFields(decodedIdToken),
-            () => this.validateIdTokenIssuedAt(decodedIdToken),
+            () => this.validateIdTokenIssuedAt(decodedIdToken, tokenValidationConfig),
             () => this.validateIdTokenIssuer(decodedIdToken, discoveryDocument.issuer),
-            () => this.validateIdTokenAud(decodedIdToken),
+            () => this.validateIdTokenAud(decodedIdToken, thisClientId),
             () => this.validateIdTokenExpiration(decodedIdToken),
         ];
 
@@ -93,19 +89,21 @@ export class TokenValidationService {
     * The ID Token MUST be rejected if the ID Token does not list the Client as a valid audience,
     * or if it contains additional audiences not trusted by the Client
     */
-    public validateIdTokenAud(dataIdToken: DecodedIdentityToken): ValidationResult {
+    public validateIdTokenAud(
+        dataIdToken: DecodedIdentityToken,
+        thisClientId: string): ValidationResult {
         let aud = dataIdToken.aud;
         if (!Array.isArray(aud)) {
             aud = [aud];
         }
 
-        const valid = aud.includes(this.config.configuration.clientId);
+        const valid = aud.includes(thisClientId);
         if (valid) {
             return ValidationResult.noErrors;
         } else {
             return ValidationResult.audValidationFailed(`
             IdentityToken Audience: ${JSON.stringify(dataIdToken.aud)}
-            ClientId: ${this.config.configuration.clientId}`);
+            ClientId: ${thisClientId}`);
         }
     }
 
@@ -210,9 +208,13 @@ export class TokenValidationService {
     * limiting the amount of time that nonces need to be stored to prevent attacks.
     * The acceptable range is Client specific.
     */
-    public validateIdTokenIssuedAt(idToken: DecodedIdentityToken): ValidationResult {
+    public validateIdTokenIssuedAt(
+        idToken: DecodedIdentityToken,
+        config: TokenValidationConfig = {}
+    ): ValidationResult {
 
-        if (this.config.configuration.tokenValidation.disableIdTokenIATValidation) {
+        if (config.disableIdTokenIATValidation) {
+            console.info('Token validation has been disabled by configuration');
             return ValidationResult.noErrors;
         }
 
@@ -226,7 +228,7 @@ export class TokenValidationService {
             return ValidationResult.claimDateInvalid('iat');
         }
 
-        const maxIATOffsetAllowed = this.config.configuration.tokenValidation.idTokenIATOffsetAllowed || 5;
+        const maxIATOffsetAllowed = config.idTokenIATOffsetAllowed || 5;
         const valid = new Date().valueOf() - idTokenIATDate.valueOf() < maxIATOffsetAllowed * 1000;
         if (valid) {
             return ValidationResult.noErrors;

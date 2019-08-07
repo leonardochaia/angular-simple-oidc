@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { switchMap, take, map } from 'rxjs/operators';
-import { TokenRequestResult, DecodedIdentityToken } from './models';
-import { TokenValidationService } from './token-validation.service';
-import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
-import { TokenHelperService } from './token-helper.service';
-import { ValidationResult } from './validation-result';
+import { TokenRequestResult, DecodedIdentityToken } from './core/models';
+import { TokenValidationService } from './core/token-validation.service';
+import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
+import { TokenHelperService } from './core/token-helper.service';
+import { ValidationResult } from './core/validation-result';
 
 interface TokenEndpointResponse {
     access_token?: string;

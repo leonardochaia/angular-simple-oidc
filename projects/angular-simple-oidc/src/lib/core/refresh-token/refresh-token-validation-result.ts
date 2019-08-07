@@ -1,4 +1,4 @@
-import { ValidationResult } from '../token/validation-result';
+import { ValidationResult } from '../validation-result';
 
 // @dynamic
 export class RefreshTokenValidationResult {

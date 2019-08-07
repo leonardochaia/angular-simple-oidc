@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { hextob64u, KEYUTIL, KJUR } from 'jsrsasign';
-import { JWTKey } from '../discovery-document/models';
+import { JWTKey } from './models';
 
 @Injectable()
 export class TokenCryptoService {

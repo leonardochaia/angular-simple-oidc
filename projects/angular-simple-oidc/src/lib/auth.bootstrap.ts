@@ -1,7 +1,7 @@
 import { APP_INITIALIZER, FactoryProvider } from '@angular/core';
 import { AuthConfigService } from './config/auth-config.service';
 import { WINDOW_REF } from './constants';
-import { OidcCodeFlowClient } from './token/oidc-code-flow-client.service';
+import { OidcCodeFlowClient } from './oidc-code-flow-client.service';
 
 // This APP_INITIALIZER makes sure the OAuthService is ready
 // must be an export function for AOT to work

@@ -2,14 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { switchMap, take, map, withLatestFrom } from 'rxjs/operators';
-import { AuthConfigService } from '../config/auth-config.service';
+import { AuthConfigService } from './config/auth-config.service';
 import {
-    OidcDiscoveryDocClient, TokenStorageService,
+    TokenStorageService,
     TokenUrlService, TokenHelperService,
 } from 'angular-simple-oidc';
-import { TokenEndpointClientService } from '../token/token-endpoint-client.service';
-import { RefreshTokenValidationService } from './refresh-token-validation.service';
-import { TokenValidationService } from '../token/token-validation.service';
+import { TokenEndpointClientService } from './token-endpoint-client.service';
+import { RefreshTokenValidationService } from './core/refresh-token/refresh-token-validation.service';
+import { TokenValidationService } from './core/token-validation.service';
 
 @Injectable()
 export class RefreshTokenClient {
@@ -21,7 +21,6 @@ export class RefreshTokenClient {
     constructor(
         protected readonly http: HttpClient,
         protected readonly config: AuthConfigService,
-        protected readonly discoveryDocumentClient: OidcDiscoveryDocClient,
         protected readonly tokenStorage: TokenStorageService,
         protected readonly tokenUrl: TokenUrlService,
         protected readonly tokenHelper: TokenHelperService,

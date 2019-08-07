@@ -1,28 +1,24 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
-import { RouterModule } from '@angular/router';
-import { WINDOW_REF, AUTH_CONFIG, LOCAL_STORAGE_REF } from './constants';
+import { AUTH_CONFIG, WINDOW_REF, LOCAL_STORAGE_REF } from './constants';
 import { AuthConfig } from './config/models';
 import { AuthConfigService } from './config/auth-config.service';
 import { SIMPLE_OIDC_APP_INITIALIZER } from './auth.bootstrap';
-import { TokenCryptoService } from './token/token-crypto.service';
-import { TokenStorageService } from './token/token-storage.service';
-import { TokenHelperService } from './token/token-helper.service';
-import { TokenValidationService } from './token/token-validation.service';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
-import { OidcCodeFlowClient } from './token/oidc-code-flow-client.service';
+import { OidcCodeFlowClient } from './oidc-code-flow-client.service';
 import { AuthGuard } from './guards/auth.guard';
 import { AuthService } from './auth.service';
-import { TokenUrlService } from './token/token-url.service';
-import { TokenEndpointClientService } from './token/token-endpoint-client.service';
+import { AngularSimpleOidcCoreModule } from './core/angular-simple-oidc-core.module';
+import { TokenStorageService } from './token-storage.service';
+import { TokenEndpointClientService } from './token-endpoint-client.service';
+import { HttpClientModule } from '@angular/common/http';
+import { RefreshTokenClient } from './refresh-token-client.service';
 
 @NgModule({
   imports: [
     HttpClientModule,
-    RouterModule.forChild([]),
+    AngularSimpleOidcCoreModule
   ],
   providers: [
-    // Register static dependencies, which are not affected by configs
     {
       provide: WINDOW_REF,
       useValue: window
@@ -31,20 +27,20 @@ import { TokenEndpointClientService } from './token/token-endpoint-client.servic
       provide: LOCAL_STORAGE_REF,
       useValue: localStorage
     },
-    TokenCryptoService,
-    TokenUrlService,
-    TokenStorageService,
-    TokenHelperService,
-    TokenValidationService,
-    TokenEndpointClientService,
     AuthConfigService,
+    TokenStorageService,
+    TokenEndpointClientService,
     OidcDiscoveryDocClient,
     OidcCodeFlowClient,
+    RefreshTokenClient,
 
     AuthService,
     AuthGuard,
   ],
   declarations: [],
+  exports: [
+    AngularSimpleOidcCoreModule
+  ]
 })
 export class AngularSimpleOidcModule {
 

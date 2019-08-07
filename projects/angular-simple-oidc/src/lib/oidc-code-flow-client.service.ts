@@ -1,16 +1,14 @@
 import { Injectable, Inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { WINDOW_REF } from '../constants';
+import { WINDOW_REF } from './constants';
 import { of, throwError, combineLatest } from 'rxjs';
 import { tap, switchMap, take, map } from 'rxjs/operators';
 import { TokenStorageService } from './token-storage.service';
-import { TokenValidationService } from './token-validation.service';
-import { AuthConfigService } from '../config/auth-config.service';
-import { urlJoin } from '../utils/url-join';
-import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
-import { TokenUrlService } from './token-url.service';
-import { ValidationResult } from './validation-result';
-import { TokenHelperService } from './token-helper.service';
+import { TokenValidationService } from './core/token-validation.service';
+import { AuthConfigService } from './config/auth-config.service';
+import { urlJoin } from './utils/url-join';
+import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
+import { TokenUrlService } from './core/token-url.service';
+import { ValidationResult } from './core/validation-result';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
 
 // @dynamic
@@ -24,13 +22,11 @@ export class OidcCodeFlowClient {
     constructor(
         @Inject(WINDOW_REF)
         protected readonly window: Window,
-        protected readonly http: HttpClient,
         protected readonly config: AuthConfigService,
         protected readonly discoveryDocumentClient: OidcDiscoveryDocClient,
         protected readonly tokenStorage: TokenStorageService,
         protected readonly tokenValidation: TokenValidationService,
         protected readonly tokenUrl: TokenUrlService,
-        protected readonly tokenHelper: TokenHelperService,
         protected readonly tokenEndpointClient: TokenEndpointClientService,
     ) { }
 
@@ -126,11 +122,14 @@ export class OidcCodeFlowClient {
                     return combineLatest(localState$, discoveryDocument$, jwtKeys$)
                         .pipe(
                             map(([localState, discoveryDocument, jwtKeys]) => {
-                                const validationResult = this.tokenValidation.validateIdToken(result.idToken,
+                                const validationResult = this.tokenValidation.validateIdToken(
+                                    this.authConfig.clientId,
+                                    result.idToken,
                                     result.decodedIdToken,
                                     localState.nonce,
                                     discoveryDocument,
-                                    jwtKeys);
+                                    jwtKeys,
+                                    this.authConfig.tokenValidation);
 
                                 if (!validationResult.success) {
                                     throw validationResult;
