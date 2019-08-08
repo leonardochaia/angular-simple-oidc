@@ -1,8 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { RefreshTokenValidationService } from './refresh-token-validation.service';
 import { DecodedIdentityToken } from '../models';
-import { RefreshTokenValidationResult } from './refresh-token-validation-result';
-import { ValidationResult } from '../validation-result';
+import {
+    IssuerValidationError,
+    SubjectValidationError,
+    IssuedAtValidationError,
+    AudienceValidationError,
+    AuthTimeValidationError,
+    AuthorizedPartyValidationError
+} from './refresh-token-validation-errors';
 
 describe('RefreshTokenValidationService', () => {
     let refreshTokenValidation: RefreshTokenValidationService;
@@ -42,18 +48,17 @@ describe('RefreshTokenValidationService', () => {
             const newToken: DecodedIdentityToken = {
                 ...originalToken,
             };
-            const output = refreshTokenValidation.validateIssuer(originalToken, newToken);
-            expect(output.success).toBeTruthy();
+            expect(() => refreshTokenValidation.validateIssuer(originalToken, newToken))
+                .not.toThrow();
         });
 
-        it('should return error when issuers don\'t match', () => {
+        it('should throw error when issuers don\'t match', () => {
             const newToken: DecodedIdentityToken = {
                 ...originalToken,
                 iss: 'nomatch'
             };
-            const output = refreshTokenValidation.validateIssuer(originalToken, newToken);
-            expect(output.success).toBeFalsy();
-            expect(output.errorCode).toBe(RefreshTokenValidationResult.issValidationFailed().errorCode);
+            expect(() => refreshTokenValidation.validateIssuer(originalToken, newToken))
+                .toThrow(new IssuerValidationError(originalToken.iss, newToken.iss, null));
         });
     });
 
@@ -63,8 +68,8 @@ describe('RefreshTokenValidationService', () => {
             const newToken: DecodedIdentityToken = {
                 ...originalToken,
             };
-            const output = refreshTokenValidation.validateSubject(originalToken, newToken);
-            expect(output.success).toBeTruthy();
+            expect(() => refreshTokenValidation.validateSubject(originalToken, newToken))
+                .not.toThrow();
         });
 
         it('should return error when subjects don\'t match', () => {
@@ -72,9 +77,8 @@ describe('RefreshTokenValidationService', () => {
                 ...originalToken,
                 sub: 'nomatch'
             };
-            const output = refreshTokenValidation.validateSubject(originalToken, newToken);
-            expect(output.success).toBeFalsy();
-            expect(output.errorCode).toBe(RefreshTokenValidationResult.subValidationFailed().errorCode);
+            expect(() => refreshTokenValidation.validateSubject(originalToken, newToken))
+                .toThrow(new SubjectValidationError(originalToken.sub, newToken.sub, null));
         });
     });
 
@@ -84,18 +88,17 @@ describe('RefreshTokenValidationService', () => {
             const newToken: DecodedIdentityToken = {
                 ...originalToken,
             };
-            const output = refreshTokenValidation.validateIssuedAt(originalToken, newToken);
-            expect(output.success).toBeTruthy();
+            expect(() => refreshTokenValidation.validateIssuedAt(originalToken, newToken))
+                .not.toThrow();
         });
 
         it('should return error when iat don\'t match', () => {
             const newToken: DecodedIdentityToken = {
                 ...originalToken,
-                iat: 91919191
+                iat: originalToken.iat - 10000
             };
-            const output = refreshTokenValidation.validateIssuedAt(originalToken, newToken);
-            expect(output.success).toBeFalsy();
-            expect(output.errorCode).toBe(RefreshTokenValidationResult.iatValidationFailed().errorCode);
+            expect(() => refreshTokenValidation.validateIssuedAt(originalToken, newToken))
+                .toThrow(new IssuedAtValidationError(null));
         });
     });
 
@@ -105,8 +108,9 @@ describe('RefreshTokenValidationService', () => {
             const newToken: DecodedIdentityToken = {
                 ...originalToken,
             };
-            const output = refreshTokenValidation.validateAudience(originalToken, newToken);
-            expect(output.success).toBeTruthy();
+
+            expect(() => refreshTokenValidation.validateAudience(originalToken, newToken))
+                .not.toThrow();
         });
 
         it('should return error when aud don\'t match', () => {
@@ -114,29 +118,30 @@ describe('RefreshTokenValidationService', () => {
                 ...originalToken,
                 aud: 'nomatch'
             };
-            const output = refreshTokenValidation.validateAudience(originalToken, newToken);
-            expect(output.success).toBeFalsy();
-            expect(output.errorCode).toBe(RefreshTokenValidationResult.audValidationFailed().errorCode);
+
+            expect(() => refreshTokenValidation.validateAudience(originalToken, newToken))
+                .toThrow(new AudienceValidationError(null));
         });
     });
 
     describe('validateAuthTime', () => {
 
-        it('should return true when auth_time match', () => {
+        it('should not throw when auth_time match', () => {
             const newToken: DecodedIdentityToken = {
                 ...originalToken,
             };
-            const output = refreshTokenValidation.validateAuthTime(originalToken, newToken);
-            expect(output.success).toBeTruthy();
+            expect(() => refreshTokenValidation.validateAuthTime(originalToken, newToken))
+                .not.toThrow();
         });
 
-        it('should return true when auth_time is not present', () => {
+        it('should not throw when auth_time is not present', () => {
             const newToken: DecodedIdentityToken = {
                 ...originalToken,
                 auth_time: null
             };
-            const output = refreshTokenValidation.validateAuthTime(originalToken, newToken);
-            expect(output.success).toBeTruthy();
+
+            expect(() => refreshTokenValidation.validateAuthTime(originalToken, newToken))
+                .not.toThrow();
         });
 
         it('should return error when aud don\'t match', () => {
@@ -144,9 +149,9 @@ describe('RefreshTokenValidationService', () => {
                 ...originalToken,
                 auth_time: 919191919
             };
-            const output = refreshTokenValidation.validateAuthTime(originalToken, newToken);
-            expect(output.success).toBeFalsy();
-            expect(output.errorCode).toBe(RefreshTokenValidationResult.authTimeValidationFailed().errorCode);
+
+            expect(() => refreshTokenValidation.validateAuthTime(originalToken, newToken))
+                .toThrow(new AuthTimeValidationError(null));
         });
     });
 
@@ -156,8 +161,8 @@ describe('RefreshTokenValidationService', () => {
             const newToken: DecodedIdentityToken = {
                 ...originalToken,
             };
-            const output = refreshTokenValidation.validateAuthorizedParty(originalToken, newToken);
-            expect(output.success).toBeTruthy();
+            expect(() => refreshTokenValidation.validateAuthorizedParty(originalToken, newToken))
+                .not.toThrow();
         });
 
         it('should return error when azp don\'t match', () => {
@@ -165,9 +170,9 @@ describe('RefreshTokenValidationService', () => {
                 ...originalToken,
                 azp: 'nomatch'
             };
-            const output = refreshTokenValidation.validateAuthorizedParty(originalToken, newToken);
-            expect(output.success).toBeFalsy();
-            expect(output.errorCode).toBe(RefreshTokenValidationResult.azpValidationFailed().errorCode);
+
+            expect(() => refreshTokenValidation.validateAuthorizedParty(originalToken, newToken))
+                .toThrow(new AuthorizedPartyValidationError(null));
         });
     });
 
@@ -185,15 +190,16 @@ describe('RefreshTokenValidationService', () => {
 
             for (const validationFn of validatorFns) {
                 spyOn(refreshTokenValidation, validationFn)
-                    .and.returnValue(ValidationResult.noErrors);
+                    .and.returnValue();
             }
 
             const newToken: DecodedIdentityToken = {
                 ...originalToken,
-                azp: 'nomatch'
             };
-            const output = refreshTokenValidation.validateIdToken(originalToken, newToken);
-            expect(output.success).toBeTruthy();
+
+            expect(() => refreshTokenValidation.validateIdToken(originalToken, newToken))
+                .not.toThrow();
+
             for (const validationFn of validatorFns) {
                 expect(refreshTokenValidation[validationFn]).toHaveBeenCalled();
             }
