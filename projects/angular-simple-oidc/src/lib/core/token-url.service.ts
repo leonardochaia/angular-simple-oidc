@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { TokenCryptoService } from './token-crypto.service';
-import { validateObjectRequiredProps } from '../utils/validate-object-required-props';
+import { validateObjectRequiredProps } from './validate-object-required-props';
 import { RequiredParemetersMissingError } from './errors';
 
 @Injectable()
