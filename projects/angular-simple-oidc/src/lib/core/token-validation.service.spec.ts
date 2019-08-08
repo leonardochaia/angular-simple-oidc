@@ -2,16 +2,11 @@ import { TestBed, inject, async } from '@angular/core/testing';
 import { TokenHelperService } from './token-helper.service';
 import { TokenValidationService } from './token-validation.service';
 import { TokenCryptoService } from './token-crypto.service';
-import { AuthConfigService } from '../config/auth-config.service';
 import { DecodedIdentityToken, LocalState, TokenValidationConfig } from './models';
-import { AuthConfig } from '../config/models';
 import { JWTKeys } from './models';
 import { ValidationResult } from './validation-result';
+import { InvalidStateError, AuthorizationCallbackError, AuthorizationCallbackMissingParameterError } from './token-validation-errors';
 
-function spyOnGet<T>(obj: T, property: keyof T) {
-  Object.defineProperty(obj, property, { get: () => null });
-  return spyOnProperty(obj, property, 'get');
-}
 // https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
 
 describe('TokenValidationService', () => {
@@ -712,20 +707,20 @@ describe('TokenValidationService', () => {
   });
 
   describe('Validate authorization callback', () => {
-    it('returns no error when states matches', async(
+    it('doesn\'t throw when states matches', async(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const state = 'a';
           const localState = {
             state: 'a'
           } as LocalState;
-          const code = 'abc';
-          const output = tokenValidation.validateAuthorizeCallback(localState, state, code);
-          expect(output.success).toBeTruthy();
+
+          expect(() => tokenValidation.validateAuthorizeCallbackState(localState, state))
+            .not.toThrow();
         })
     ));
 
-    it('returns error when states do not match', async(
+    it('throws when states do not match', async(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const state = 'a';
@@ -733,34 +728,63 @@ describe('TokenValidationService', () => {
             state: 'abc'
           } as LocalState;
           const code = 'abc';
-          const output = tokenValidation.validateAuthorizeCallback(localState, state, code);
-          expect(output.errorCode).toBe(ValidationResult.stateValidationFailed().errorCode);
+
+          expect(() => tokenValidation.validateAuthorizeCallbackState(localState, state))
+            .toThrowError(InvalidStateError);
+        })
+    ));
+  });
+
+  describe('validateAuthorizeCallbackFormat', () => {
+    it('throws when an error is returned', async(
+      inject([TokenValidationService],
+        (tokenValidation: TokenValidationService) => {
+          const state = 'state';
+          const code = 'code';
+          const error = 'error';
+          const href = 'example.com';
+
+          expect(() => tokenValidation.validateAuthorizeCallbackFormat(code, state, error, href))
+            .toThrow(new AuthorizationCallbackError(error, null));
         })
     ));
 
-    it('returns error when no code', async(
+    it('throws when code is not present', async(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
-          const state = 'a';
-          const localState = {
-            state: 'a'
-          } as LocalState;
+          const state = 'state';
           const code = null;
-          const output = tokenValidation.validateAuthorizeCallback(localState, state, code);
-          expect(output.errorCode).toBe(ValidationResult.authorizeCallbackWithoutCode.errorCode);
+          const error = null;
+          const href = 'example.com';
+
+          expect(() => tokenValidation.validateAuthorizeCallbackFormat(code, state, error, href))
+            .toThrow(new AuthorizationCallbackMissingParameterError('code', null));
         })
     ));
 
-    it('returns error when no code', async(
+    it('throws when state is not present', async(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
-          const state = 'a';
-          const localState = {
-            state: 'a'
-          } as LocalState;
-          const code = '';
-          const output = tokenValidation.validateAuthorizeCallback(localState, state, code);
-          expect(output.errorCode).toBe(ValidationResult.authorizeCallbackWithoutCode.errorCode);
+          const state = null;
+          const code = 'code';
+          const error = null;
+          const href = 'example.com';
+
+          expect(() => tokenValidation.validateAuthorizeCallbackFormat(code, state, error, href))
+            .toThrow(new AuthorizationCallbackMissingParameterError('state', null));
+        })
+    ));
+
+    it('doesn\'t throw when is ok', async(
+      inject([TokenValidationService],
+        (tokenValidation: TokenValidationService) => {
+          const state = 'state';
+          const code = 'code';
+          const error = null;
+          const href = 'example.com';
+
+          expect(() => tokenValidation.validateAuthorizeCallbackFormat(code, state, error, href))
+            .not.toThrow();
         })
     ));
   });

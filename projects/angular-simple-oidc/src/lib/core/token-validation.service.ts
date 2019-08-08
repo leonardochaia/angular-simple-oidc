@@ -5,6 +5,11 @@ import { ValidationResult } from './validation-result';
 import { DecodedIdentityToken, LocalState, TokenValidationConfig } from './models';
 import { JWTKeys, DiscoveryDocument } from './models';
 import { runValidations } from './token-validations-runner';
+import {
+    InvalidStateError,
+    AuthorizationCallbackError,
+    AuthorizationCallbackMissingParameterError
+} from './token-validation-errors';
 
 /**
  * Implements Identity and Access tokens validations according to the
@@ -214,7 +219,7 @@ export class TokenValidationService {
     ): ValidationResult {
 
         if (config.disableIdTokenIATValidation) {
-            console.info('Token validation has been disabled by configuration');
+            console.info('Issued At validation has been disabled by configuration');
             return ValidationResult.noErrors;
         }
 
@@ -332,16 +337,37 @@ export class TokenValidationService {
      * Validates the local state against the
      * returned state from the IDP to make sure it matches
      */
-    public validateAuthorizeCallback(localState: LocalState, state: string, code: string) {
+    public validateAuthorizeCallbackState(localState: LocalState, state: string) {
         if (state !== localState.state) {
-            return ValidationResult.stateValidationFailed(`LocalState: ${localState.state}
-            ReturnedState: ${state}`);
+            throw new InvalidStateError({
+                localState,
+                returnedState: state,
+            });
+        }
+    }
+
+    public validateAuthorizeCallbackFormat(
+        code: string,
+        state: string,
+        error: string,
+        href: string) {
+
+        if (typeof error === 'string') {
+            throw new AuthorizationCallbackError(error, {
+                url: href,
+            });
         }
 
-        if (!code || !code.length) {
-            return ValidationResult.authorizeCallbackWithoutCode;
+        if (typeof code !== 'string') {
+            throw new AuthorizationCallbackMissingParameterError('code', {
+                url: href,
+            });
         }
 
-        return ValidationResult.noErrors;
+        if (typeof state !== 'string') {
+            throw new AuthorizationCallbackMissingParameterError('state', {
+                url: href,
+            });
+        }
     }
 }

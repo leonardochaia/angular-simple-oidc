@@ -18,4 +18,3 @@ export class RequiredParemetersMissingError extends SimpleOidcError {
         );
     }
 }
-

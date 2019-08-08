@@ -8,8 +8,8 @@ import { AuthConfigService } from './config/auth-config.service';
 import { urlJoin } from './utils/url-join';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
 import { TokenUrlService } from './core/token-url.service';
-import { ValidationResult } from './core/validation-result';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
+import { AuthorizationCallbackFormatError } from './core/token-validation-errors';
 
 // @dynamic
 @Injectable()
@@ -54,25 +54,25 @@ export class OidcCodeFlowClient {
     }
 
     public codeFlowCallback() {
-        const { code, state, error } = this.tokenUrl
-            .parseAuthorizeCallbackParamsFromUrl(this.window.location.href);
+        let code: string, state: string, error: string;
+        const href = this.window.location.href;
 
-        if (typeof error === 'string') {
-            return throwError(`Identity Provider returned an error after redirection: ${error}`);
+        try {
+            const result = this.tokenUrl.parseAuthorizeCallbackParamsFromUrl(href);
+            code = result.code;
+            state = result.state;
+            error = result.state;
+        } catch (error) {
+            throw new AuthorizationCallbackFormatError(error);
         }
-        if (typeof code !== 'string' || typeof state !== 'string') {
-            return throwError(`Window URL has invalid code or state`);
-        }
+
+        this.tokenValidation.validateAuthorizeCallbackFormat(code, state, error, href);
 
         return this.tokenStorage.currentState$
             .pipe(
                 take(1),
                 switchMap(localState => {
-                    const codeValidationResult = this.tokenValidation
-                        .validateAuthorizeCallback(localState, state, code);
-                    if (codeValidationResult !== ValidationResult.noErrors) {
-                        return throwError(codeValidationResult);
-                    }
+                    this.tokenValidation.validateAuthorizeCallbackState(localState, state);
 
                     console.info(`Obtained authorization code: ${code}`);
                     return this.tokenStorage.storeAuthorizationCode(code)

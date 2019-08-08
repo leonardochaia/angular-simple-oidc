@@ -134,6 +134,7 @@ export class TokenUrlService {
         if (!url || !url.length) {
             throw new RequiredParemetersMissingError(`url`, arguments);
         }
+
         const paramsError = new RequiredParemetersMissingError(`url must have params`, arguments);
 
         if (!url.includes('?')) {
