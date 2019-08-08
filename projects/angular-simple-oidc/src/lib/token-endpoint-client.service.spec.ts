@@ -1,13 +1,14 @@
 import { TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
 import { TokenHelperService } from './core/token-helper.service';
 import { TokenValidationService } from './core/token-validation.service';
 import { DiscoveryDocument } from './core/models';
 import { of, throwError } from 'rxjs';
 import { TokenRequestResult, DecodedIdentityToken } from './core/models';
-import { ValidationResult } from './core/validation-result';
+import { TokenEndpointError, TokenEndpointUnexpectedError } from './errors';
+import { IdentityTokenMalformedError } from './core/token-validation-errors';
 
 function spyOnGet<T>(obj: T, property: keyof T) {
     Object.defineProperty(obj, property, { get: () => null });
@@ -85,7 +86,7 @@ describe('TokenEndpointClientService', () => {
             })
         );
 
-        it('throws when an error is returned',
+        it('throws wrapped error when a known error is returned',
             fakeAsync(() => {
                 const tokenEndpoint = 'http://token-endpoint';
                 const payload = 'payload';
@@ -95,20 +96,39 @@ describe('TokenEndpointClientService', () => {
                     token_endpoint: tokenEndpoint
                 } as Partial<DiscoveryDocument>));
 
-                httpSpy.post.and.returnValue(of({
-                    error: error,
-                }));
+                httpSpy.post.and.returnValue(throwError({
+                    error: { error },
+                    status: 400
+                } as HttpErrorResponse));
 
                 expect(() => {
                     tokenEndpointClientService.call(payload)
-                        .subscribe(() => { });
+                        .subscribe();
 
                     flush();
-                }).toThrow({
-                    errorCode: error,
-                    message: error,
-                    success: false
-                } as ValidationResult);
+                }).toThrow(new TokenEndpointError(error, null));
+            })
+        );
+
+        it('throws wrapped error when an unknown error is returned',
+            fakeAsync(() => {
+                const tokenEndpoint = 'http://token-endpoint';
+                const payload = 'payload';
+
+                discoveryDocSpy.and.returnValue(of({
+                    token_endpoint: tokenEndpoint
+                } as Partial<DiscoveryDocument>));
+
+                httpSpy.post.and.returnValue(throwError({
+                    status: 500
+                } as HttpErrorResponse));
+
+                expect(() => {
+                    tokenEndpointClientService.call(payload)
+                        .subscribe();
+
+                    flush();
+                }).toThrow(new TokenEndpointUnexpectedError(null));
             })
         );
 
@@ -188,7 +208,7 @@ describe('TokenEndpointClientService', () => {
                 }));
 
                 tokenValidationSpy.validateIdTokenFormat
-                    .and.returnValue(ValidationResult.noErrors);
+                    .and.returnValue();
 
                 tokenHelperSpy.getPayloadFromToken
                     .and.returnValue(decodedIdToken);
@@ -209,7 +229,7 @@ describe('TokenEndpointClientService', () => {
                 const tokenEndpoint = 'http://token-endpoint';
                 const payload = 'payload';
                 const idToken = 'idToken';
-                const error = ValidationResult.idTokenInvalidNoDots(idToken, 0);
+                const error = new IdentityTokenMalformedError(null);
 
                 discoveryDocSpy.and.returnValue(of({
                     token_endpoint: tokenEndpoint
@@ -220,7 +240,9 @@ describe('TokenEndpointClientService', () => {
                 }));
 
                 tokenValidationSpy.validateIdTokenFormat
-                    .and.returnValue(error);
+                    .and.callFake(() => {
+                        throw error;
+                    });
                 expect(() => {
                     tokenEndpointClientService.call(payload)
                         .subscribe();

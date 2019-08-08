@@ -8,8 +8,10 @@ import { runValidations } from './token-validations-runner';
 import {
     InvalidStateError,
     AuthorizationCallbackError,
-    AuthorizationCallbackMissingParameterError
+    AuthorizationCallbackMissingParameterError,
+    IdentityTokenMalformedError
 } from './token-validation-errors';
+import { RequiredParemetersMissingError } from './errors';
 
 /**
  * Implements Identity and Access tokens validations according to the
@@ -320,17 +322,17 @@ export class TokenValidationService {
      */
     public validateIdTokenFormat(idToken: string) {
         if (!idToken || !idToken.length) {
-            return ValidationResult.idTokenInvalid(idToken);
+            throw new RequiredParemetersMissingError('idToken', null);
         }
 
         const expectedSliceAmount = 3;
         const slices = idToken.split('.');
 
         if (slices.length !== expectedSliceAmount) {
-            return ValidationResult.idTokenInvalidNoDots(idToken, expectedSliceAmount);
+            throw new IdentityTokenMalformedError({
+                idToken
+            });
         }
-
-        return ValidationResult.noErrors;
     }
 
     /**

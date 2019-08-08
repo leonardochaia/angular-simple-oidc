@@ -5,7 +5,13 @@ import { TokenCryptoService } from './token-crypto.service';
 import { DecodedIdentityToken, LocalState, TokenValidationConfig } from './models';
 import { JWTKeys } from './models';
 import { ValidationResult } from './validation-result';
-import { InvalidStateError, AuthorizationCallbackError, AuthorizationCallbackMissingParameterError } from './token-validation-errors';
+import {
+  InvalidStateError,
+  AuthorizationCallbackError,
+  AuthorizationCallbackMissingParameterError,
+  IdentityTokenMalformedError
+} from './token-validation-errors';
+import { RequiredParemetersMissingError } from './errors';
 
 // https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
 
@@ -664,8 +670,8 @@ describe('TokenValidationService', () => {
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const token = null;
-          const output = tokenValidation.validateIdTokenFormat(token);
-          expect(output.errorCode).toBe(ValidationResult.idTokenInvalid().errorCode);
+          expect(() => tokenValidation.validateIdTokenFormat(token))
+            .toThrow(new RequiredParemetersMissingError('idToken', null));
         })
     ));
 
@@ -673,8 +679,8 @@ describe('TokenValidationService', () => {
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const token = '';
-          const output = tokenValidation.validateIdTokenFormat(token);
-          expect(output.errorCode).toBe(ValidationResult.idTokenInvalid().errorCode);
+          expect(() => tokenValidation.validateIdTokenFormat(token))
+            .toThrow(new RequiredParemetersMissingError('idToken', null));
         })
     ));
 
@@ -682,8 +688,8 @@ describe('TokenValidationService', () => {
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const token = 'token';
-          const output = tokenValidation.validateIdTokenFormat(token);
-          expect(output.errorCode).toBe(ValidationResult.idTokenInvalidNoDots(null, null).errorCode);
+          expect(() => tokenValidation.validateIdTokenFormat(token))
+            .toThrow(new IdentityTokenMalformedError(null));
         })
     ));
 
@@ -691,8 +697,8 @@ describe('TokenValidationService', () => {
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const token = 'header.payload';
-          const output = tokenValidation.validateIdTokenFormat(token);
-          expect(output.errorCode).toBe(ValidationResult.idTokenInvalidNoDots(null, null).errorCode);
+          expect(() => tokenValidation.validateIdTokenFormat(token))
+            .toThrow(new IdentityTokenMalformedError(null));
         })
     ));
 
@@ -700,8 +706,8 @@ describe('TokenValidationService', () => {
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const token = 'header.payload.signature';
-          const output = tokenValidation.validateIdTokenFormat(token);
-          expect(output.success).toBeTruthy();
+          expect(() => tokenValidation.validateIdTokenFormat(token))
+            .not.toThrow();
         })
     ));
   });

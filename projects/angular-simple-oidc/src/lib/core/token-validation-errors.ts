@@ -2,6 +2,16 @@ import { SimpleOidcError } from './errors';
 
 export abstract class TokenValidationError extends SimpleOidcError { }
 
+export class IdentityTokenMalformedError extends TokenValidationError {
+    constructor(context: any) {
+        super(
+            'Identity token format invalid: it needs to have three dots. (header.payload.signature)',
+            'id-token-invalid-format',
+            context
+        );
+    }
+}
+
 export class InvalidStateError extends SimpleOidcError {
     constructor(context: any) {
         super(

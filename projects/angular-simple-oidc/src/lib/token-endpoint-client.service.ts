@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { switchMap, take, map } from 'rxjs/operators';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { switchMap, take, map, catchError } from 'rxjs/operators';
 import { TokenRequestResult, DecodedIdentityToken } from './core/models';
 import { TokenValidationService } from './core/token-validation.service';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
 import { TokenHelperService } from './core/token-helper.service';
-import { ValidationResult } from './core/validation-result';
+import { TokenEndpointError, TokenEndpointUnexpectedError } from './errors';
 
 interface TokenEndpointResponse {
     access_token?: string;
@@ -33,15 +33,15 @@ export class TokenEndpointClientService {
                 take(1),
                 switchMap(({ token_endpoint }) =>
                     this.http.post<TokenEndpointResponse>(token_endpoint, payload, { headers: headers })),
-                map(response => {
-                    if (response.error) {
-                        throw {
-                            success: false,
-                            // TODO: use messages from https://tools.ietf.org/html/rfc6749#section-5.2
-                            message: response.error,
-                            errorCode: response.error
-                        } as ValidationResult;
+                catchError((e: HttpErrorResponse) => {
+                    if (e.status === 400) {
+                        // https://tools.ietf.org/html/rfc6749#section-5.2
+                        throw new TokenEndpointError(e.error.error, e);
+                    } else {
+                        throw new TokenEndpointUnexpectedError(e);
                     }
+                }),
+                map(response => {
                     let expiresAt: Date;
                     if (response.expires_in) {
                         expiresAt = this.tokenHelper.getExpirationFromExpiresIn(response.expires_in);
@@ -49,10 +49,7 @@ export class TokenEndpointClientService {
 
                     let decodedToken: DecodedIdentityToken;
                     if (response.id_token) {
-                        const formatValidationResult = this.tokenValidation.validateIdTokenFormat(response.id_token);
-                        if (!formatValidationResult.success) {
-                            throw formatValidationResult;
-                        }
+                        this.tokenValidation.validateIdTokenFormat(response.id_token);
 
                         decodedToken = this.tokenHelper.getPayloadFromToken(response.id_token);
                     }
