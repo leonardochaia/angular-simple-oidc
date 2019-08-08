@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { of, throwError } from 'rxjs';
-import { switchMap, take, map, withLatestFrom } from 'rxjs/operators';
+import { switchMap, take, map, withLatestFrom, tap } from 'rxjs/operators';
 import { AuthConfigService } from './config/auth-config.service';
 import {
     TokenStorageService,
@@ -52,15 +51,9 @@ export class RefreshTokenClient {
                     throw validationResult;
                 }
             }),
-            switchMap(result => {
+            tap(result => {
                 console.info('Validating access token..');
-                const validation = this.tokenValidation
-                    .validateAccessToken(result.accessToken, result.decodedIdToken.at_hash);
-                if (!validation.success) {
-                    return throwError(validation);
-                }
-
-                return of(result);
+                this.tokenValidation.validateAccessToken(result.accessToken, result.decodedIdToken.at_hash);
             }),
             switchMap(result => {
                 console.info('Storing tokens..');

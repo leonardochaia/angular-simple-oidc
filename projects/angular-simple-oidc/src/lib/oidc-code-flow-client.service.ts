@@ -1,7 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
 import { WINDOW_REF } from './constants';
-import { of, throwError, combineLatest } from 'rxjs';
-import { tap, switchMap, take, map } from 'rxjs/operators';
+import { tap, switchMap, take, map, withLatestFrom } from 'rxjs/operators';
 import { TokenStorageService } from './token-storage.service';
 import { TokenValidationService } from './core/token-validation.service';
 import { AuthConfigService } from './config/auth-config.service';
@@ -61,7 +60,7 @@ export class OidcCodeFlowClient {
             const result = this.tokenUrl.parseAuthorizeCallbackParamsFromUrl(href);
             code = result.code;
             state = result.state;
-            error = result.state;
+            error = result.error;
         } catch (error) {
             throw new AuthorizationCallbackFormatError(error);
         }
@@ -102,58 +101,42 @@ export class OidcCodeFlowClient {
             codeVerifier: codeVerifier
         });
 
+        // For validations, we need the local stored state
+        const localState$ = this.tokenStorage.currentState$
+            .pipe(take(1));
+
+        // The discovery document for issuer
+        const discoveryDocument$ = this.discoveryDocumentClient.current$
+            .pipe(take(1));
+
+        // JWT Keys to validate id token signature
+        const jwtKeys$ = this.discoveryDocumentClient.jwtKeys$
+            .pipe(take(1));
+
         return this.tokenEndpointClient.call(payload)
             .pipe(
-                switchMap(result => {
+                withLatestFrom(localState$, discoveryDocument$, jwtKeys$),
+                tap(([result, localState, discoveryDocument, jwtKeys]) => {
                     console.info('Validating identity token..');
-
-                    // For validations, we need the local stored state
-                    const localState$ = this.tokenStorage.currentState$
-                        .pipe(take(1));
-
-                    // The discovery document for issuer
-                    const discoveryDocument$ = this.discoveryDocumentClient.current$
-                        .pipe(take(1));
-
-                    // JWT Keys to validate id token signature
-                    const jwtKeys$ = this.discoveryDocumentClient.jwtKeys$
-                        .pipe(take(1));
-
-                    return combineLatest(localState$, discoveryDocument$, jwtKeys$)
-                        .pipe(
-                            map(([localState, discoveryDocument, jwtKeys]) => {
-                                const validationResult = this.tokenValidation.validateIdToken(
-                                    this.authConfig.clientId,
-                                    result.idToken,
-                                    result.decodedIdToken,
-                                    localState.nonce,
-                                    discoveryDocument,
-                                    jwtKeys,
-                                    this.authConfig.tokenValidation);
-
-                                if (!validationResult.success) {
-                                    throw validationResult;
-                                }
-
-                                return result;
-                            }));
-
+                    this.tokenValidation.validateIdToken(
+                        this.authConfig.clientId,
+                        result.idToken,
+                        result.decodedIdToken,
+                        localState.nonce,
+                        discoveryDocument,
+                        jwtKeys,
+                        this.authConfig.tokenValidation);
                 }),
-                switchMap(result => {
+                tap(([result]) => {
                     console.info('Validating access token..');
-                    const validation = this.tokenValidation
-                        .validateAccessToken(result.accessToken, result.decodedIdToken.at_hash);
-                    if (!validation.success) {
-                        return throwError(validation);
-                    }
-
-                    return of(result);
+                    this.tokenValidation.validateAccessToken(result.accessToken,
+                        result.decodedIdToken.at_hash);
                 }),
                 tap(() => {
                     console.info('Clearing pre-authorize state..');
                     this.tokenStorage.clearPreAuthorizationState();
                 }),
-                switchMap(result => {
+                switchMap(([result]) => {
                     console.info('Storing tokens..');
                     return this.tokenStorage.storeTokens(result)
                         .pipe(map(() => result));
