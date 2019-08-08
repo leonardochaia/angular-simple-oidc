@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { switchMap, take, map, catchError } from 'rxjs/operators';
+import { switchMap, take, map, catchError, tap } from 'rxjs/operators';
 import { TokenRequestResult, DecodedIdentityToken } from './core/models';
 import { TokenValidationService } from './core/token-validation.service';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
 import { TokenHelperService } from './core/token-helper.service';
 import { TokenEndpointError, TokenEndpointUnexpectedError } from './errors';
+import { SimpleOidcError } from './core/errors';
 
 interface TokenEndpointResponse {
     access_token?: string;
@@ -33,12 +34,18 @@ export class TokenEndpointClientService {
                 take(1),
                 switchMap(({ token_endpoint }) =>
                     this.http.post<TokenEndpointResponse>(token_endpoint, payload, { headers: headers })),
-                catchError((e: HttpErrorResponse) => {
-                    if (e.status === 400) {
-                        // https://tools.ietf.org/html/rfc6749#section-5.2
-                        throw new TokenEndpointError(e.error.error, e);
-                    } else {
-                        throw new TokenEndpointUnexpectedError(e);
+                tap({
+                    error: (e: HttpErrorResponse) => {
+                        if (e instanceof SimpleOidcError) {
+                            return;
+                        }
+
+                        if (e.status === 400) {
+                            // https://tools.ietf.org/html/rfc6749#section-5.2
+                            throw new TokenEndpointError(e.error.error, e);
+                        } else {
+                            throw new TokenEndpointUnexpectedError(e);
+                        }
                     }
                 }),
                 map(response => {
