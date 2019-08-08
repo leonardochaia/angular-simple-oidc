@@ -16,12 +16,12 @@ export class OidcDiscoveryDocClient {
     }
 
     public readonly current$ = this.requestDiscoveryDocument()
-        .pipe(shareReplay({ refCount: true, bufferSize: 1 }));
+        .pipe(shareReplay());
 
     public readonly jwtKeys$ = this.current$
         .pipe(
             switchMap(doc => this.requestJWTKeys(doc)),
-            shareReplay({ refCount: true, bufferSize: 1 })
+            shareReplay()
         );
 
     constructor(
