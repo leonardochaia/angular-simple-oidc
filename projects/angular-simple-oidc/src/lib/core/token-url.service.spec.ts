@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { TokenUrlService } from './token-url.service';
 import { TokenCryptoService } from './token-crypto.service';
+import { RequiredParemetersMissingError } from './errors';
 
 describe('TokenUrlService', () => {
   let tokenCryptoSpy: jasmine.SpyObj<TokenCryptoService>;
@@ -33,20 +34,20 @@ describe('TokenUrlService', () => {
     it('throw if required url is missing', () => {
       expect(() => {
         tokenUrl.createAuthorizeUrl(null, null);
-      }).toThrowError(/authorizeEndpointUrl(.*)required/);
+      }).toThrow(new RequiredParemetersMissingError(`authorizeEndpointUrl`, null));
     });
 
     it('throw if required params are missing', () => {
       expect(() => {
         tokenUrl.createAuthorizeUrl('http://example.com', null);
-      }).toThrowError(/params(.*)required/);
+      }).toThrow(new RequiredParemetersMissingError(`params`, null));
     });
 
     it('throw if required params are missing', () => {
       expect(() => {
         tokenUrl.createAuthorizeUrl('http://example.com', {
         } as any);
-      }).toThrowError(/clientId(.*)required/);
+      }).toThrow(new RequiredParemetersMissingError(`clientId`, null));
     });
 
     it('uses tokenCrypto to obtain state', () => {
@@ -91,25 +92,25 @@ describe('TokenUrlService', () => {
     it('throws if no url is provided', () => {
       const url = '';
       expect(() => tokenUrl.parseAuthorizeCallbackParamsFromUrl(url))
-        .toThrowError(/url(.*)required/);
+        .toThrow(new RequiredParemetersMissingError(`url`, null));
     });
 
     it('throws if no url is provided', () => {
       const url = null;
       expect(() => tokenUrl.parseAuthorizeCallbackParamsFromUrl(url))
-        .toThrowError(/url(.*)required/);
+        .toThrow(new RequiredParemetersMissingError(`url`, null));
     });
 
     it('throws if url has no params', () => {
       const url = 'http://example.com';
       expect(() => tokenUrl.parseAuthorizeCallbackParamsFromUrl(url))
-        .toThrowError(/params(.*)/);
+        .toThrow(new RequiredParemetersMissingError(`url must have params`, null));
     });
 
     it('throws if url has no params', () => {
       const url = 'http://example.com?';
       expect(() => tokenUrl.parseAuthorizeCallbackParamsFromUrl(url))
-        .toThrowError(/params(.*)/);
+        .toThrow(new RequiredParemetersMissingError(`url must have params`, null));
     });
 
     it('parses params correctly', () => {

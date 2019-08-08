@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { TokenCryptoService } from './token-crypto.service';
 import { validateObjectRequiredProps } from '../utils/validate-object-required-props';
+import { RequiredParemetersMissingError } from './errors';
 
 @Injectable()
 export class TokenUrlService {
@@ -88,11 +89,11 @@ export class TokenUrlService {
         }) {
 
         if (!authorizeEndpointUrl || !authorizeEndpointUrl.length) {
-            throw new Error(`authorizeEndpointUrl is required`);
+            throw new RequiredParemetersMissingError(`authorizeEndpointUrl`, arguments);
         }
 
         if (!params) {
-            throw new Error(`params are required`);
+            throw new RequiredParemetersMissingError(`params`, arguments);
         }
 
         validateObjectRequiredProps(params, ['clientId', 'redirectUri', 'scope', 'responseType']);
@@ -131,9 +132,9 @@ export class TokenUrlService {
 
     public parseAuthorizeCallbackParamsFromUrl(url: string) {
         if (!url || !url.length) {
-            throw new Error(`url is required`);
+            throw new RequiredParemetersMissingError(`url`, arguments);
         }
-        const paramsError = new Error(`url has no params`);
+        const paramsError = new RequiredParemetersMissingError(`url must have params`, arguments);
 
         if (!url.includes('?')) {
             throw paramsError;

@@ -8,3 +8,14 @@ export class SimpleOidcError extends Error {
         this.name = code;
     }
 }
+
+export class RequiredParemetersMissingError extends SimpleOidcError {
+    constructor(paramName: string, context: any) {
+        super(
+            `Expected a valid value in provided parameter: ${paramName}`,
+            'required-param-missing',
+            context
+        );
+    }
+}
+
