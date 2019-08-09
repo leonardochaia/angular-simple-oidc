@@ -1,10 +1,16 @@
 import { SimpleOidcError } from '../core/errors';
 
-export interface SimpleOidcEvent {
-    readonly type: string;
+export abstract class SimpleOidcEvent { }
+
+export class SimpleOidcErrorEvent {
+    constructor(public readonly error: SimpleOidcError) { }
 }
 
-export class SimpleOidcErrorEvent implements SimpleOidcEvent {
-    public readonly type = 'Error Ocurred';
-    constructor(public readonly error: SimpleOidcError) { }
+export class SimpleOidcInfoEvent<TPayload = any> extends SimpleOidcEvent {
+    constructor(
+        public readonly message: string,
+        public readonly payload?: TPayload
+    ) {
+        super();
+    }
 }

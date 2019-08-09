@@ -14,8 +14,7 @@ import { HomeComponent } from './home/home.component';
     AngularSimpleOidcModule.forRoot({
       clientId: 'example.client',
       clientSecret: 'myDummySecret',
-      openIDProviderUrl: 'http://localhost:420',
-      scope: "openid profile",
+      scope: 'openid profile offline_access',
     }),
 
     AppRoutingModule,

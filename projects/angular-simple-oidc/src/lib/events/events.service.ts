@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { SimpleOidcEvent, SimpleOidcErrorEvent } from './models';
 import { ReplaySubject } from 'rxjs';
 import { SimpleOidcError } from '../core/errors';
+import { filter, map } from 'rxjs/operators';
 
 @Injectable({
     providedIn: 'root'
@@ -9,13 +10,21 @@ import { SimpleOidcError } from '../core/errors';
 export class EventsService {
 
     public get events$() {
-        return this.subject.asObservable();
+        return this.eventSubject.asObservable();
     }
 
-    protected readonly subject = new ReplaySubject<SimpleOidcEvent>();
+    public get errors$() {
+        return this.events$
+            .pipe(
+                filter(e => e instanceof SimpleOidcErrorEvent),
+                map(e => e as SimpleOidcErrorEvent)
+            );
+    }
+
+    protected readonly eventSubject = new ReplaySubject<SimpleOidcEvent>();
 
     public dispatch<TEvent extends SimpleOidcEvent>(ev: TEvent) {
-        this.subject.next(ev);
+        this.eventSubject.next(ev);
     }
 
     public dispatchError(e: SimpleOidcError) {

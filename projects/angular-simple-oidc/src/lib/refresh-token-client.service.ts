@@ -9,6 +9,8 @@ import {
 import { TokenEndpointClientService } from './token-endpoint-client.service';
 import { RefreshTokenValidationService } from './core/refresh-token/refresh-token-validation.service';
 import { TokenValidationService } from './core/token-validation.service';
+import { EventsService } from './events/events.service';
+import { SimpleOidcInfoEvent } from './events/models';
 
 @Injectable()
 export class RefreshTokenClient {
@@ -26,6 +28,7 @@ export class RefreshTokenClient {
         protected readonly tokenEndpointClient: TokenEndpointClientService,
         protected readonly refreshTokenValidation: RefreshTokenValidationService,
         protected readonly tokenValidation: TokenValidationService,
+        protected readonly events: EventsService,
     ) { }
 
     public requestTokenWithRefreshCode() {
@@ -37,20 +40,28 @@ export class RefreshTokenClient {
                     clientSecret: this.authConfig.clientSecret,
                     refreshToken: localState.refreshToken
                 });
+
+                this.events.dispatch(new SimpleOidcInfoEvent(`Refreshing token using refresh code`,
+                    { payload, refreshToken: localState.refreshToken }));
+
                 return this.tokenEndpointClient.call(payload);
             }),
             withLatestFrom(this.tokenStorage.currentState$),
             tap(([result, localState]) => {
-                console.info('Validating identity token..');
                 const originalToken = this.tokenHelper.getPayloadFromToken(localState.originalIdentityToken);
+
+                this.events.dispatch(new SimpleOidcInfoEvent(`Validating new Identity Token against original`,
+                    { result, originalToken }));
+
                 this.refreshTokenValidation.validateIdToken(originalToken, result.decodedIdToken);
             }),
             tap(([result]) => {
-                console.info('Validating access token..');
+                this.events.dispatch(new SimpleOidcInfoEvent(`Validating access token against at_hash`,
+                    { accessToken: result.accessToken, hash: result.decodedIdToken.at_hash }));
                 this.tokenValidation.validateAccessToken(result.accessToken, result.decodedIdToken.at_hash);
             }),
             switchMap(([result]) => {
-                console.info('Storing tokens..');
+                this.events.dispatch(new SimpleOidcInfoEvent(`Storing new tokens..`, result));
                 return this.tokenStorage.storeTokens(result)
                     .pipe(map(() => result));
             })

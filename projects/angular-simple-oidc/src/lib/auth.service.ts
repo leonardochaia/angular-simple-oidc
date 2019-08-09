@@ -51,6 +51,10 @@ export class AuthService {
         return this.events.events$;
     }
 
+    public get errors$() {
+        return this.events.errors$;
+    }
+
     constructor(
         protected readonly oidcClient: OidcCodeFlowClient,
         protected readonly tokenHelper: TokenHelperService,

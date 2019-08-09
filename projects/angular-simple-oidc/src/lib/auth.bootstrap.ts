@@ -17,18 +17,19 @@ export function simpleOidcInitializer(
 
     if (config.configuration.enableAuthorizationCallbackAppInitializer
       && window.location.pathname.includes(config.configuration.tokenCallbackRoute)) {
-      console.info('Attempting token callback..');
+
       // Will do a callback, if the url has a code and state parameter.
       return oidcCodeFlowClient
         .codeFlowCallback()
         .pipe(catchError(e => {
 
+          // make sure this errors get logged.
           console.error('Callback failed in APP_INITIALIZER');
           console.error(e);
 
           events.dispatchError(e);
 
-          // Do not prevent bootstrapping in order to be able to handle errors gracefully
+          // Do not prevent bootstrapping in order to be able to handle errors gracefully.
           return of();
         }))
         .toPromise();

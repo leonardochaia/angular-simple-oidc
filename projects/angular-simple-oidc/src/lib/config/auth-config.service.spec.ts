@@ -50,7 +50,7 @@ describe('Auth Configuration Service', () => {
 
   it('should handle invalid clientId gracefully', () => {
     expect(() => {
-      console.log(configureService({} as any).configuration);
+      configureService({} as any).configuration;
     }).toThrowError(/clientId(.*)is required/);
   });
 
