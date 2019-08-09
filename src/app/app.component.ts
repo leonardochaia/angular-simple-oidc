@@ -1,4 +1,9 @@
 import { Component } from '@angular/core';
+import { AuthService } from 'angular-simple-oidc';
+import { pipe } from 'rxjs';
+import { filter } from 'rxjs/operators';
+import { SimpleOidcErrorEvent } from 'angular-simple-oidc/lib/events/models';
+import { SimpleOidcError } from 'angular-simple-oidc/lib/core/errors';
 
 @Component({
   selector: 'soidc-root',
@@ -6,5 +11,16 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'angular-simple-oidc';
+
+  public oidcErrors: SimpleOidcError[] = [];
+
+  constructor(readonly auth: AuthService) {
+    auth.events$
+      .pipe(filter(e => e instanceof SimpleOidcErrorEvent))
+      .subscribe((e: SimpleOidcErrorEvent) => {
+
+        console.log(e);
+        this.oidcErrors.push(e.error);
+      });
+  }
 }

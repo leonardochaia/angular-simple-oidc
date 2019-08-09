@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { TokenStorageService } from './token-storage.service';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { OidcCodeFlowClient } from './oidc-code-flow-client.service';
 import { TokenHelperService } from './core/token-helper.service';
 import { RefreshTokenClient } from './refresh-token-client.service';
+import { EventsService } from './events/events.service';
 
 @Injectable()
 export class AuthService {
@@ -46,18 +47,25 @@ export class AuthService {
             .pipe(map(s => s.decodedIdentityToken));
     }
 
+    public get events$() {
+        return this.events.events$;
+    }
+
     constructor(
         protected readonly oidcClient: OidcCodeFlowClient,
         protected readonly tokenHelper: TokenHelperService,
         protected readonly tokenStorage: TokenStorageService,
         protected readonly refreshTokenClient: RefreshTokenClient,
+        protected readonly events: EventsService,
     ) { }
 
     public startCodeFlow() {
-        return this.oidcClient.startCodeFlow();
+        return this.oidcClient.startCodeFlow()
+            .pipe(tap({ error: e => this.events.dispatchError(e) }));
     }
 
     public refreshAccesstoken() {
-        return this.refreshTokenClient.requestTokenWithRefreshCode();
+        return this.refreshTokenClient.requestTokenWithRefreshCode()
+            .pipe(tap({ error: e => this.events.dispatchError(e) }));
     }
 }
