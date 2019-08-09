@@ -1,10 +1,28 @@
 import { Injectable } from '@angular/core';
 import { TokenHelperService } from './token-helper.service';
 import { TokenCryptoService } from './token-crypto.service';
-import { ValidationResult } from './validation-result';
 import { DecodedIdentityToken, LocalState, TokenValidationConfig } from './models';
 import { JWTKeys, DiscoveryDocument } from './models';
-import { runValidations } from './token-validations-runner';
+import {
+    InvalidStateError,
+    AuthorizationCallbackError,
+    AuthorizationCallbackMissingParameterError,
+    IdentityTokenMalformedError,
+    JWTKeysMissingError,
+    SignatureAlgorithmNotSupportedError,
+    JWTKeysInvalidError,
+    InvalidSignatureError,
+    InvalidNonceError,
+    ClaimRequiredError,
+    ClaimTypeInvalidError,
+    DateClaimInvalidError,
+    IssuedAtValidationFailedError,
+    IssuerValidationFailedError,
+    AudienceValidationFailedError,
+    TokenExpiredError,
+    AccessTokenHashValidationFailedError
+} from './token-validation-errors';
+import { RequiredParemetersMissingError } from './errors';
 
 /**
  * Implements Identity and Access tokens validations according to the
@@ -30,30 +48,27 @@ export class TokenValidationService {
 
         // Apply all validation as defined on
         // https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
-        const validations: (() => ValidationResult)[] = [
-            () => this.validateIdTokenSignature(idToken, jwtKeys),
-            () => this.validateIdTokenNonce(decodedIdToken, nonce),
-            () => this.validateIdTokenRequiredFields(decodedIdToken),
-            () => this.validateIdTokenIssuedAt(decodedIdToken, tokenValidationConfig),
-            () => this.validateIdTokenIssuer(decodedIdToken, discoveryDocument.issuer),
-            () => this.validateIdTokenAud(decodedIdToken, thisClientId),
-            () => this.validateIdTokenExpiration(decodedIdToken),
-        ];
 
-        return runValidations(validations);
+        this.validateIdTokenSignature(idToken, jwtKeys);
+        this.validateIdTokenNonce(decodedIdToken, nonce);
+        this.validateIdTokenRequiredFields(decodedIdToken);
+        this.validateIdTokenIssuedAt(decodedIdToken, tokenValidationConfig);
+        this.validateIdTokenIssuer(decodedIdToken, discoveryDocument.issuer);
+        this.validateIdTokenAud(decodedIdToken, thisClientId);
+        this.validateIdTokenExpiration(decodedIdToken);
     }
 
     /**
     * The Issuer Identifier for the OpenID Provider (which is typically obtained during Discovery)
     * MUST exactly match the value of the iss (issuer) Claim.
     */
-    public validateIdTokenIssuer(dataIdToken: DecodedIdentityToken, discoveryDocumentIssuer: string): ValidationResult {
-        if (dataIdToken.iss !== discoveryDocumentIssuer) {
-            return ValidationResult.issValidationFailed(`IdentityToken Issuer: ${dataIdToken.iss}
-            DiscoveryDocument Issuer: ${discoveryDocumentIssuer}`);
+    public validateIdTokenIssuer(idToken: DecodedIdentityToken, discoveryDocumentIssuer: string) {
+        if (idToken.iss !== discoveryDocumentIssuer) {
+            throw new IssuerValidationFailedError(idToken.iss, discoveryDocumentIssuer, {
+                idToken,
+                discoveryDocumentIssuer
+            });
         }
-
-        return ValidationResult.noErrors;
     }
 
     /**
@@ -65,21 +80,20 @@ export class TokenValidationService {
      * The value of at_hash in the ID Token MUST match the value produced in the previous step
      * if at_hash is present in the ID Token
     */
-    public validateAccessToken(accessToken: string, idTokenAtHash: string): ValidationResult {
+    public validateAccessToken(accessToken: string, idTokenAtHash: string) {
         // The at_hash is optional for the code flow
         if (!idTokenAtHash) {
             console.info(`No "at_hash" in Identity Token: Skipping access token validation.`);
-            return ValidationResult.noErrors;
+            return;
         }
 
         const accessTokenHash = this.tokenCrypto.sha256b64First128Bits(accessToken);
-        const valid = idTokenAtHash === accessTokenHash;
-
-        if (valid) {
-            return ValidationResult.noErrors;
-        } else {
-            return ValidationResult.atHashValidationFailed(`at_hash: ${idTokenAtHash}
-            Local: ${accessTokenHash}`);
+        if (idTokenAtHash !== accessTokenHash) {
+            throw new AccessTokenHashValidationFailedError({
+                accessToken,
+                idTokenAtHash,
+                calculatedHash: accessTokenHash
+            });
         }
     }
 
@@ -89,21 +103,19 @@ export class TokenValidationService {
     * The ID Token MUST be rejected if the ID Token does not list the Client as a valid audience,
     * or if it contains additional audiences not trusted by the Client
     */
-    public validateIdTokenAud(
-        dataIdToken: DecodedIdentityToken,
-        thisClientId: string): ValidationResult {
-        let aud = dataIdToken.aud;
+    public validateIdTokenAud(idToken: DecodedIdentityToken, thisClientId: string) {
+        let aud = idToken.aud;
         if (!Array.isArray(aud)) {
             aud = [aud];
         }
 
         const valid = aud.includes(thisClientId);
-        if (valid) {
-            return ValidationResult.noErrors;
-        } else {
-            return ValidationResult.audValidationFailed(`
-            IdentityToken Audience: ${JSON.stringify(dataIdToken.aud)}
-            ClientId: ${thisClientId}`);
+        if (!valid) {
+            throw new AudienceValidationFailedError(aud.join(','), thisClientId, {
+                idToken,
+                thisClientId,
+                aud
+            });
         }
     }
 
@@ -115,27 +127,36 @@ export class TokenValidationService {
      * Validation of tokens using other signing algorithms is described in the
      * OpenID Connect Core 1.0 specification.
      */
-    public validateIdTokenSignature(idToken: string, jwtkeys: JWTKeys): ValidationResult {
+    public validateIdTokenSignature(idToken: string, jwtKeys: JWTKeys) {
 
-        if (!jwtkeys || !jwtkeys.keys || !jwtkeys.keys.length) {
-            return ValidationResult.missingJWTKeys;
+        if (!jwtKeys || !jwtKeys.keys || !jwtKeys.keys.length) {
+            throw new JWTKeysMissingError({
+                idToken,
+                jwtKeys
+            });
         }
 
         const header = this.tokenHelper.getHeaderFromToken(idToken);
-        if (!header) {
-            return ValidationResult.failedToObtainTokenHeader;
-        }
 
         if (header.alg !== 'RS256') {
-            return ValidationResult.onlyRSASupported;
+            throw new SignatureAlgorithmNotSupportedError({
+                idToken,
+                jwtKeys,
+                header,
+            });
         }
 
         // Filter keys according to kty and use
-        let keysToTry = jwtkeys.keys
+        let keysToTry = jwtKeys.keys
             .filter(k => k.kty === 'RSA' && k.use === 'sig');
 
         if (!keysToTry.length) {
-            return ValidationResult.invalidJWTKeys;
+            throw new JWTKeysInvalidError({
+                idToken,
+                jwtKeys,
+                header,
+                keysToTry
+            });
         }
 
         // Token header may have a 'kid' claim (key id)
@@ -160,46 +181,56 @@ export class TokenValidationService {
             }
         }
 
-        // Validate each key breaking as soon as one suceeds
+        // Validate each key returning as soon as one suceeds
         for (const key of keysToTry) {
             if (this.tokenCrypto.verifySignature(key, idToken)) {
                 if (kid && kid !== key.kid) {
                     console.info(`Identity token's header contained 'kid' ${kid}
                     but key signature was validated using key ${key.kid}`);
                 }
-                return ValidationResult.noErrors;
+                return;
             }
         }
 
-        return ValidationResult.incorrectSignature;
+        throw new InvalidSignatureError({
+            idToken,
+            jwtKeys,
+            header,
+            keysToTry,
+            kid
+        });
     }
 
     /**
      * The current time MUST be before the time represented by the exp Claim
      * (possibly allowing for some small leeway to account for clock skew)
      */
-    public validateIdTokenExpiration(idToken: DecodedIdentityToken, offsetSeconds?: number): ValidationResult {
+    public validateIdTokenExpiration(idToken: DecodedIdentityToken, offsetSeconds?: number) {
 
-        const numberOutput = this.validateTokenNumericClaim(idToken, 'exp');
-        if (!numberOutput.success) {
-            return numberOutput;
-        }
+        this.validateTokenNumericClaim(idToken, 'exp');
 
         const tokenExpirationDate = this.tokenHelper.convertTokenClaimToDate(idToken.exp);
         if (!tokenExpirationDate) {
-            return ValidationResult.claimDateInvalid('exp');
+            throw new DateClaimInvalidError('exp', {
+                idToken,
+                offsetSeconds,
+                parsedDate: tokenExpirationDate
+            });
         }
 
         offsetSeconds = offsetSeconds || 0;
-        const tokenExpirationValue = tokenExpirationDate.valueOf();
-        const nowWithOffset = new Date().valueOf() - offsetSeconds * 1000;
-        const tokenNotExpired = tokenExpirationValue > nowWithOffset;
-        if (tokenNotExpired) {
-            return ValidationResult.noErrors;
-        } else {
-            return ValidationResult.tokenExpired(`${tokenExpirationDate} (${idToken.exp}
-            Max: ${new Date(nowWithOffset)}
-            ${tokenExpirationValue} > ${nowWithOffset}`);
+        const tokenExpirationMs = tokenExpirationDate.valueOf();
+        const maxDateMs = new Date().valueOf() - offsetSeconds * 1000;
+        const tokenNotExpired = tokenExpirationMs > maxDateMs;
+        if (!tokenNotExpired) {
+            throw new TokenExpiredError(tokenExpirationDate, {
+                idToken,
+                offsetSeconds,
+                tokenExpirationDate,
+                tokenExpirationMs,
+                maxDateMs,
+                maxDate: new Date(maxDateMs)
+            });
         }
     }
 
@@ -208,33 +239,34 @@ export class TokenValidationService {
     * limiting the amount of time that nonces need to be stored to prevent attacks.
     * The acceptable range is Client specific.
     */
-    public validateIdTokenIssuedAt(
-        idToken: DecodedIdentityToken,
-        config: TokenValidationConfig = {}
-    ): ValidationResult {
+    public validateIdTokenIssuedAt(idToken: DecodedIdentityToken, config: TokenValidationConfig = {}) {
 
         if (config.disableIdTokenIATValidation) {
-            console.info('Token validation has been disabled by configuration');
-            return ValidationResult.noErrors;
+            console.info('Issued At validation has been disabled by configuration');
+            return;
         }
 
-        const numberOutput = this.validateTokenNumericClaim(idToken, 'iat');
-        if (!numberOutput.success) {
-            return numberOutput;
-        }
+        this.validateTokenNumericClaim(idToken, 'iat');
 
         const idTokenIATDate = this.tokenHelper.convertTokenClaimToDate(idToken.iat);
         if (!idTokenIATDate) {
-            return ValidationResult.claimDateInvalid('iat');
+            throw new DateClaimInvalidError('iat', {
+                idToken,
+                config,
+                parsedDate: idTokenIATDate
+            });
         }
 
-        const maxIATOffsetAllowed = config.idTokenIATOffsetAllowed || 5;
-        const valid = new Date().valueOf() - idTokenIATDate.valueOf() < maxIATOffsetAllowed * 1000;
-        if (valid) {
-            return ValidationResult.noErrors;
-        } else {
-            return ValidationResult.iatValidationFailed(`iat < offset:
-            ${new Date().valueOf() - idTokenIATDate.valueOf()} < ${maxIATOffsetAllowed * 1000}`);
+        const maxOffsetInMs = (config.idTokenIATOffsetAllowed || 5) * 1000;
+        const now = new Date().valueOf();
+        const valid = (now - idTokenIATDate.valueOf()) < maxOffsetInMs;
+        if (!valid) {
+            throw new IssuedAtValidationFailedError(maxOffsetInMs / 1000, {
+                idToken,
+                config,
+                iatDiff: now - idTokenIATDate.valueOf(),
+                maxOffsetInMs,
+            });
         }
     }
 
@@ -244,13 +276,14 @@ export class TokenValidationService {
     * The Client SHOULD check the nonce value for replay attacks.
     * The precise method for detecting replay attacks is Client specific.
     */
-    public validateIdTokenNonce(idToken: DecodedIdentityToken, localNonce: any): ValidationResult {
+    public validateIdTokenNonce(idToken: DecodedIdentityToken, localNonce: string) {
         if (idToken.nonce !== localNonce) {
-            return ValidationResult.nonceValidationFailed(`LocalNonce: ${localNonce}
-            ReturnedNonce: ${idToken.nonce}`);
+            throw new InvalidNonceError({
+                localNonce,
+                idTokenNonce: idToken.nonce,
+                idToken
+            });
         }
-
-        return ValidationResult.noErrors;
     }
 
     /**
@@ -284,14 +317,17 @@ export class TokenValidationService {
     * from 1970- 01 - 01T00: 00:00Z as measured
     * in UTC until the date/ time.
     */
-    public validateIdTokenRequiredFields(dataIdToken: DecodedIdentityToken): ValidationResult {
+    public validateIdTokenRequiredFields(idToken: DecodedIdentityToken) {
         const requiredClaims = ['iss', 'sub', 'aud', 'exp', 'iat'];
         for (const key of requiredClaims) {
-            if (!dataIdToken.hasOwnProperty(key)) {
-                return ValidationResult.claimRequired(key);
+            if (!idToken.hasOwnProperty(key)) {
+                throw new ClaimRequiredError(key, {
+                    idToken,
+                    requiredClaims,
+                    missingClaim: key
+                });
             }
         }
-        return ValidationResult.noErrors;
     }
 
     /**
@@ -300,13 +336,19 @@ export class TokenValidationService {
     public validateTokenNumericClaim<T extends DecodedIdentityToken>(idToken: T, claim: keyof T) {
         if (typeof idToken[claim] !== 'number') {
             if (!idToken[claim]) {
-                return ValidationResult.claimRequired(claim.toString());
+                throw new ClaimRequiredError(claim.toString(), {
+                    idToken,
+                    requiredClaim: claim
+                });
             } else {
-                return ValidationResult.claimTypeInvalid(claim.toString(), 'number', typeof (idToken[claim]));
+                throw new ClaimTypeInvalidError(claim.toString(), 'number', typeof (idToken[claim]), {
+                    idToken,
+                    claim,
+                    claimType: typeof (idToken[claim]),
+                    claimExpectedType: 'number'
+                });
             }
         }
-
-        return ValidationResult.noErrors;
     }
 
     /**
@@ -315,33 +357,54 @@ export class TokenValidationService {
      */
     public validateIdTokenFormat(idToken: string) {
         if (!idToken || !idToken.length) {
-            return ValidationResult.idTokenInvalid(idToken);
+            throw new RequiredParemetersMissingError('idToken', null);
         }
 
         const expectedSliceAmount = 3;
         const slices = idToken.split('.');
 
         if (slices.length !== expectedSliceAmount) {
-            return ValidationResult.idTokenInvalidNoDots(idToken, expectedSliceAmount);
+            throw new IdentityTokenMalformedError({
+                idToken
+            });
         }
-
-        return ValidationResult.noErrors;
     }
 
     /**
      * Validates the local state against the
      * returned state from the IDP to make sure it matches
      */
-    public validateAuthorizeCallback(localState: LocalState, state: string, code: string) {
+    public validateAuthorizeCallbackState(localState: LocalState, state: string) {
         if (state !== localState.state) {
-            return ValidationResult.stateValidationFailed(`LocalState: ${localState.state}
-            ReturnedState: ${state}`);
+            throw new InvalidStateError({
+                localState,
+                returnedState: state,
+            });
+        }
+    }
+
+    public validateAuthorizeCallbackFormat(
+        code: string,
+        state: string,
+        error: string,
+        href: string) {
+
+        if (typeof error === 'string') {
+            throw new AuthorizationCallbackError(error, {
+                url: href,
+            });
         }
 
-        if (!code || !code.length) {
-            return ValidationResult.authorizeCallbackWithoutCode;
+        if (typeof code !== 'string') {
+            throw new AuthorizationCallbackMissingParameterError('code', {
+                url: href,
+            });
         }
 
-        return ValidationResult.noErrors;
+        if (typeof state !== 'string') {
+            throw new AuthorizationCallbackMissingParameterError('state', {
+                url: href,
+            });
+        }
     }
 }

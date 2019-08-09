@@ -25,7 +25,7 @@ export class TokenHelperService {
     public getExpirationFromExpiresIn(expiresIn: number) {
         const now = new Date();
         // expires_in = access token expiration in seconds (optional)
-        // 3.2.2.5.  Successful Authentication Response 
+        // 3.2.2.5.  Successful Authentication Response
         // https://openid.net/specs/openid-connect-core-1_0.html#TokenResponse
         now.setSeconds(now.getSeconds() + expiresIn);
         return now;
@@ -44,7 +44,7 @@ export class TokenHelperService {
     }
 
     protected getTokenSlice(idToken: string, index: number) {
-        if (!idToken || idToken.split('.').length != 3) {
+        if (!idToken || idToken.split('.').length !== 3) {
             // Quick and dirty validation.
             // The caller is expcetd to validate the token properly
             return null;
