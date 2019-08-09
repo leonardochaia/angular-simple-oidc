@@ -14,20 +14,17 @@ export class EventsService {
     }
 
     public get errors$() {
-        return this.events$
-            .pipe(
-                filter(e => e instanceof SimpleOidcErrorEvent),
-                map(e => e as SimpleOidcErrorEvent)
-            );
+        return this.errorSubject.asObservable();
     }
 
     protected readonly eventSubject = new ReplaySubject<SimpleOidcEvent>();
+    protected readonly errorSubject = new ReplaySubject<SimpleOidcErrorEvent>();
 
     public dispatch<TEvent extends SimpleOidcEvent>(ev: TEvent) {
         this.eventSubject.next(ev);
     }
 
     public dispatchError(e: SimpleOidcError) {
-        this.dispatch(new SimpleOidcErrorEvent(e));
+        this.errorSubject.next(new SimpleOidcErrorEvent(e));
     }
 }
