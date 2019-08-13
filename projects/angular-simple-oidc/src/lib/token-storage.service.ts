@@ -5,6 +5,8 @@ import {
 } from './core/models';
 import { of, BehaviorSubject } from 'rxjs';
 import { LOCAL_STORAGE_REF } from './constants';
+import { EventsService } from './events/events.service';
+import { TokensReadyEvent } from './auth.events';
 
 // @dynamic
 @Injectable()
@@ -18,12 +20,25 @@ export class TokenStorageService {
         return this.localStorage;
     }
 
-    protected readonly localStateSubject = new BehaviorSubject<LocalState>(this.getCurrentLocalState());
+    protected readonly localStateSubject: BehaviorSubject<LocalState>;
 
     constructor(
         @Inject(LOCAL_STORAGE_REF)
-        private readonly localStorage: Storage
-    ) { }
+        private readonly localStorage: Storage,
+        private readonly events: EventsService,
+    ) {
+        const state = this.getCurrentLocalState();
+        this.localStateSubject = new BehaviorSubject(state);
+        if (state.accessToken || state.identityToken || state.refreshToken) {
+            this.events.dispatch(new TokensReadyEvent({
+                accessToken: state.accessToken,
+                accessTokenExpiresAt: state.accessTokenExpiration,
+                decodedIdToken: state.decodedIdentityToken,
+                idToken: state.identityToken,
+                refreshToken: state.refreshToken,
+            }));
+        }
+    }
 
     public storePreAuthorizationState(authState: {
         nonce: string,

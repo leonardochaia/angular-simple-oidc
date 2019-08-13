@@ -9,6 +9,7 @@ import { TokenEndpointError, TokenEndpointUnexpectedError } from './errors';
 import { SimpleOidcError } from './core/errors';
 import { EventsService } from './events/events.service';
 import { SimpleOidcInfoEvent } from './events/models';
+import { TokensObtainedEvent } from './auth.events';
 
 interface TokenEndpointResponse {
     access_token?: string;
@@ -88,8 +89,7 @@ export class TokenEndpointClientService {
                         decodedIdToken: decodedToken
                     };
 
-                    this.events.dispatch(new SimpleOidcInfoEvent(`Token response was successful`,
-                        result));
+                    this.events.dispatch(new TokensObtainedEvent(result));
 
                     return result;
                 })

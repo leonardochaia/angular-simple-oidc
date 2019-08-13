@@ -11,6 +11,7 @@ import { TokenEndpointClientService } from './token-endpoint-client.service';
 import { AuthorizationCallbackFormatError } from './core/token-validation-errors';
 import { EventsService } from './events/events.service';
 import { SimpleOidcInfoEvent } from './events/models';
+import { TokensValidatedEvent, TokensReadyEvent } from './auth.events';
 
 // @dynamic
 @Injectable()
@@ -159,10 +160,12 @@ export class OidcCodeFlowClient {
                     this.tokenValidation.validateAccessToken(result.accessToken,
                         result.decodedIdToken.at_hash);
                 }),
-                tap(() => {
+                switchMap((r) => {
                     this.events.dispatch(new SimpleOidcInfoEvent('Clearing pre-authorize state..'));
-                    this.tokenStorage.clearPreAuthorizationState();
+                    return this.tokenStorage.clearPreAuthorizationState()
+                        .pipe(map(() => r));
                 }),
+                tap(([result]) => this.events.dispatch(new TokensValidatedEvent(result))),
                 switchMap(([result]) => {
                     this.events.dispatch(new SimpleOidcInfoEvent('Storing tokens..', result));
                     return this.tokenStorage.storeTokens(result)
@@ -173,11 +176,12 @@ export class OidcCodeFlowClient {
                     return this.tokenStorage.storeOriginalIdToken(result.idToken)
                         .pipe(map(() => result));
                 }),
+                tap((result) => this.events.dispatch(new TokensReadyEvent(result))),
             );
     }
 
     protected changeUrl(url: string) {
-        this.events.dispatch(new SimpleOidcInfoEvent(`Redirecting to ${url}`));
+        this.events.dispatch(new SimpleOidcInfoEvent(`Redirecting`, url));
         this.window.location.href = url;
     }
 }

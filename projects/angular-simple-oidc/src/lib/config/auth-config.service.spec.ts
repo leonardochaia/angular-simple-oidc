@@ -43,21 +43,18 @@ describe('Auth Configuration Service', () => {
   });
 
   it('should handle invalid url gracefully', () => {
-    expect(() => {
-      configureService({} as any).configuration;
-    }).toThrowError(/openIDProviderUrl(.*)is required/);
+    expect(() => configureService({} as any).configuration)
+      .toThrowError(/openIDProviderUrl(.*)is required/);
   });
 
   it('should handle invalid clientId gracefully', () => {
-    expect(() => {
-      configureService({} as any).configuration;
-    }).toThrowError(/clientId(.*)is required/);
+    expect(() => configureService({} as any).configuration)
+      .toThrowError(/clientId(.*)is required/);
   });
 
   it('should handle invalid scope gracefully', () => {
-    expect(() => {
-      configureService({} as any).configuration;
-    }).toThrowError(/scope(.*)is required/);
+    expect(() => configureService({} as any).configuration)
+      .toThrowError(/scope(.*)is required/);
   });
 
   it('should merge all AUTH_CONFIG in the injector', () => {

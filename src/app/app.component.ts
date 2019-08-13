@@ -3,6 +3,7 @@ import { AuthService } from 'angular-simple-oidc';
 import { takeUntil } from 'rxjs/operators';
 import { SimpleOidcError } from 'angular-simple-oidc/lib/core/errors';
 import { Subject } from 'rxjs';
+import { TokensReadyEvent } from 'angular-simple-oidc/lib/auth.events';
 
 @Component({
   selector: 'soidc-root',
@@ -19,7 +20,14 @@ export class AppComponent implements OnDestroy {
     auth.events$
       .pipe(takeUntil(this.destroyedSubject))
       .subscribe(e => {
-        console.log(e);
+        if (e instanceof TokensReadyEvent) {
+          console.info(`Tokens! Yummy.`);
+          console.log(
+            JSON.stringify(e.payload, null, 4)
+          );
+        } else {
+          console.log(e);
+        }
       });
 
     auth.errors$

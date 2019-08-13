@@ -11,6 +11,7 @@ import { RefreshTokenValidationService } from './core/refresh-token/refresh-toke
 import { TokenValidationService } from './core/token-validation.service';
 import { EventsService } from './events/events.service';
 import { SimpleOidcInfoEvent } from './events/models';
+import { TokensValidatedEvent, TokensReadyEvent } from './auth.events';
 
 @Injectable()
 export class RefreshTokenClient {
@@ -60,11 +61,13 @@ export class RefreshTokenClient {
                     { accessToken: result.accessToken, hash: result.decodedIdToken.at_hash }));
                 this.tokenValidation.validateAccessToken(result.accessToken, result.decodedIdToken.at_hash);
             }),
+            tap(([result]) => this.events.dispatch(new TokensValidatedEvent(result))),
             switchMap(([result]) => {
                 this.events.dispatch(new SimpleOidcInfoEvent(`Storing new tokens..`, result));
                 return this.tokenStorage.storeTokens(result)
                     .pipe(map(() => result));
-            })
+            }),
+            tap((result) => this.events.dispatch(new TokensReadyEvent(result))),
         );
     }
 }
