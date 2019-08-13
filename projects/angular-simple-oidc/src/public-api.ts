@@ -24,5 +24,14 @@ export {
     TokenRequestResult
 } from './lib/core/models';
 
+
+export * from './lib/core/errors';
+export * from './lib/core/token-validation-errors';
+export * from './lib/core/refresh-token/refresh-token-validation-errors';
+export * from './lib/errors';
+
+export * from './lib/events/models';
+export * from './lib/auth.events';
+
 export { RefreshTokenClient } from './lib/refresh-token-client.service';
 export { RefreshTokenValidationService } from './lib/core/refresh-token/refresh-token-validation.service';
