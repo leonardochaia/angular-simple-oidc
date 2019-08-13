@@ -1,1 +1,5 @@
 <router-outlet></router-outlet>
+
+<ng-container *ngFor="let e of oidcErrors">
+  <pre>{{e|json}}</pre>
+</ng-container>

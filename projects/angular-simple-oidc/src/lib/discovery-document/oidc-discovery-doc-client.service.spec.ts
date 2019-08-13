@@ -6,6 +6,7 @@ import { AuthConfig } from '../config/models';
 import { DiscoveryDocument, JWTKeys } from '../core/models';
 import { of, throwError } from 'rxjs';
 import { ObtainDiscoveryDocumentError, ObtainJWTKeysError } from './errors';
+import { EventsService } from '../events/events.service';
 
 
 function spyOnGet<T>(obj: T, property: keyof T) {
@@ -17,6 +18,7 @@ describe('OidcDiscoveryDocClient', () => {
     let httpSpy: jasmine.SpyObj<HttpClient>;
     let configSpy: jasmine.SpyObj<AuthConfigService>;
     let authConfigSpy: jasmine.Spy<InferableFunction>;
+    let eventsSpy: jasmine.SpyObj<EventsService>;
 
     function createDiscoveryClient(doc: DiscoveryDocument = {} as any) {
         httpSpy.get.and.returnValue(of(doc));
@@ -24,13 +26,15 @@ describe('OidcDiscoveryDocClient', () => {
         // we need to re-create it since observables gets created on constructor
         return new OidcDiscoveryDocClient(
             configSpy,
-            httpSpy
+            httpSpy,
+            eventsSpy
         );
     }
 
     beforeEach(() => {
         httpSpy = jasmine.createSpyObj('HttpClient', ['post', 'get']);
         configSpy = jasmine.createSpyObj('AuthConfigService', ['configuration']);
+        eventsSpy = jasmine.createSpyObj('EventsSpy', ['dispatch', 'dispatchError']);
 
         authConfigSpy = spyOnGet(configSpy, 'configuration');
 
@@ -38,7 +42,6 @@ describe('OidcDiscoveryDocClient', () => {
             openIDProviderUrl: 'http://example.com',
             discoveryDocumentUrl: '/.well-known/openid-configuration'
         } as AuthConfig);
-
     });
 
     it('should create', () => {

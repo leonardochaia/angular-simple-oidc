@@ -9,6 +9,7 @@ import { of, throwError } from 'rxjs';
 import { TokenRequestResult, DecodedIdentityToken } from './core/models';
 import { TokenEndpointError, TokenEndpointUnexpectedError } from './errors';
 import { IdentityTokenMalformedError } from './core/token-validation-errors';
+import { SimpleOidcError } from './core/errors';
 
 function spyOnGet<T>(obj: T, property: keyof T) {
     Object.defineProperty(obj, property, { get: () => null });
@@ -129,6 +130,27 @@ describe('TokenEndpointClientService', () => {
 
                     flush();
                 }).toThrow(new TokenEndpointUnexpectedError(null));
+            })
+        );
+
+        it('doesn\' re-throw SimpleOidcError',
+            fakeAsync(() => {
+                const tokenEndpoint = 'http://token-endpoint';
+                const payload = 'payload';
+
+                discoveryDocSpy.and.returnValue(of({
+                    token_endpoint: tokenEndpoint
+                } as Partial<DiscoveryDocument>));
+
+                const expected = new SimpleOidcError('bad', 'b', {});
+                httpSpy.post.and.returnValue(throwError(expected));
+
+                expect(() => {
+                    tokenEndpointClientService.call(payload)
+                        .subscribe();
+
+                    flush();
+                }).toThrow(expected);
             })
         );
 

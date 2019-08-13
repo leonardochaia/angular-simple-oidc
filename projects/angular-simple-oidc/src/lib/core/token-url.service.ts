@@ -36,12 +36,6 @@ export class TokenUrlService {
                 .set('acr_values', params.acrValues);
         }
 
-        console.info(`Generating Authorization Code Payload:
-            CodeVerifier: ${httpParams.get('code_verifier')}
-            Code: ${httpParams.get('code')}
-            ${httpParams}`);
-
-
         return httpParams.toString();
     }
 
@@ -67,10 +61,6 @@ export class TokenUrlService {
             httpParams = httpParams
                 .set('acr_values', params.acrValues);
         }
-
-        console.info(`Generating Refresh Token Payload:
-            RefreshToken: ${httpParams.get('refresh_token')}
-            ${httpParams}`);
 
         return httpParams.toString();
     }
@@ -113,13 +103,6 @@ export class TokenUrlService {
             .set('code_challenge_method', verification.method);
 
         const url = `${authorizeEndpointUrl}?${httpParams}`;
-
-        console.info(`Generated Authorize URL:
-        State: ${state}
-        Nonce: ${nonce}
-        CodeVerifier: ${verification.codeVerifier}
-        Challenge: ${verification.codeChallenge}
-        URL: ${url}`);
 
         return {
             nonce,

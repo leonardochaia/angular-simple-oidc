@@ -12,10 +12,10 @@ import { HomeComponent } from './home/home.component';
     BrowserModule,
 
     AngularSimpleOidcModule.forRoot({
+      openIDProviderUrl: 'http://localhost:420',
       clientId: 'example.client',
       clientSecret: 'myDummySecret',
-      openIDProviderUrl: 'http://localhost:420',
-      scope: "openid profile",
+      scope: 'openid profile offline_access',
     }),
 
     AppRoutingModule,

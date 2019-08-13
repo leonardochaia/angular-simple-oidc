@@ -3,11 +3,16 @@ import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angul
 import { map, take, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { AuthService } from '../auth.service';
+import { EventsService } from '../events/events.service';
+import { SimpleOidcInfoEvent } from '../events/models';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
 
-  constructor(private readonly auth: AuthService) { }
+  constructor(
+    protected readonly auth: AuthService,
+    protected readonly events: EventsService,
+  ) { }
 
   public canActivate(
     next: ActivatedRouteSnapshot,
@@ -17,13 +22,15 @@ export class AuthGuard implements CanActivate {
         take(1),
         switchMap(authenticated => {
           if (!authenticated) {
-            console.info('Route requires auth, starting login');
+            this.events.dispatch(new SimpleOidcInfoEvent(`Route requires auth. No token or it's expired.`,
+              { route: state.url }));
             return this.auth.startCodeFlow()
               // return false so that route change does not happen
               .pipe(map(() => false));
           }
 
           return of(true);
-        }));
+        })
+      );
   }
 }

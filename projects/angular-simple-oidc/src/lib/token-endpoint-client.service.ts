@@ -7,6 +7,9 @@ import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-
 import { TokenHelperService } from './core/token-helper.service';
 import { TokenEndpointError, TokenEndpointUnexpectedError } from './errors';
 import { SimpleOidcError } from './core/errors';
+import { EventsService } from './events/events.service';
+import { SimpleOidcInfoEvent } from './events/models';
+import { TokensObtainedEvent } from './auth.events';
 
 interface TokenEndpointResponse {
     access_token?: string;
@@ -24,6 +27,7 @@ export class TokenEndpointClientService {
         protected readonly discoveryDocumentClient: OidcDiscoveryDocClient,
         protected readonly tokenValidation: TokenValidationService,
         protected readonly tokenHelper: TokenHelperService,
+        protected readonly events: EventsService,
     ) { }
 
     public call(payload: string) {
@@ -32,8 +36,12 @@ export class TokenEndpointClientService {
         return this.discoveryDocumentClient.current$
             .pipe(
                 take(1),
-                switchMap(({ token_endpoint }) =>
-                    this.http.post<TokenEndpointResponse>(token_endpoint, payload, { headers: headers })),
+                switchMap(({ token_endpoint }) => {
+                    this.events.dispatch(new SimpleOidcInfoEvent(`Executing Token Endpoint`,
+                        { url: token_endpoint, payload }));
+
+                    return this.http.post<TokenEndpointResponse>(token_endpoint, payload, { headers: headers });
+                }),
                 tap({
                     error: (e: HttpErrorResponse) => {
                         if (e instanceof SimpleOidcError) {
@@ -52,13 +60,23 @@ export class TokenEndpointClientService {
                     let expiresAt: Date;
                     if (response.expires_in) {
                         expiresAt = this.tokenHelper.getExpirationFromExpiresIn(response.expires_in);
+                    } else {
+                        this.events.dispatch(new SimpleOidcInfoEvent(`Token Response did not contain expires_in`,
+                            response));
                     }
 
                     let decodedToken: DecodedIdentityToken;
                     if (response.id_token) {
+                        this.events.dispatch(new SimpleOidcInfoEvent(`Validating Identity Token format`,
+                            response.id_token));
                         this.tokenValidation.validateIdTokenFormat(response.id_token);
 
                         decodedToken = this.tokenHelper.getPayloadFromToken(response.id_token);
+                        this.events.dispatch(new SimpleOidcInfoEvent(`Identity Token Payload decoded`,
+                            decodedToken));
+                    } else {
+                        this.events.dispatch(new SimpleOidcInfoEvent(`Token Response did not contain id_token`,
+                            response));
                     }
 
                     const result: TokenRequestResult = {
@@ -71,12 +89,7 @@ export class TokenEndpointClientService {
                         decodedIdToken: decodedToken
                     };
 
-                    console.info(`Token request succeed
-                    AccessToken: ${result.accessToken}
-                    AccessTokenExpiresIn: ${result.accessTokenExpiresIn} seconds
-                    AccessTokenExpiresAt: ${expiresAt}
-                    RefreshToken: ${result.refreshToken || 'no refresh token'}
-                    IdentityToken: ${decodedToken ? JSON.stringify(decodedToken) : 'no id token'}`);
+                    this.events.dispatch(new TokensObtainedEvent(result));
 
                     return result;
                 })

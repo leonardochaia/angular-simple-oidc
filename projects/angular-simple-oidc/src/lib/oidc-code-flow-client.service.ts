@@ -9,6 +9,9 @@ import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-
 import { TokenUrlService } from './core/token-url.service';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
 import { AuthorizationCallbackFormatError } from './core/token-validation-errors';
+import { EventsService } from './events/events.service';
+import { SimpleOidcInfoEvent } from './events/models';
+import { TokensValidatedEvent, TokensReadyEvent } from './auth.events';
 
 // @dynamic
 @Injectable()
@@ -27,9 +30,11 @@ export class OidcCodeFlowClient {
         protected readonly tokenValidation: TokenValidationService,
         protected readonly tokenUrl: TokenUrlService,
         protected readonly tokenEndpointClient: TokenEndpointClientService,
+        protected readonly events: EventsService,
     ) { }
 
     public startCodeFlow() {
+        this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow`));
         return this.discoveryDocumentClient.current$
             .pipe(
                 take(1),
@@ -41,21 +46,28 @@ export class OidcCodeFlowClient {
                             responseType: 'code',
                             redirectUri: urlJoin(this.config.baseUrl, this.authConfig.tokenCallbackRoute)
                         });
+
+                    this.events.dispatch(new SimpleOidcInfoEvent(`Authorize URL generated`, result));
+
                     return this.tokenStorage.storePreAuthorizationState({
                         nonce: result.nonce,
                         state: result.state,
                         codeVerifier: result.codeVerifier,
                         preRedirectUrl: this.window.location.href
-                    }).pipe(tap(() => {
+                    }).pipe(tap((state) => {
+                        this.events.dispatch(new SimpleOidcInfoEvent(`Pre-authorize state stored`, state));
                         this.changeUrl(result.url);
                     }));
                 }));
     }
 
     public codeFlowCallback() {
+        this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow callback`));
+
         let code: string, state: string, error: string;
         const href = this.window.location.href;
 
+        this.events.dispatch(new SimpleOidcInfoEvent(`Parsing params from URL`, href));
         try {
             const result = this.tokenUrl.parseAuthorizeCallbackParamsFromUrl(href);
             code = result.code;
@@ -65,15 +77,22 @@ export class OidcCodeFlowClient {
             throw new AuthorizationCallbackFormatError(error);
         }
 
+        this.events.dispatch(new SimpleOidcInfoEvent(`Validating URL params`,
+            { code, state, error, href }));
         this.tokenValidation.validateAuthorizeCallbackFormat(code, state, error, href);
 
         return this.tokenStorage.currentState$
             .pipe(
                 take(1),
                 switchMap(localState => {
+                    this.events.dispatch(new SimpleOidcInfoEvent(`Validating state vs local state`,
+                        { localState, state }));
+
                     this.tokenValidation.validateAuthorizeCallbackState(localState, state);
 
-                    console.info(`Obtained authorization code: ${code}`);
+                    this.events.dispatch(new SimpleOidcInfoEvent(`Obtained authorization code.`,
+                        { code, state }));
+
                     return this.tokenStorage.storeAuthorizationCode(code)
                         .pipe(
                             switchMap((freshState) =>
@@ -92,6 +111,9 @@ export class OidcCodeFlowClient {
         code: string,
         codeVerifier: string) {
 
+        this.events.dispatch(new SimpleOidcInfoEvent(`Requesting token using authorization code`,
+            { code, codeVerifier }));
+
         const payload = this.tokenUrl.createAuthorizationCodeRequestPayload({
             clientId: this.authConfig.clientId,
             clientSecret: this.authConfig.clientSecret,
@@ -100,6 +122,8 @@ export class OidcCodeFlowClient {
             code: code,
             codeVerifier: codeVerifier
         });
+
+        this.events.dispatch(new SimpleOidcInfoEvent(`Token Endpoint payload generated`, payload));
 
         // For validations, we need the local stored state
         const localState$ = this.tokenStorage.currentState$
@@ -117,7 +141,11 @@ export class OidcCodeFlowClient {
             .pipe(
                 withLatestFrom(localState$, discoveryDocument$, jwtKeys$),
                 tap(([result, localState, discoveryDocument, jwtKeys]) => {
-                    console.info('Validating identity token..');
+
+                    this.events.dispatch(new SimpleOidcInfoEvent('Validating identity token..', {
+                        result, localState, discoveryDocument, jwtKeys
+                    }));
+
                     this.tokenValidation.validateIdToken(
                         this.authConfig.clientId,
                         result.idToken,
@@ -128,29 +156,32 @@ export class OidcCodeFlowClient {
                         this.authConfig.tokenValidation);
                 }),
                 tap(([result]) => {
-                    console.info('Validating access token..');
+                    this.events.dispatch(new SimpleOidcInfoEvent('Validating access token..', result));
                     this.tokenValidation.validateAccessToken(result.accessToken,
                         result.decodedIdToken.at_hash);
                 }),
-                tap(() => {
-                    console.info('Clearing pre-authorize state..');
-                    this.tokenStorage.clearPreAuthorizationState();
+                switchMap((r) => {
+                    this.events.dispatch(new SimpleOidcInfoEvent('Clearing pre-authorize state..'));
+                    return this.tokenStorage.clearPreAuthorizationState()
+                        .pipe(map(() => r));
                 }),
+                tap(([result]) => this.events.dispatch(new TokensValidatedEvent(result))),
                 switchMap(([result]) => {
-                    console.info('Storing tokens..');
+                    this.events.dispatch(new SimpleOidcInfoEvent('Storing tokens..', result));
                     return this.tokenStorage.storeTokens(result)
                         .pipe(map(() => result));
                 }),
                 switchMap(result => {
-                    console.info('Storing original Identity Token..');
+                    this.events.dispatch(new SimpleOidcInfoEvent('Storing original Identity Token..', result.idToken));
                     return this.tokenStorage.storeOriginalIdToken(result.idToken)
                         .pipe(map(() => result));
                 }),
+                tap((result) => this.events.dispatch(new TokensReadyEvent(result))),
             );
     }
 
     protected changeUrl(url: string) {
-        console.info(`Redirecting to ${url}`);
+        this.events.dispatch(new SimpleOidcInfoEvent(`Redirecting`, url));
         this.window.location.href = url;
     }
 }

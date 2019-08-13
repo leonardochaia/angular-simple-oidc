@@ -6,6 +6,8 @@ import { DiscoveryDocument, JWTKeys } from '../core/models';
 import { urlJoin } from '../utils/url-join';
 import { AuthConfigService } from '../config/auth-config.service';
 import { ObtainDiscoveryDocumentError, ObtainJWTKeysError } from './errors';
+import { EventsService } from '../events/events.service';
+import { SimpleOidcInfoEvent } from '../events/models';
 
 @Injectable()
 export class OidcDiscoveryDocClient {
@@ -26,13 +28,16 @@ export class OidcDiscoveryDocClient {
 
     constructor(
         protected readonly config: AuthConfigService,
-        protected readonly http: HttpClient) { }
+        protected readonly http: HttpClient,
+        protected readonly events: EventsService) { }
 
     public requestDiscoveryDocument() {
         return of(null)
             .pipe(
-                tap(() => console.info('Obtaining discovery document')),
+                tap(() => this.events.dispatch(new SimpleOidcInfoEvent('Obtaining discovery document',
+                    this.discoveryDocumentAbsoluteEndpoint))),
                 switchMap(() => this.http.get<DiscoveryDocument>(this.discoveryDocumentAbsoluteEndpoint)),
+                tap(d => this.events.dispatch(new SimpleOidcInfoEvent('Discovery Document obtained', d))),
                 catchError(e => throwError(new ObtainDiscoveryDocumentError(e)))
             );
     }
@@ -40,8 +45,9 @@ export class OidcDiscoveryDocClient {
     public requestJWTKeys(doc: DiscoveryDocument) {
         return of(null)
             .pipe(
-                tap(() => console.info('Obtaining JWT Keys')),
+                tap(() => this.events.dispatch(new SimpleOidcInfoEvent('Obtaining JWT Keys', doc.jwks_uri))),
                 switchMap(() => this.http.get<JWTKeys>(doc.jwks_uri)),
+                tap(j => this.events.dispatch(new SimpleOidcInfoEvent('JWT Keys obtained', j))),
                 catchError(e => throwError(new ObtainJWTKeysError(e)))
             );
     }

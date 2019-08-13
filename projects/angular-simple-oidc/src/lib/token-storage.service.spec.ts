@@ -2,6 +2,8 @@ import { TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { TokenStorageService } from './token-storage.service';
 import { LOCAL_STORAGE_REF } from './constants';
 import { TokenStorageKeys, LocalState, DecodedIdentityToken, TokenRequestResult } from './core/models';
+import { EventsService } from './events/events.service';
+import { TokensReadyEvent } from './auth.events';
 
 class FakeStorage implements Storage {
     [name: string]: any;
@@ -32,15 +34,21 @@ class FakeStorage implements Storage {
 describe('TokenStorageService', () => {
     let tokenStorage: TokenStorageService;
     let storageSpy: jasmine.SpyObj<Storage>;
+    let eventsSpy: jasmine.SpyObj<EventsService>;
 
     beforeEach(() => {
         storageSpy = jasmine.createSpyObj('Storage', ['setItem', 'getItem', 'removeItem']);
+        eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
 
         TestBed.configureTestingModule({
             providers: [
                 {
                     provide: LOCAL_STORAGE_REF,
                     useValue: storageSpy
+                },
+                {
+                    provide: EventsService,
+                    useValue: eventsSpy,
                 },
                 TokenStorageService
             ],
@@ -51,6 +59,17 @@ describe('TokenStorageService', () => {
 
     it('should create', () => {
         expect(tokenStorage).toBeTruthy();
+    });
+
+    it('should dispatch TokenObtainedEvents on construction', () => {
+        storageSpy.getItem.and.returnValue('{}');
+
+        const service = new TokenStorageService(storageSpy, eventsSpy);
+
+        expect(service).toBeTruthy();
+
+        expect(eventsSpy.dispatch).toHaveBeenCalled();
+
     });
 
     describe('storePreAuthorizationState', () => {
