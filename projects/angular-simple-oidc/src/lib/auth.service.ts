@@ -68,7 +68,7 @@ export class AuthService {
             .pipe(tap({ error: e => this.events.dispatchError(e) }));
     }
 
-    public refreshAccesstoken() {
+    public refreshAccessToken() {
         return this.refreshTokenClient.requestTokenWithRefreshCode()
             .pipe(tap({ error: e => this.events.dispatchError(e) }));
     }

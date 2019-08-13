@@ -39,7 +39,7 @@ export class HomeComponent {
   constructor(private readonly auth: AuthService) { }
 
   public doTokenRefresh() {
-    this.auth.refreshAccesstoken()
+    this.auth.refreshAccessToken()
       .subscribe();
   }
 }
