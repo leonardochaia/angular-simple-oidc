@@ -18,6 +18,8 @@ import { HomeComponent } from './home/home.component';
       scope: 'openid profile offline_access',
     }),
 
+    AutomaticRefreshModule,
+
     AppRoutingModule,
 
   ],
