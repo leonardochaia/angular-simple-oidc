@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { switchMap, take, map, withLatestFrom, tap } from 'rxjs/operators';
 import { AuthConfigService } from './config/auth-config.service';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
@@ -20,7 +19,6 @@ export class RefreshTokenClient {
     }
 
     constructor(
-        protected readonly http: HttpClient,
         protected readonly config: AuthConfigService,
         protected readonly tokenStorage: TokenStorageService,
         protected readonly tokenUrl: TokenUrlService,
