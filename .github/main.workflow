@@ -15,3 +15,10 @@ action "Run tests" {
   args = "test-lib-ci"
   runs = "yarn"
 }
+
+action "Build angular-simple-oidc" {
+  uses = "Borales/actions-yarn@master"
+  needs = ["Install packages"]
+  args = "build angular-simple-oidc"
+  runs = "yarn"
+}
