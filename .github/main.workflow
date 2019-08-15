@@ -1,6 +1,9 @@
 workflow "Run tests on push" {
   on = "push"
-  resolves = ["Run tests"]
+  resolves = [
+    "Run tests",
+    "Build angular-simple-oidc",
+  ]
 }
 
 action "Install packages" {
@@ -14,4 +17,11 @@ action "Run tests" {
   needs = ["Install packages"]
   args = "test-lib-ci"
   runs = "yarn"
+}
+
+action "Build angular-simple-oidc" {
+  uses = "Borales/actions-yarn@master"
+  needs = ["Install packages"]
+  runs = "yarn"
+  args = "build angular-simple-oidc"
 }
