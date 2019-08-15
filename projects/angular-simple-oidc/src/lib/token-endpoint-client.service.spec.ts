@@ -16,9 +16,6 @@ function spyOnGet<T>(obj: T, property: keyof T) {
     return spyOnProperty(obj, property, 'get');
 }
 
-/**
- * Inspired on https://github.com/damienbod/angular-auth-oidc-client
- */
 describe('TokenEndpointClientService', () => {
     let tokenEndpointClientService: TokenEndpointClientService;
     let httpSpy: jasmine.SpyObj<HttpClient>;
@@ -60,7 +57,7 @@ describe('TokenEndpointClientService', () => {
     });
 
     it('should create', () => {
-        expect(TokenEndpointClientService).toBeTruthy();
+        expect(tokenEndpointClientService).toBeTruthy();
     });
 
     describe('call', () => {

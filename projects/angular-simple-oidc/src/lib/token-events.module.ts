@@ -1,6 +1,6 @@
 import { NgModule, OnDestroy } from '@angular/core';
 import { AuthService } from './auth.service';
-import { filter, takeUntil, delay, switchMap, map, take } from 'rxjs/operators';
+import { filter, takeUntil, delay, switchMap, take } from 'rxjs/operators';
 import { TokensReadyEvent, AccessTokenExpiredEvent, AccessTokenExpiringEvent } from './auth.events';
 import { Subject, of, merge } from 'rxjs';
 import { EventsService } from './events/events.service';
@@ -86,7 +86,10 @@ export class TokenEventsModule implements OnDestroy {
         }),
         takeUntil(this.destroyedSubject),
       ).subscribe(e => {
-        e.payload.now = new Date();
+        if (e.payload) {
+          e.payload.now = new Date();
+        }
+
         this.events.dispatch(e);
       });
   }
