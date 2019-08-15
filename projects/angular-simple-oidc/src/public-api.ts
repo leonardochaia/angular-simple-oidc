@@ -35,3 +35,5 @@ export * from './lib/auth.events';
 
 export { RefreshTokenClient } from './lib/refresh-token-client.service';
 export { RefreshTokenValidationService } from './lib/core/refresh-token/refresh-token-validation.service';
+
+export { AutomaticRefreshModule } from './lib/automatic-refresh.module';

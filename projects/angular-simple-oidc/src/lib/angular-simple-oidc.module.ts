@@ -12,11 +12,13 @@ import { TokenStorageService } from './token-storage.service';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
 import { HttpClientModule } from '@angular/common/http';
 import { RefreshTokenClient } from './refresh-token-client.service';
+import { TokenEventsModule } from './token-events.module';
 
 @NgModule({
   imports: [
     HttpClientModule,
-    AngularSimpleOidcCoreModule
+    AngularSimpleOidcCoreModule,
+    TokenEventsModule
   ],
   providers: [
     {

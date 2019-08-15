@@ -1,54 +1,20 @@
 import { TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { TokenStorageService } from './token-storage.service';
 import { LOCAL_STORAGE_REF } from './constants';
-import { TokenStorageKeys, LocalState, DecodedIdentityToken, TokenRequestResult } from './core/models';
-import { EventsService } from './events/events.service';
-import { TokensReadyEvent } from './auth.events';
-
-class FakeStorage implements Storage {
-    [name: string]: any;
-    public readonly length: number;
-    private readonly map = new Map<string, string>();
-
-    public clear(): void {
-        throw new Error('Method not implemented.');
-    }
-
-    public getItem(key: string): string {
-        return this.map.get(key);
-    }
-
-    public key(index: number): string {
-        throw new Error('Method not implemented.');
-    }
-
-    public removeItem(key: string): void {
-        this.map.delete(key);
-    }
-
-    public setItem(key: string, value: string): void {
-        this.map.set(key, value);
-    }
-}
+import { TokenStorageKeys, LocalState, TokenRequestResult } from './core/models';
 
 describe('TokenStorageService', () => {
     let tokenStorage: TokenStorageService;
     let storageSpy: jasmine.SpyObj<Storage>;
-    let eventsSpy: jasmine.SpyObj<EventsService>;
 
     beforeEach(() => {
         storageSpy = jasmine.createSpyObj('Storage', ['setItem', 'getItem', 'removeItem']);
-        eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
 
         TestBed.configureTestingModule({
             providers: [
                 {
                     provide: LOCAL_STORAGE_REF,
                     useValue: storageSpy
-                },
-                {
-                    provide: EventsService,
-                    useValue: eventsSpy,
                 },
                 TokenStorageService
             ],
@@ -59,17 +25,6 @@ describe('TokenStorageService', () => {
 
     it('should create', () => {
         expect(tokenStorage).toBeTruthy();
-    });
-
-    it('should dispatch TokenObtainedEvents on construction', () => {
-        storageSpy.getItem.and.returnValue('{}');
-
-        const service = new TokenStorageService(storageSpy, eventsSpy);
-
-        expect(service).toBeTruthy();
-
-        expect(eventsSpy.dispatch).toHaveBeenCalled();
-
     });
 
     describe('storePreAuthorizationState', () => {
@@ -91,30 +46,6 @@ describe('TokenStorageService', () => {
             expect(storageSpy.setItem).toHaveBeenCalledWith(TokenStorageKeys.CodeVerifier, codeVerifier);
             expect(storageSpy.setItem).toHaveBeenCalledWith(TokenStorageKeys.PreRedirectUrl, preRedirectUrl);
         }));
-
-        // it('should return newly stored params', fakeAsync(() => {
-        //     const nonce = 'nonce';
-        //     const state = 'state';
-        //     const codeVerifier = 'codeVerifier';
-        //     const preRedirectUrl = 'preRedirectUri';
-
-        //     const storage = new FakeStorage();
-        //     storageSpy.setItem.and.callFake((k, v) => storage.setItem(k, v));
-        //     storageSpy.getItem.and.callFake((k) => storage.getItem(k));
-
-        //     let output: LocalState;
-        //     tokenStorage.storePreAuthorizationState({
-        //         nonce, state, codeVerifier, preRedirectUrl
-        //     }).subscribe(s => output = s);
-
-        //     flush();
-
-        //     expect(output.nonce).toBe(nonce);
-        //     expect(output.state).toBe(state);
-        //     expect(output.codeVerifier).toBe(codeVerifier);
-        //     expect(output.preRedirectUrl).toBe(preRedirectUrl);
-
-        // }));
     });
 
     describe('clearPreAuthorizationState', () => {

@@ -3,7 +3,7 @@ import { TokenCryptoService } from './token-crypto.service';
 import { TokenHelperService } from './token-helper.service';
 import { TokenValidationService } from './token-validation.service';
 import { TokenUrlService } from './token-url.service';
-import { RefreshTokenValidationService } from 'angular-simple-oidc';
+import { RefreshTokenValidationService } from './refresh-token/refresh-token-validation.service';
 
 @NgModule({
   imports: [

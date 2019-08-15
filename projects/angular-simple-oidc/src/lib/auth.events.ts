@@ -27,3 +27,21 @@ export class TokensReadyEvent extends SimpleOidcInfoEvent<TokenRequestResult> {
         );
     }
 }
+
+export class AccessTokenExpiredEvent extends SimpleOidcInfoEvent {
+    constructor(payload: { token: string, expiredAt: Date, now?: Date }) {
+        super(
+            `Access token has expired`,
+            payload
+        );
+    }
+}
+
+export class AccessTokenExpiringEvent extends SimpleOidcInfoEvent {
+    constructor(payload: { token: string, expiresAt: Date, now?: Date }) {
+        super(
+            `Access token is almost expired`,
+            payload
+        );
+    }
+}

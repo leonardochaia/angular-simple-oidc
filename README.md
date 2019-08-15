@@ -5,7 +5,7 @@ An Angular (currently 8+, lower versions could be supported) library for the [Op
 * Discovery Document
 * Code Flow
 * Refresh Tokens
-* Refresh Token before token expiring (in-progress)
+* Automatic Token Refresh before token expiring
 * Session Checks (in-progress)
 
 ## Motivation
@@ -44,7 +44,7 @@ import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 
-import { AngularSimpleOidcModule } from 'angular-simple-oidc';
+import { AngularSimpleOidcModule, AutomaticRefreshModule } from 'angular-simple-oidc';
 
 @NgModule({
   imports: [
@@ -56,6 +56,9 @@ import { AngularSimpleOidcModule } from 'angular-simple-oidc';
       openIDProviderUrl: 'http://my.oidc.provider.com',
       scope: 'openid profile offline_access',
     }),
+
+    // For automatic token refresh.
+    // AutomaticRefreshModule,
 
   ],
   declarations: [
