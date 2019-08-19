@@ -83,6 +83,15 @@ export class TokenStorageService {
         return of(state);
     }
 
+    public removeAll() {
+        for (const k of Object.keys(TokenStorageKeys)) {
+            // We can't use clear since we could
+            // potentially delete keys which are not owned by us
+            this.storage.removeItem(TokenStorageKeys[k]);
+        }
+        return of(this.getCurrentLocalState());
+    }
+
     protected getCurrentLocalState() {
         const state: LocalState = {
             nonce: this.storage.getItem(TokenStorageKeys.Nonce),

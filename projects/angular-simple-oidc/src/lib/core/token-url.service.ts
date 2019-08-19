@@ -92,7 +92,7 @@ export class TokenUrlService {
         const nonce = this.tokenCrypto.generateNonce();
         const verification = this.tokenCrypto.generateCodesForCodeVerification();
 
-        const httpParams = new HttpParams({ fromObject: params })
+        let httpParams = new HttpParams()
             .set('client_id', params.clientId)
             .set('scope', params.scope)
             .set('redirect_uri', params.redirectUri)
@@ -102,6 +102,22 @@ export class TokenUrlService {
             .set('code_challenge', verification.codeChallenge)
             .set('code_challenge_method', verification.method);
 
+        if (params.prompt) {
+            httpParams = httpParams.set('prompt', params.prompt);
+        }
+
+        if (params.loginHint) {
+            httpParams = httpParams.set('login_hint', params.loginHint);
+        }
+
+        if (params.uiLocales) {
+            httpParams = httpParams.set('ui_locales', params.uiLocales);
+        }
+
+        if (params.acrValues) {
+            httpParams = httpParams.set('acr_values', params.acrValues);
+        }
+
         const url = `${authorizeEndpointUrl}?${httpParams}`;
 
         return {
@@ -110,6 +126,38 @@ export class TokenUrlService {
             codeVerifier: verification.codeVerifier,
             codeChallenge: verification.codeChallenge,
             url,
+        };
+    }
+
+    public createEndSessionUrl(
+        endSessionEndpointUrl: string,
+        params: {
+            idTokenHint?: string,
+            postLogoutRedirectUri?: string,
+        } = {}) {
+
+        if (!endSessionEndpointUrl || !endSessionEndpointUrl.length) {
+            throw new RequiredParemetersMissingError(`endSessionEndpointUrl`, arguments);
+        }
+
+        const state = this.tokenCrypto.generateState();
+        let httpParams = new HttpParams()
+            .set('state', state);
+
+        if (params.idTokenHint) {
+            httpParams = httpParams
+                .set('id_token_hint', params.idTokenHint);
+        }
+
+        if (params.postLogoutRedirectUri) {
+            httpParams = httpParams
+                .set('post_logout_redirect_uri', params.postLogoutRedirectUri);
+        }
+
+        const url = `${endSessionEndpointUrl}?${httpParams}`;
+        return {
+            url,
+            state
         };
     }
 

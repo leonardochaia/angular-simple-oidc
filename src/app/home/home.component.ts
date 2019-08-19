@@ -42,4 +42,9 @@ export class HomeComponent {
     this.auth.refreshAccessToken()
       .subscribe();
   }
+
+  public endSession() {
+    this.auth.endSession()
+      .subscribe();
+  }
 }

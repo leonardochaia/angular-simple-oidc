@@ -86,6 +86,77 @@ describe('TokenUrlService', () => {
       expect(output.nonce).toEqual(expected);
     });
 
+    it('generates URL using parameters', () => {
+      const nonce = 'N123';
+      tokenCryptoSpy.generateNonce.and.returnValue(nonce);
+
+      const state = 'S123';
+      tokenCryptoSpy.generateState.and.returnValue(state);
+
+      const verif = {
+        codeVerifier: 'verifier',
+        codeChallenge: 'challenge',
+        method: 'S256'
+      };
+      tokenCryptoSpy.generateCodesForCodeVerification.and.returnValue(verif);
+
+      const urlParams = {
+        clientId: 'myclient',
+        redirectUri: 'redirecturi',
+        scope: 'scope',
+        responseType: 'code' as any
+      };
+
+      const { url } = tokenUrl.createAuthorizeUrl('http://example.com', urlParams);
+
+      expect(url).toContain(`client_id=${urlParams.clientId}`);
+      expect(url).toContain(`redirect_uri=${urlParams.redirectUri}`);
+      expect(url).toContain(`scope=${urlParams.scope}`);
+      expect(url).toContain(`response_type=${urlParams.responseType}`);
+
+      expect(url).toContain(`state=${state}`);
+      expect(url).toContain(`nonce=${nonce}`);
+
+      expect(url).toContain(`code_challenge=${verif.codeChallenge}`);
+      expect(url).toContain(`code_challenge_method=${verif.method}`);
+
+    });
+
+    it('generates URL using optional parameters', () => {
+      const nonce = 'N123';
+      tokenCryptoSpy.generateNonce.and.returnValue(nonce);
+
+      const state = 'S123';
+      tokenCryptoSpy.generateState.and.returnValue(state);
+
+      const verif = {
+        codeVerifier: 'verifier',
+        codeChallenge: 'challenge',
+        method: 'S256'
+      };
+      tokenCryptoSpy.generateCodesForCodeVerification.and.returnValue(verif);
+
+      const urlParams = {
+        clientId: 'myclient',
+        redirectUri: 'redirecturi',
+        scope: 'scope',
+        responseType: 'code' as any,
+
+        prompt: 'prompt',
+        uiLocales: 'ui-locales',
+        loginHint: 'login-hint',
+        acrValues: 'acr-values',
+      };
+
+      const { url } = tokenUrl.createAuthorizeUrl('http://example.com', urlParams);
+
+      expect(url).toContain(`prompt=${urlParams.prompt}`);
+      expect(url).toContain(`ui_locales=${urlParams.uiLocales}`);
+      expect(url).toContain(`login_hint=${urlParams.loginHint}`);
+      expect(url).toContain(`acr_values=${urlParams.acrValues}`);
+
+    });
+
   });
 
   describe('parseAuthorizeCallbackParamsFromUrl', () => {
@@ -286,5 +357,54 @@ describe('TokenUrlService', () => {
       expect(output).toContain(`redirect_uri=${encodeURI(redirectUri)}`);
       expect(output).toContain(`grant_type=authorization_code`);
     });
+  });
+
+  describe('createEndSessionUrl', () => {
+    it('throws if end session url is missing', () => {
+      expect(() => {
+        tokenUrl.createEndSessionUrl(null, null);
+      }).toThrow(new RequiredParemetersMissingError(`endSessionEndpointUrl`, null));
+    });
+
+    it('uses tokenCrypto to obtain state', () => {
+      const expected = 'S123';
+      tokenCryptoSpy.generateState.and.returnValue(expected);
+
+      const idTokenHint = 'id-token';
+      const postLogoutRedirectUri = 'http://post-logout';
+
+      const output = tokenUrl.createEndSessionUrl('http://example.com', {
+        idTokenHint,
+        postLogoutRedirectUri,
+      });
+
+      expect(output.state).toEqual(expected);
+    });
+
+    it('generates url with params', () => {
+      const expected = 'S123';
+      tokenCryptoSpy.generateState.and.returnValue(expected);
+
+      const idTokenHint = 'id-token';
+      const postLogoutRedirectUri = 'http://post-logout';
+
+      const output = tokenUrl.createEndSessionUrl('http://example.com', {
+        idTokenHint,
+        postLogoutRedirectUri,
+      });
+
+      expect(output.url).toContain(`id_token_hint=${idTokenHint}`);
+      expect(output.url).toContain(`post_logout_redirect_uri=${postLogoutRedirectUri}`);
+    });
+
+    it('generates url without params', () => {
+      const state = 'S123';
+      tokenCryptoSpy.generateState.and.returnValue(state);
+
+      const output = tokenUrl.createEndSessionUrl('http://example.com');
+
+      expect(output.url).toContain(`state=${state}`);
+    });
+
   });
 });
