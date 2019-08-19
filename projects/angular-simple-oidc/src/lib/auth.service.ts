@@ -5,6 +5,8 @@ import { OidcCodeFlowClient } from './oidc-code-flow-client.service';
 import { TokenHelperService } from './core/token-helper.service';
 import { RefreshTokenClient } from './refresh-token-client.service';
 import { EventsService } from './events/events.service';
+import { EndSessionClientService } from './end-session-client.service';
+import { AuthConfigService } from './config/auth-config.service';
 
 @Injectable()
 export class AuthService {
@@ -60,6 +62,8 @@ export class AuthService {
         protected readonly tokenHelper: TokenHelperService,
         protected readonly tokenStorage: TokenStorageService,
         protected readonly refreshTokenClient: RefreshTokenClient,
+        protected readonly endSessionClient: EndSessionClientService,
+        protected readonly authConfig: AuthConfigService,
         protected readonly events: EventsService,
     ) { }
 
@@ -70,6 +74,11 @@ export class AuthService {
 
     public refreshAccessToken() {
         return this.refreshTokenClient.requestTokenWithRefreshCode()
+            .pipe(tap({ error: e => this.events.dispatchError(e) }));
+    }
+
+    public endSession(postLogoutRedirectUri = this.authConfig.baseUrl) {
+        return this.endSessionClient.logoutWithRedirect(postLogoutRedirectUri)
             .pipe(tap({ error: e => this.events.dispatchError(e) }));
     }
 }

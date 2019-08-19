@@ -163,4 +163,16 @@ describe('TokenStorageService', () => {
             expect(currentState.accessToken).toEqual(expected);
         }));
     });
+
+    describe('removeAll', () => {
+
+        it('removes each key one by one', fakeAsync(() => {
+
+            tokenStorage.removeAll().subscribe();
+
+            for (const k of Object.keys(TokenStorageKeys)) {
+                expect(storageSpy.removeItem).toHaveBeenCalledWith(TokenStorageKeys[k]);
+            }
+        }));
+    });
 });
