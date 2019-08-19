@@ -7,8 +7,8 @@ import { WINDOW_REF } from './constants';
 import { TokenUrlService } from './core/token-url.service';
 import { TokenStorageService } from './token-storage.service';
 import { combineLatest } from 'rxjs';
-import { AuthConfigService } from './config/auth-config.service';
 
+// @dynamic
 @Injectable()
 export class EndSessionClientService {
 
