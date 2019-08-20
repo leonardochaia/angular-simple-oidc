@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { switchMap, take, map, catchError, tap } from 'rxjs/operators';
-import { TokenRequestResult, DecodedIdentityToken } from './core/models';
-import { TokenValidationService } from './core/token-validation.service';
+import {
+    TokenRequestResult,
+    DecodedIdentityToken,
+    TokenValidationService,
+    TokenHelperService,
+    SimpleOidcError
+} from 'angular-simple-oidc/core';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
-import { TokenHelperService } from './core/token-helper.service';
 import { TokenEndpointError, TokenEndpointUnexpectedError } from './errors';
-import { SimpleOidcError } from './core/errors';
 import { EventsService } from './events/events.service';
 import { SimpleOidcInfoEvent } from './events/models';
 import { TokensObtainedEvent } from './auth.events';

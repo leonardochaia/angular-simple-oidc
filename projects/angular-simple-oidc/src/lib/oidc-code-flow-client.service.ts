@@ -2,13 +2,15 @@ import { Injectable, Inject } from '@angular/core';
 import { WINDOW_REF } from './constants';
 import { tap, switchMap, take, map, withLatestFrom } from 'rxjs/operators';
 import { TokenStorageService } from './token-storage.service';
-import { TokenValidationService } from './core/token-validation.service';
+import {
+    TokenValidationService,
+    TokenUrlService,
+    AuthorizationCallbackFormatError,
+} from 'angular-simple-oidc/core';
 import { AuthConfigService } from './config/auth-config.service';
 import { urlJoin } from './utils/url-join';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
-import { TokenUrlService } from './core/token-url.service';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
-import { AuthorizationCallbackFormatError } from './core/token-validation-errors';
 import { EventsService } from './events/events.service';
 import { SimpleOidcInfoEvent } from './events/models';
 import { TokensValidatedEvent, TokensReadyEvent } from './auth.events';

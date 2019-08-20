@@ -123,7 +123,7 @@
     "angular-simple-oidc": {
       "projectType": "library",
       "root": "projects/angular-simple-oidc",
-      "sourceRoot": "projects/angular-simple-oidc/src",
+      "sourceRoot": "projects/angular-simple-oidc",
       "prefix": "soidc",
       "architect": {
         "build": {
@@ -136,7 +136,7 @@
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "main": "projects/angular-simple-oidc/src/test.ts",
+            "main": "projects/angular-simple-oidc/test.ts",
             "tsConfig": "projects/angular-simple-oidc/tsconfig.spec.json",
             "karmaConfig": "projects/angular-simple-oidc/karma.conf.js"
           }

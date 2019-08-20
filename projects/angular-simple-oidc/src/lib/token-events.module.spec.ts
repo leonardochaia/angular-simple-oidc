@@ -3,9 +3,12 @@ import { TokenEventsModule } from './token-events.module';
 import { AuthService } from './auth.service';
 import { EventsService } from './events/events.service';
 import { TokenStorageService } from './token-storage.service';
-import { TokenHelperService } from './core/token-helper.service';
+import {
+    TokenHelperService,
+    LocalState,
+    TokenRequestResult
+} from 'angular-simple-oidc/core';
 import { of, Subject } from 'rxjs';
-import { LocalState, TokenRequestResult } from './core/models';
 import { TokensReadyEvent, AccessTokenExpiringEvent, AccessTokenExpiredEvent } from './auth.events';
 import { SimpleOidcInfoEvent } from './events/models';
 

@@ -3,7 +3,7 @@ import { OidcDiscoveryDocClient } from './oidc-discovery-doc-client.service';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { AuthConfigService } from '../config/auth-config.service';
 import { AuthConfig } from '../config/models';
-import { DiscoveryDocument, JWTKeys } from '../core/models';
+import { DiscoveryDocument, JWTKeys } from 'angular-simple-oidc/core';
 import { of, throwError } from 'rxjs';
 import { ObtainDiscoveryDocumentError, ObtainJWTKeysError } from './errors';
 import { EventsService } from '../events/events.service';

@@ -1,4 +1,4 @@
-import { SimpleOidcError } from '../core/errors';
+import { SimpleOidcError } from 'angular-simple-oidc/core';
 
 export abstract class SimpleOidcEvent { }
 

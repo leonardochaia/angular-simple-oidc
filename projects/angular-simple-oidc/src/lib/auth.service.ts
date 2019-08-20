@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { TokenStorageService } from './token-storage.service';
 import { map, tap } from 'rxjs/operators';
 import { OidcCodeFlowClient } from './oidc-code-flow-client.service';
-import { TokenHelperService } from './core/token-helper.service';
+import { TokenHelperService } from 'angular-simple-oidc/core';
 import { RefreshTokenClient } from './refresh-token-client.service';
 import { EventsService } from './events/events.service';
 import { EndSessionClientService } from './end-session-client.service';

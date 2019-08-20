@@ -1,7 +1,7 @@
 import { TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { EventsService } from './events.service';
 import { SimpleOidcEvent, SimpleOidcInfoEvent, SimpleOidcErrorEvent } from './models';
-import { SimpleOidcError } from '../core/errors';
+import { SimpleOidcError } from 'angular-simple-oidc/core';
 
 describe('EventsService', () => {
   let events: EventsService;

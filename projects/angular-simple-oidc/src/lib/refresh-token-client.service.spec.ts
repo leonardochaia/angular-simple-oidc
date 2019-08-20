@@ -1,17 +1,20 @@
 import { TestBed, flush, fakeAsync } from '@angular/core/testing';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
-import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
-import { TokenValidationService } from './core/token-validation.service';
+import {
+    TokenValidationService,
+    TokenUrlService,
+    RefreshTokenValidationService,
+    TokenHelperService,
+    LocalState,
+    TokenRequestResult,
+    DecodedIdentityToken
+} from 'angular-simple-oidc/core';
 import { of } from 'rxjs';
 import { AuthConfigService } from './config/auth-config.service';
 import { TokenStorageService } from './token-storage.service';
-import { TokenUrlService } from './core/token-url.service';
 import { EventsService } from './events/events.service';
 import { AuthConfig } from './config/models';
-import { RefreshTokenValidationService } from './core/refresh-token/refresh-token-validation.service';
 import { RefreshTokenClient } from './refresh-token-client.service';
-import { TokenHelperService } from './core/token-helper.service';
-import { LocalState, TokenRequestResult, DecodedIdentityToken } from './core/models';
 import { TokensReadyEvent } from './auth.events';
 
 function spyOnGet<T>(obj: T, property: keyof T) {

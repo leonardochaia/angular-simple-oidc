@@ -6,7 +6,7 @@ import { Subject, of, merge } from 'rxjs';
 import { EventsService } from './events/events.service';
 import { SimpleOidcInfoEvent } from './events/models';
 import { TokenStorageService } from './token-storage.service';
-import { TokenHelperService } from './core/token-helper.service';
+import { TokenHelperService } from 'angular-simple-oidc/core';
 
 @NgModule({
   imports: [],

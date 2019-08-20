@@ -20,13 +20,13 @@
     ],
     "paths": {
       "angular-simple-oidc": [
-        "./projects/angular-simple-oidc/src/public-api"
-        // "dist/angular-simple-oidc"
+        // "./projects/angular-simple-oidc/src/public-api"
+        "dist/angular-simple-oidc"
       ],
       "angular-simple-oidc/*": [
-        "./projects/angular-simple-oidc/src/*"
+        // "./projects/angular-simple-oidc/src/*"
         // "./projects/angular-simple-oic/src/*"
-        // "dist/angular-simple-oidc/*"
+        "dist/angular-simple-oidc/*"
       ]
     },
   },

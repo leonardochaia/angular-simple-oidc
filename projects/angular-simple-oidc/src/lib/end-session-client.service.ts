@@ -4,7 +4,7 @@ import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-
 import { EventsService } from './events/events.service';
 import { SimpleOidcInfoEvent } from './events/models';
 import { WINDOW_REF } from './constants';
-import { TokenUrlService } from './core/token-url.service';
+import { TokenUrlService } from 'angular-simple-oidc/core';
 import { TokenStorageService } from './token-storage.service';
 import { combineLatest } from 'rxjs';
 
