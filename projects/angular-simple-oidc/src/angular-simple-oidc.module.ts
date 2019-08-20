@@ -1,5 +1,5 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
-import { AUTH_CONFIG, WINDOW_REF, LOCAL_STORAGE_REF } from './lib/constants';
+import { AUTH_CONFIG, WINDOW_PROVIDER, LOCAL_STORAGE_PROVIDER } from './lib/constants';
 import { AuthConfig } from './lib/config/models';
 import { AuthConfigService } from './lib/config/auth-config.service';
 import { SIMPLE_OIDC_APP_INITIALIZER } from './lib/auth.bootstrap';
@@ -22,14 +22,9 @@ import { EndSessionClientService } from './lib/end-session-client.service';
     TokenEventsModule
   ],
   providers: [
-    {
-      provide: WINDOW_REF,
-      useValue: window
-    },
-    {
-      provide: LOCAL_STORAGE_REF,
-      useValue: localStorage
-    },
+    WINDOW_PROVIDER,
+    LOCAL_STORAGE_PROVIDER,
+
     AuthConfigService,
     TokenStorageService,
     TokenEndpointClientService,
