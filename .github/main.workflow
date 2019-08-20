@@ -31,5 +31,5 @@ action "Build sample app" {
   uses = "Borales/actions-yarn@master"
   needs = ["Build angular-simple-oidc"]
   runs = "yarn"
-  args = "build build --prod"
+  args = "build --prod"
 }
