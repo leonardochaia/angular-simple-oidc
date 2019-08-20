@@ -2,16 +2,18 @@ import { Injectable } from '@angular/core';
 import { TokenStorageService } from './token-storage.service';
 import { map, tap } from 'rxjs/operators';
 import { OidcCodeFlowClient } from './oidc-code-flow-client.service';
-import { TokenHelperService } from 'angular-simple-oidc/core';
+import { TokenHelperService, DecodedIdentityToken, SimpleOidcError, LocalState, TokenRequestResult } from 'angular-simple-oidc/core';
 import { RefreshTokenClient } from './refresh-token-client.service';
 import { EventsService } from './events/events.service';
 import { EndSessionClientService } from './end-session-client.service';
 import { AuthConfigService } from './config/auth-config.service';
+import { Observable } from 'rxjs';
+import { SimpleOidcEvent, SimpleOidcErrorEvent } from './events/models';
 
 @Injectable()
 export class AuthService {
 
-    public get isLoggedIn$() {
+    public get isLoggedIn$(): Observable<boolean> {
         return this.tokenStorage.currentState$
             .pipe(
                 map(({ accessToken, accessTokenExpiration }) => {
@@ -24,36 +26,36 @@ export class AuthService {
             );
     }
 
-    public get accessToken$() {
+    public get accessToken$(): Observable<string> {
         return this.tokenStorage.currentState$
             .pipe(map(s => s.accessToken));
     }
 
-    public get tokenExpiration$() {
+    public get tokenExpiration$(): Observable<Date> {
         return this.tokenStorage.currentState$
-            .pipe(map(s => s.accessTokenExpiration));
+            .pipe(map(s => new Date(s.accessTokenExpiration)));
     }
 
-    public get refreshToken$() {
+    public get refreshToken$(): Observable<string> {
         return this.tokenStorage.currentState$
             .pipe(map(s => s.refreshToken));
     }
 
-    public get identityToken$() {
+    public get identityToken$(): Observable<string> {
         return this.tokenStorage.currentState$
             .pipe(map(s => s.identityToken));
     }
 
-    public get identityTokenDecoded$() {
+    public get identityTokenDecoded$(): Observable<DecodedIdentityToken> {
         return this.tokenStorage.currentState$
             .pipe(map(s => s.decodedIdentityToken));
     }
 
-    public get events$() {
+    public get events$(): Observable<SimpleOidcEvent> {
         return this.events.events$;
     }
 
-    public get errors$() {
+    public get errors$(): Observable<SimpleOidcErrorEvent> {
         return this.events.errors$;
     }
 
@@ -67,12 +69,12 @@ export class AuthService {
         protected readonly events: EventsService,
     ) { }
 
-    public startCodeFlow() {
+    public startCodeFlow(): Observable<LocalState> {
         return this.oidcClient.startCodeFlow()
             .pipe(tap({ error: e => this.events.dispatchError(e) }));
     }
 
-    public refreshAccessToken() {
+    public refreshAccessToken(): Observable<TokenRequestResult> {
         return this.refreshTokenClient.requestTokenWithRefreshCode()
             .pipe(tap({ error: e => this.events.dispatchError(e) }));
     }

@@ -7,11 +7,13 @@ import {
     TokenValidationService,
     TokenUrlService,
     TokenHelperService,
+    TokenRequestResult,
 } from 'angular-simple-oidc/core';
 import { EventsService } from './events/events.service';
 import { SimpleOidcInfoEvent } from './events/models';
 import { TokensValidatedEvent, TokensReadyEvent } from './auth.events';
 import { TokenStorageService } from './token-storage.service';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class RefreshTokenClient {
@@ -31,7 +33,7 @@ export class RefreshTokenClient {
         protected readonly events: EventsService,
     ) { }
 
-    public requestTokenWithRefreshCode() {
+    public requestTokenWithRefreshCode(): Observable<TokenRequestResult> {
         return this.tokenStorage.currentState$.pipe(
             take(1),
             switchMap(localState => {

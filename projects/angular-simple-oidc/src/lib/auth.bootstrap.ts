@@ -32,7 +32,7 @@ export function simpleOidcInitializer(
           // Do not prevent bootstrapping in order to be able to handle errors gracefully.
           return of();
         }))
-        .toPromise();
+        .toPromise<any>();
     }
   };
 }
