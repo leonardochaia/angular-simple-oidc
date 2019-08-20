@@ -6,6 +6,8 @@ import {
     TokenValidationService,
     TokenUrlService,
     AuthorizationCallbackFormatError,
+    LocalState,
+    TokenRequestResult,
 } from 'angular-simple-oidc/core';
 import { AuthConfigService } from './config/auth-config.service';
 import { urlJoin } from './utils/url-join';
@@ -14,6 +16,7 @@ import { TokenEndpointClientService } from './token-endpoint-client.service';
 import { EventsService } from './events/events.service';
 import { SimpleOidcInfoEvent } from './events/models';
 import { TokensValidatedEvent, TokensReadyEvent } from './auth.events';
+import { Observable } from 'rxjs';
 
 // @dynamic
 @Injectable()
@@ -35,7 +38,7 @@ export class OidcCodeFlowClient {
         protected readonly events: EventsService,
     ) { }
 
-    public startCodeFlow() {
+    public startCodeFlow(): Observable<LocalState> {
         this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow`));
         return this.discoveryDocumentClient.current$
             .pipe(
@@ -63,7 +66,7 @@ export class OidcCodeFlowClient {
                 }));
     }
 
-    public codeFlowCallback() {
+    public codeFlowCallback(): Observable<TokenRequestResult> {
         this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow callback`));
 
         let code: string, state: string, error: string;
