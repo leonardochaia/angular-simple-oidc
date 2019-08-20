@@ -2,14 +2,16 @@ import { Injectable } from '@angular/core';
 import { switchMap, take, map, withLatestFrom, tap } from 'rxjs/operators';
 import { AuthConfigService } from './config/auth-config.service';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
-import { RefreshTokenValidationService } from './core/refresh-token/refresh-token-validation.service';
-import { TokenValidationService } from './core/token-validation.service';
+import {
+    RefreshTokenValidationService,
+    TokenValidationService,
+    TokenUrlService,
+    TokenHelperService,
+} from 'angular-simple-oidc/core';
 import { EventsService } from './events/events.service';
 import { SimpleOidcInfoEvent } from './events/models';
 import { TokensValidatedEvent, TokensReadyEvent } from './auth.events';
 import { TokenStorageService } from './token-storage.service';
-import { TokenUrlService } from './core/token-url.service';
-import { TokenHelperService } from './core/token-helper.service';
 
 @Injectable()
 export class RefreshTokenClient {

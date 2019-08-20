@@ -1,10 +1,9 @@
 import { TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
-import { DiscoveryDocument, LocalState } from './core/models';
+import { DiscoveryDocument, LocalState, TokenUrlService } from 'angular-simple-oidc/core';
 import { of } from 'rxjs';
 import { EndSessionClientService } from './end-session-client.service';
 import { WINDOW_REF } from './constants';
-import { TokenUrlService } from './core/token-url.service';
 import { TokenStorageService } from './token-storage.service';
 import { EventsService } from './events/events.service';
 

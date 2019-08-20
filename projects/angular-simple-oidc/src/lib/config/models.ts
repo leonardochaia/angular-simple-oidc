@@ -1,4 +1,4 @@
-import { TokenValidationConfig } from '../core/models';
+import { TokenValidationConfig } from 'angular-simple-oidc/core';
 
 export const AuthConfigRequiredFields: (keyof AuthConfig)[] = ['clientId', 'scope', 'openIDProviderUrl'];
 

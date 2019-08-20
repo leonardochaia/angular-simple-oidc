@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SimpleOidcEvent, SimpleOidcErrorEvent } from './models';
 import { ReplaySubject } from 'rxjs';
-import { SimpleOidcError } from '../core/errors';
+import { SimpleOidcError } from 'angular-simple-oidc/core';
 
 @Injectable({
     providedIn: 'root'

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { throwError, of } from 'rxjs';
 import { switchMap, catchError, shareReplay, tap } from 'rxjs/operators';
-import { DiscoveryDocument, JWTKeys } from '../core/models';
+import { DiscoveryDocument, JWTKeys } from 'angular-simple-oidc/core';
 import { urlJoin } from '../utils/url-join';
 import { AuthConfigService } from '../config/auth-config.service';
 import { ObtainDiscoveryDocumentError, ObtainJWTKeysError } from './errors';

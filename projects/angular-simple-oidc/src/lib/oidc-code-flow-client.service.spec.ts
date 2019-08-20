@@ -1,16 +1,20 @@
 import { TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
-import { TokenValidationService } from './core/token-validation.service';
-import { DiscoveryDocument, LocalState, JWTKeys } from './core/models';
+import {
+    TokenValidationService,
+    DiscoveryDocument,
+    LocalState,
+    JWTKeys,
+    TokenRequestResult,
+    AuthorizationCallbackFormatError,
+    TokenUrlService
+} from 'angular-simple-oidc/core';
 import { of } from 'rxjs';
-import { TokenRequestResult } from './core/models';
-import { AuthorizationCallbackFormatError } from './core/token-validation-errors';
 import { OidcCodeFlowClient } from './oidc-code-flow-client.service';
 import { WINDOW_REF } from './constants';
 import { AuthConfigService } from './config/auth-config.service';
 import { TokenStorageService } from './token-storage.service';
-import { TokenUrlService } from './core/token-url.service';
 import { EventsService } from './events/events.service';
 import { AuthConfig } from './config/models';
 import { TokensReadyEvent } from './auth.events';
