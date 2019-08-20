@@ -14,7 +14,7 @@ action "Install packages" {
 
 action "Run tests" {
   uses = "ianwalter/puppeteer@v2.0.0"
-  needs = ["Install packages"]
+  needs = ["Build angular-simple-oidc"]
   args = "test-lib-ci"
   runs = "yarn"
 }
