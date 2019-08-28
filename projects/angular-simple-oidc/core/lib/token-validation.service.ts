@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { TokenHelperService } from './token-helper.service';
 import { TokenCryptoService } from './token-crypto.service';
-import { DecodedIdentityToken, LocalState, TokenValidationConfig } from './models';
+import { DecodedIdentityToken, TokenValidationConfig } from './models';
 import { JWTKeys, DiscoveryDocument } from './models';
 import {
     InvalidStateError,
@@ -374,8 +374,8 @@ export class TokenValidationService {
      * Validates the local state against the
      * returned state from the IDP to make sure it matches
      */
-    public validateAuthorizeCallbackState(localState: LocalState, state: string) {
-        if (state !== localState.state) {
+    public validateAuthorizeCallbackState(localState: string, state: string) {
+        if (state !== localState) {
             throw new InvalidStateError({
                 localState,
                 returnedState: state,
@@ -392,6 +392,7 @@ export class TokenValidationService {
         if (typeof error === 'string') {
             throw new AuthorizationCallbackError(error, {
                 url: href,
+                error,
             });
         }
 

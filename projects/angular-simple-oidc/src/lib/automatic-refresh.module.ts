@@ -1,9 +1,10 @@
 import { NgModule, OnDestroy } from '@angular/core';
 import { AuthService } from './auth.service';
-import { filter, takeUntil, switchMap } from 'rxjs/operators';
+import { takeUntil, switchMap } from 'rxjs/operators';
 import { AccessTokenExpiringEvent } from './auth.events';
 import { Subject } from 'rxjs';
 import { EventsService } from './events/events.service';
+import { filterInstanceOf } from './utils/filter-instance-of';
 
 @NgModule({
   imports: [],
@@ -21,7 +22,7 @@ export class AutomaticRefreshModule implements OnDestroy {
 
     this.auth.events$
       .pipe(
-        filter((e): e is AccessTokenExpiringEvent => e instanceof AccessTokenExpiringEvent),
+        filterInstanceOf(AccessTokenExpiringEvent),
         switchMap(() => this.auth.refreshAccessToken()),
         takeUntil(this.destroyedSubject)
       )

@@ -52,8 +52,13 @@ export class TokenStorageService {
         return of(state);
     }
 
-    public storeAuthorizationCode(authorizationCode: string) {
+    public storeAuthorizationCode(authorizationCode: string, sessionState?: string) {
         this.storage.setItem(TokenStorageKeys.AuthorizationCode, authorizationCode);
+
+        if (sessionState) {
+            this.storage.setItem(TokenStorageKeys.SessionState, sessionState);
+        }
+
         const state = this.getCurrentLocalState();
         this.localStateSubject.next(state);
         return of(state);
@@ -100,6 +105,7 @@ export class TokenStorageService {
             state: this.storage.getItem(TokenStorageKeys.State),
             codeVerifier: this.storage.getItem(TokenStorageKeys.CodeVerifier),
             authorizationCode: this.storage.getItem(TokenStorageKeys.AuthorizationCode),
+            sessionState: this.storage.getItem(TokenStorageKeys.SessionState),
             identityToken: this.storage.getItem(TokenStorageKeys.IdentityToken),
             originalIdentityToken: this.storage.getItem(TokenStorageKeys.OriginalIdentityToken),
             accessToken: this.storage.getItem(TokenStorageKeys.AccessToken),

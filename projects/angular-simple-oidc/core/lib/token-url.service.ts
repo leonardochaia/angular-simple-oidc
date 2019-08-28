@@ -75,7 +75,8 @@ export class TokenUrlService {
             loginHint?: string,
             uiLocales?: string,
             acrValues?: string
-            responseType: 'code' | 'token' | 'id_token token'
+            responseType: 'code' | 'token' | 'id_token token',
+            idTokenHint?: string,
         }) {
 
         if (!authorizeEndpointUrl || !authorizeEndpointUrl.length) {
@@ -116,6 +117,10 @@ export class TokenUrlService {
 
         if (params.acrValues) {
             httpParams = httpParams.set('acr_values', params.acrValues);
+        }
+
+        if (params.idTokenHint) {
+            httpParams = httpParams.set('id_token_hint', params.idTokenHint);
         }
 
         const url = `${authorizeEndpointUrl}?${httpParams}`;

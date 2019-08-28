@@ -7,6 +7,7 @@ import { WINDOW_REF } from './constants';
 import { TokenUrlService } from 'angular-simple-oidc/core';
 import { TokenStorageService } from './token-storage.service';
 import { combineLatest } from 'rxjs';
+import { switchTap } from './utils/switch-tap';
 
 // @dynamic
 @Injectable()
@@ -32,10 +33,9 @@ export class EndSessionClientService {
                     idTokenHint: localState.identityToken,
                     postLogoutRedirectUri
                 })),
-                switchMap(result => {
+                switchTap(() => {
                     this.events.dispatch(new SimpleOidcInfoEvent('Deleting Local Session'));
-                    return this.tokenStorage.removeAll()
-                        .pipe(map(() => result));
+                    return this.tokenStorage.removeAll();
                 }),
                 tap(({ url }) => {
                     this.events.dispatch(new SimpleOidcInfoEvent('Redirecting to End Session Endpoint', url));

@@ -7,6 +7,9 @@
   <li>
     Authenticated (has token && not expired): {{isLoggedIn$ | async}}
     <button (click)="endSession()">End Session</button>
+    <button (click)="doCodeFlowInIframe()">Authorize w/ prompt=none in iframe</button>
+    <button (click)="doAuthorizeWithRedirect()">Authorize w/ window redirect</button>
+
   </li>
   <li>
     Access Token: {{accessToken$ | async}}
