@@ -64,7 +64,7 @@ import {
     // For automatic token refresh.
     // AutomaticRefreshModule,
 
-    // For Session Management
+    // For Session Management (read below)
     // SessionManagementModule
 
   ],
@@ -168,3 +168,17 @@ The `AutomaticRefreshModule` will attempt to refresh the token using Refresh Tok
 
 The `SessionManagementModule` will use an iframe to an endpoint in the Identity Provider to check if the session is still active.
 If the session has finished, `SessionTerminatedEvent` will be fired.
+
+You'll need to provide an HTML file in your `/assets` directory with the below contents:
+
+```html
+<html>
+<!-- This file is required for angular-simple-oidc Session Management -->
+<body>
+    <script>
+        (window.opener || window.parent).postMessage(location.href, location.origin);
+    </script>
+</body>
+
+</html>
+```
