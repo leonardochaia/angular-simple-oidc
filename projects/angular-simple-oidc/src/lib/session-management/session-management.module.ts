@@ -8,7 +8,7 @@ import { SessionChangedEvent, SessionTerminatedEvent } from './events';
 import { SimpleOidcInfoEvent } from '../events/models';
 import { TokenStorageService } from '../token-storage.service';
 import { SimpleOidcError } from 'angular-simple-oidc/core';
-import { filterInstanceOf } from '../utils/filter-instance-of';
+import { filterInstanceOf } from 'angular-simple-oidc/operators';
 import { AuthorizeEndpointSilentClientService } from './authorize-endpoint-silent-client.service';
 
 /**

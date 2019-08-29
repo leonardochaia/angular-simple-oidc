@@ -14,7 +14,6 @@ export { AuthConfig } from './lib/config/models';
 
 export * from './lib/errors';
 export * from './lib/events/models';
-export * from './lib/utils/filter-instance-of';
 export * from './lib/auth.events';
 
 export { RefreshTokenClient } from './lib/refresh-token-client.service';

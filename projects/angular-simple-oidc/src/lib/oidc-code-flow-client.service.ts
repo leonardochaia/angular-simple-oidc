@@ -18,7 +18,7 @@ import { SimpleOidcInfoEvent } from './events/models';
 import { TokensValidatedEvent, TokensReadyEvent } from './auth.events';
 import { Observable } from 'rxjs';
 import { DynamicIframeService } from './dynamic-iframe/dynamic-iframe.service';
-import { switchTap } from './utils/switch-tap';
+import { switchTap } from 'angular-simple-oidc/operators';
 
 // @dynamic
 @Injectable()

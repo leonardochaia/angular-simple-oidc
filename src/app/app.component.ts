@@ -2,12 +2,12 @@ import { Component, OnDestroy } from '@angular/core';
 import {
   AuthService,
   TokensReadyEvent,
-  filterInstanceOf,
   SessionTerminatedEvent
 } from 'angular-simple-oidc';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { SimpleOidcError } from 'angular-simple-oidc/core';
+import { filterInstanceOf, } from 'angular-simple-oidc/operators';
 
 @Component({
   selector: 'soidc-root',
