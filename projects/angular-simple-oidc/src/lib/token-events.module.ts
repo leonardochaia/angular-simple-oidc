@@ -7,7 +7,7 @@ import { EventsService } from './events/events.service';
 import { SimpleOidcInfoEvent } from './events/models';
 import { TokenStorageService } from './token-storage.service';
 import { TokenHelperService } from 'angular-simple-oidc/core';
-import { filterInstanceOf } from './utils/filter-instance-of';
+import { filterInstanceOf } from 'angular-simple-oidc/operators';
 
 @NgModule({
   imports: [],

@@ -10,7 +10,7 @@ import { EventsService } from '../events/events.service';
 import { TokenUrlService, TokenRequestResult } from 'angular-simple-oidc/core';
 import { SimpleOidcInfoEvent } from '../events/models';
 import { urlJoin } from '../utils/url-join';
-import { switchTap } from '../utils/switch-tap';
+import { switchTap } from 'angular-simple-oidc/operators';
 import { OidcCodeFlowClient } from '../oidc-code-flow-client.service';
 import { IframePostMessageTimeoutError } from './errors';
 

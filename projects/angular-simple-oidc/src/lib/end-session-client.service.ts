@@ -7,7 +7,7 @@ import { WINDOW_REF } from './constants';
 import { TokenUrlService } from 'angular-simple-oidc/core';
 import { TokenStorageService } from './token-storage.service';
 import { combineLatest } from 'rxjs';
-import { switchTap } from './utils/switch-tap';
+import { switchTap } from 'angular-simple-oidc/operators';
 
 // @dynamic
 @Injectable()

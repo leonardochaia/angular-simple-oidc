@@ -4,7 +4,7 @@ import { takeUntil, switchMap } from 'rxjs/operators';
 import { AccessTokenExpiringEvent } from './auth.events';
 import { Subject } from 'rxjs';
 import { EventsService } from './events/events.service';
-import { filterInstanceOf } from './utils/filter-instance-of';
+import { filterInstanceOf } from 'angular-simple-oidc/operators';
 
 @NgModule({
   imports: [],
