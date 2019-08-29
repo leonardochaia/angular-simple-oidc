@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { AuthService } from 'angular-simple-oidc';
+import { AuthService, AuthorizeEndpointSilentClientService } from 'angular-simple-oidc';
 import { map } from 'rxjs/operators';
 
 @Component({
@@ -36,7 +36,9 @@ export class HomeComponent {
       );
   }
 
-  constructor(private readonly auth: AuthService) { }
+  constructor(
+    private readonly auth: AuthService,
+    private readonly authorizeSilentClient: AuthorizeEndpointSilentClientService) { }
 
   public doTokenRefresh() {
     this.auth.refreshAccessToken()
@@ -45,6 +47,16 @@ export class HomeComponent {
 
   public endSession() {
     this.auth.endSession()
+      .subscribe();
+  }
+
+  public doCodeFlowInIframe() {
+    this.authorizeSilentClient.startCodeFlowInIframe()
+      .subscribe();
+  }
+
+  public doAuthorizeWithRedirect() {
+    this.auth.startCodeFlow()
       .subscribe();
   }
 }

@@ -715,9 +715,7 @@ describe('TokenValidationService', () => {
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const state = 'a';
-          const localState = {
-            state: 'a'
-          } as LocalState;
+          const localState = 'a';
 
           expect(() => tokenValidation.validateAuthorizeCallbackState(localState, state))
             .not.toThrow();
@@ -728,10 +726,7 @@ describe('TokenValidationService', () => {
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const state = 'a';
-          const localState = {
-            state: 'abc'
-          } as LocalState;
-          const code = 'abc';
+          const localState = 'abc';
 
           expect(() => tokenValidation.validateAuthorizeCallbackState(localState, state))
             .toThrowError(InvalidStateError);

@@ -6,7 +6,7 @@ An Angular (currently 8+, lower versions could be supported) library for the [Op
 * Code Flow
 * Refresh Tokens
 * Automatic Token Refresh before token expiring
-* Session Checks (in-progress)
+* Session Checks
 
 ## Motivation
 
@@ -44,7 +44,11 @@ import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 
-import { AngularSimpleOidcModule, AutomaticRefreshModule } from 'angular-simple-oidc';
+import {
+  AngularSimpleOidcModule,
+  AutomaticRefreshModule,
+  SessionManagementModule
+} from 'angular-simple-oidc';
 
 @NgModule({
   imports: [
@@ -59,6 +63,9 @@ import { AngularSimpleOidcModule, AutomaticRefreshModule } from 'angular-simple-
 
     // For automatic token refresh.
     // AutomaticRefreshModule,
+
+    // For Session Management (read below)
+    // SessionManagementModule
 
   ],
   declarations: [
@@ -148,3 +155,30 @@ export class MyComponent {
 
 **Note that a token will be returned even if it's expired**;.
 To check if the user "is logged in", meaning that has an Access Token and the token is not yet expired you must use the `isLoggedIn$` observable instead.
+
+## End Session
+
+To log out the user, use the `AuthService.endSession()`. Will redirect to the log out page of the IdentityProvider.
+
+## Automatic refresh
+
+The `AutomaticRefreshModule` will attempt to refresh the token using Refresh Tokens just before the tokens expire.
+
+## Session Management
+
+The `SessionManagementModule` will use an iframe to an endpoint in the Identity Provider to check if the session is still active.
+If the session has finished, `SessionTerminatedEvent` will be fired.
+
+You'll need to provide an HTML file in your `/assets` directory with the below contents:
+
+```html
+<html>
+<!-- This file is required for angular-simple-oidc Session Management -->
+<body>
+    <script>
+        (window.opener || window.parent).postMessage(location.href, location.origin);
+    </script>
+</body>
+
+</html>
+```

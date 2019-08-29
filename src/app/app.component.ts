@@ -1,7 +1,9 @@
 import { Component, OnDestroy } from '@angular/core';
 import {
   AuthService,
-  TokensReadyEvent
+  TokensReadyEvent,
+  filterInstanceOf,
+  SessionTerminatedEvent
 } from 'angular-simple-oidc';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -19,23 +21,37 @@ export class AppComponent implements OnDestroy {
   protected readonly destroyedSubject = new Subject();
 
   constructor(readonly auth: AuthService) {
+
+    auth.events$
+      .pipe(
+        filterInstanceOf(TokensReadyEvent),
+        takeUntil(this.destroyedSubject)
+      )
+      .subscribe(e => {
+        console.info(`Tokens! Yummy.`);
+        console.log(
+          JSON.stringify(e.payload.decodedIdToken, null, 4)
+        );
+      });
+
+    auth.events$
+      .pipe(
+        filterInstanceOf(SessionTerminatedEvent),
+        takeUntil(this.destroyedSubject)
+      )
+      .subscribe(e => {
+        alert('Your session has ended!');
+      });
+
     auth.events$
       .pipe(takeUntil(this.destroyedSubject))
       .subscribe(e => {
-        if (e instanceof TokensReadyEvent) {
-          console.info(`Tokens! Yummy.`);
-          console.log(
-            JSON.stringify(e.payload, null, 4)
-          );
-        } else {
-          console.log(e);
-        }
+        console.log(e);
       });
 
     auth.errors$
       .pipe(takeUntil(this.destroyedSubject))
       .subscribe(e => {
-
         console.error(e);
         this.oidcErrors.push(e.error);
       });

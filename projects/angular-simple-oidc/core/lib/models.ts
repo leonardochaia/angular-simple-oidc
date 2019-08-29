@@ -35,6 +35,7 @@ export enum TokenStorageKeys {
     State = 'simple.oidc.state',
     CodeVerifier = 'simple.oidc.code-verifier',
     AuthorizationCode = 'simple.oidc.authorization-code',
+    SessionState = 'simple.oidc.session-state',
     OriginalIdentityToken = 'simple.oidc.original-identity-token',
     IdentityToken = 'simple.oidc.identity-token',
     IdentityTokenDecoded = 'simple.oidc.identity-token-decoded',
@@ -56,6 +57,7 @@ export interface LocalState {
     accessTokenExpiration: number;
     refreshToken: string;
     preRedirectUrl: string;
+    sessionState?: string;
 }
 
 export interface TokenValidationConfig {

@@ -1,12 +1,13 @@
 import { NgModule, OnDestroy } from '@angular/core';
 import { AuthService } from './auth.service';
-import { filter, takeUntil, delay, switchMap, take } from 'rxjs/operators';
+import { takeUntil, delay, switchMap, take } from 'rxjs/operators';
 import { TokensReadyEvent, AccessTokenExpiredEvent, AccessTokenExpiringEvent } from './auth.events';
 import { Subject, of, merge } from 'rxjs';
 import { EventsService } from './events/events.service';
 import { SimpleOidcInfoEvent } from './events/models';
 import { TokenStorageService } from './token-storage.service';
 import { TokenHelperService } from 'angular-simple-oidc/core';
+import { filterInstanceOf } from './utils/filter-instance-of';
 
 @NgModule({
   imports: [],
@@ -54,7 +55,7 @@ export class TokenEventsModule implements OnDestroy {
   public watchTokenExpiration() {
     this.auth.events$
       .pipe(
-        filter((e): e is TokensReadyEvent => e instanceof TokensReadyEvent),
+        filterInstanceOf(TokensReadyEvent),
         switchMap(({ payload }) => {
           if (payload.accessToken && payload.accessTokenExpiresAt) {
 
