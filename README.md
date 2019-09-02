@@ -33,10 +33,14 @@ Install from NPM
 yarn add angular-simple-oidc
 ```
 
-You will then need to supply the configuration for OIDC, you can do so statically for your entire application in the `app.module` file. You could use `environment.ts` config replacement for different prod/staging/development settings.
+### Static Configuration
+
+You will then need to supply the configuration for OIDC.
+Configuration can be provided statically for in the `app.module` file.
+You could use `environment.ts` config replacement for different prod/staging/development settings.
 i.e:
 
-**WARNING**: The clientSecret should not be treated as a secret. Some IdentityProviders require a secret for Code Flow, some don't.
+**WARNING: The clientSecret should not be treated as a secret. Some IdentityProviders require a secret for Code Flow, some don't.**
 
 ```typescript
 import { BrowserModule } from '@angular/platform-browser';
@@ -65,7 +69,9 @@ import {
     // AutomaticRefreshModule,
 
     // For Session Management (read below)
-    // SessionManagementModule
+    // SessionManagementModule.forRoot({
+    //   iframePath: "assets/oidc-iframe.html"
+    // })
 
   ],
   declarations: [
@@ -78,10 +84,67 @@ export class AppModule { }
 
 ```
 
-#### Limitations
+#### Asynchronous Configuration
 
-The downside when using this setup is that you're not able to change the configuration on runtime (i.e, get JSON file from server and load the config).
-We're working on ways to provide config on runtime. #8
+The downside of using static configuration is that your config ends up hard-coded in your app bundle.
+You can customize the configuration provision by using a service and overriding Angular Simple OIDC configuration providers.
+
+Check the `custom-config` for a [complete example](/projects/samples/custom-config)
+
+```typescript
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule, Provider } from '@angular/core';
+
+import { AppComponent } from './app.component';
+import { AngularSimpleOidcModule, AUTH_CONFIG, SessionManagementModule, SESSION_MANAGEMENT_CONFIG } from 'angular-simple-oidc';
+import { ExternalConfigService } from './external-config.service';
+import { HttpClientModule } from '@angular/common/http';
+import { map } from 'rxjs/operators';
+
+// needs to be exporter for AOT
+export function getExternalAuthConfigFactory(externalConfig: ExternalConfigService) {
+  return externalConfig.config$
+    .pipe(map(c => c.auth));
+}
+
+export const EXTERNAL_AUTH_CONFIG_PROVIDER: Provider = {
+  provide: AUTH_CONFIG,
+  useFactory: getExternalAuthConfigFactory,
+  deps: [ExternalConfigService],
+};
+
+export function getExternalSessionConfigFactory(externalConfig: ExternalConfigService) {
+  return externalConfig.config$
+    .pipe(map(c => c.session));
+}
+
+export const EXTERNAL_SESSION_CONFIG_PROVIDER: Provider = {
+  provide: SESSION_MANAGEMENT_CONFIG,
+  useFactory: getExternalSessionConfigFactory,
+  deps: [ExternalConfigService],
+};
+
+@NgModule({
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+
+    // Do not provide a static config here.
+    AngularSimpleOidcModule.forRoot(),
+    SessionManagementModule.forRoot()
+  ],
+  providers: [
+    EXTERNAL_AUTH_CONFIG_PROVIDER,
+    EXTERNAL_SESSION_CONFIG_PROVIDER,
+  ],
+  declarations: [
+    AppComponent,
+  ],
+  bootstrap: [AppComponent],
+})
+export class AppModule { }
+
+```
 
 #### Requesting more scopes
 
