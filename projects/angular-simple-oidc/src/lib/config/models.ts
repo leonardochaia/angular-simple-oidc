@@ -1,6 +1,6 @@
 import { TokenValidationConfig } from 'angular-simple-oidc/core';
 
-export const AUTH_CONFIG_REQUIRED_FIELDS: (keyof AuthConfig)[] = ['clientId', 'scope', 'openIDProviderUrl'];
+export const AUTH_CONFIG_REQUIRED_FIELDS: (keyof AuthConfig)[] = ['clientId', 'openIDProviderUrl'];
 
 export interface AuthConfig {
     /** The URL to the OpenID Provider (OP).
@@ -21,7 +21,7 @@ export interface AuthConfig {
     /** Space separated list of scopes to request when requesting access tokens.
      * i.e: 'openid profile'
      */
-    scope: string;
+    scope?: string;
 
     /**
      * Name of the tokenCallbackPath. This is the Angular Route 'path'
