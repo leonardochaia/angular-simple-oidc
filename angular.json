@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
-  "newProjectRoot": "projects",
+  "newProjectRoot": "projects/samples",
   "projects": {
     "angular-simple-oidc-sample": {
       "projectType": "application",
@@ -151,6 +151,141 @@
             "exclude": [
               "**/node_modules/**"
             ]
+          }
+        }
+      }
+    },
+    "custom-config": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:class": {
+          "skipTests": true
+        },
+        "@schematics/angular:component": {
+          "skipTests": true
+        },
+        "@schematics/angular:directive": {
+          "skipTests": true
+        },
+        "@schematics/angular:guard": {
+          "skipTests": true
+        },
+        "@schematics/angular:module": {
+          "skipTests": true
+        },
+        "@schematics/angular:pipe": {
+          "skipTests": true
+        },
+        "@schematics/angular:service": {
+          "skipTests": true
+        }
+      },
+      "root": "projects/samples/custom-config",
+      "sourceRoot": "projects/samples/custom-config/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/custom-config",
+            "index": "projects/samples/custom-config/src/index.html",
+            "main": "projects/samples/custom-config/src/main.ts",
+            "polyfills": "projects/samples/custom-config/src/polyfills.ts",
+            "tsConfig": "projects/samples/custom-config/tsconfig.app.json",
+            "aot": false,
+            "assets": [
+              "projects/samples/custom-config/src/favicon.ico",
+              "projects/samples/custom-config/src/assets"
+            ],
+            "styles": [
+              "projects/samples/custom-config/src/styles.css"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/samples/custom-config/src/environments/environment.ts",
+                  "with": "projects/samples/custom-config/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "custom-config:build"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "custom-config:build:production"
+            }
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "custom-config:build"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/samples/custom-config/src/test.ts",
+            "polyfills": "projects/samples/custom-config/src/polyfills.ts",
+            "tsConfig": "projects/samples/custom-config/tsconfig.spec.json",
+            "karmaConfig": "projects/samples/custom-config/karma.conf.js",
+            "assets": [
+              "projects/samples/custom-config/src/favicon.ico",
+              "projects/samples/custom-config/src/assets"
+            ],
+            "styles": [
+              "projects/samples/custom-config/src/styles.css"
+            ],
+            "scripts": []
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/samples/custom-config/tsconfig.app.json",
+              "projects/samples/custom-config/tsconfig.spec.json",
+              "projects/samples/custom-config/e2e/tsconfig.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        },
+        "e2e": {
+          "builder": "@angular-devkit/build-angular:protractor",
+          "options": {
+            "protractorConfig": "projects/samples/custom-config/e2e/protractor.conf.js",
+            "devServerTarget": "custom-config:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "custom-config:serve:production"
+            }
           }
         }
       }

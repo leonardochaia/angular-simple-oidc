@@ -1,0 +1,12 @@
+{
+    "auth": {
+        "openIDProviderUrl": "http: //localhost:420",
+        "clientId": "example.client",
+        "clientSecret": "myDummySecret",
+        "scope": "openid profile offline_access"
+    },
+    "session": {
+        "opIframePollInterval": 500,
+        "iframePath": "assets/oidc-iframe.html"
+    }
+}
