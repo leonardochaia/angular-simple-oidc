@@ -10,9 +10,8 @@ import {
 } from 'angular-simple-oidc/core';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
 import { TokenEndpointError, TokenEndpointUnexpectedError } from './errors';
-import { EventsService } from './events/events.service';
-import { SimpleOidcInfoEvent } from './events/models';
 import { TokensObtainedEvent } from './auth.events';
+import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
 interface TokenEndpointResponse {
     access_token?: string;

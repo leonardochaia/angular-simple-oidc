@@ -1,26 +1,24 @@
 import { Injectable, Inject } from '@angular/core';
 import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
 import { DynamicIframeService } from '../dynamic-iframe/dynamic-iframe.service';
-import { take, map, tap, switchMap, filter, timeout, catchError } from 'rxjs/operators';
-import { AuthConfigService } from '../config/auth-config.service';
+import { take, map, tap, switchMap, filter, timeout, catchError, withLatestFrom } from 'rxjs/operators';
 import { TokenStorageService } from '../token-storage.service';
 import { fromEvent, throwError, Observable } from 'rxjs';
-import { WINDOW_REF } from '../constants';
-import { EventsService } from '../events/events.service';
+import { WINDOW_REF, AUTH_CONFIG_SERVICE } from '../providers';
 import { TokenUrlService, TokenRequestResult } from 'angular-simple-oidc/core';
-import { SimpleOidcInfoEvent } from '../events/models';
 import { urlJoin } from '../utils/url-join';
 import { switchTap } from 'angular-simple-oidc/operators';
 import { OidcCodeFlowClient } from '../oidc-code-flow-client.service';
 import { IframePostMessageTimeoutError } from './errors';
+import { ConfigService } from 'angular-simple-oidc/config';
+import { AuthConfig } from '../config/models';
+import { SESSION_MANAGEMENT_CONFIG_SERVICE } from './providers';
+import { SessionManagementConfig } from './models';
+import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
 // @dynamic
 @Injectable()
 export class AuthorizeEndpointSilentClientService {
-
-    protected get authConfig() {
-        return this.config.configuration;
-    }
 
     constructor(
         @Inject(WINDOW_REF)
@@ -28,22 +26,34 @@ export class AuthorizeEndpointSilentClientService {
         protected readonly discoveryClient: OidcDiscoveryDocClient,
         protected readonly dynamicIframe: DynamicIframeService,
         protected readonly tokenStorage: TokenStorageService,
-        protected readonly config: AuthConfigService,
+        @Inject(AUTH_CONFIG_SERVICE)
+        protected readonly authConfig: ConfigService<AuthConfig>,
+        @Inject(SESSION_MANAGEMENT_CONFIG_SERVICE)
+        protected readonly sessionConfig: ConfigService<SessionManagementConfig>,
         protected readonly events: EventsService,
         protected readonly oidcClient: OidcCodeFlowClient,
         protected readonly tokenUrl: TokenUrlService,
     ) { }
 
     public startCodeFlowInIframe(): Observable<TokenRequestResult> {
-        // TODO: Configuration
-        const iframeUrl = urlJoin(this.config.baseUrl, 'assets/oidc-iframe.html');
-        const iframeTimeout = 10 * 1000;
+        const iframeUrl$ = this.authConfig.current$
+            .pipe(
+                withLatestFrom(this.sessionConfig.current$),
+                map(([authConfig, sessionConfig]) => urlJoin(authConfig.baseUrl, sessionConfig.iframePath))
+            );
+
         return this.tokenStorage.currentState$
             .pipe(
                 take(1),
                 tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow in iframe`))),
-                switchMap(({ identityToken }) => this.oidcClient.generateCodeFlowMetadata(iframeUrl, identityToken, 'none')),
-                switchMap(metadata => {
+                withLatestFrom(iframeUrl$),
+                switchMap(([{ identityToken }, iframeUrl]) =>
+                    this.oidcClient.generateCodeFlowMetadata(iframeUrl, identityToken, 'none')
+                        .pipe(map(metadata => ({ metadata, iframeUrl })))
+                ),
+                withLatestFrom(this.sessionConfig.current$),
+                take(1),
+                switchMap(([{ metadata, iframeUrl }, sessionConfig]) => {
                     this.events.dispatch(new SimpleOidcInfoEvent(`Creating iframe`, metadata));
                     const iframe = this.dynamicIframe
                         .create()
@@ -53,10 +63,10 @@ export class AuthorizeEndpointSilentClientService {
 
                     return fromEvent(this.window, 'message')
                         .pipe(
-                            map((event: MessageEvent) => ({ event, iframe, metadata })),
+                            map((event: MessageEvent) => ({ event, iframe, metadata, iframeUrl })),
                             filter(({ event }) => (event.data as string).startsWith(iframeUrl)),
                             take(1),
-                            timeout(iframeTimeout),
+                            timeout(sessionConfig.iframeTimeout),
                             catchError(e => {
                                 if (e.name && e.name === 'TimeoutError') {
                                     throw new IframePostMessageTimeoutError({
@@ -69,7 +79,7 @@ export class AuthorizeEndpointSilentClientService {
                             })
                         );
                 }),
-                map(({ event, iframe, metadata }) => {
+                map(({ event, iframe, metadata, iframeUrl }) => {
                     const href = event.data;
                     this.events.dispatch(new SimpleOidcInfoEvent(`Obtained data from iframe`, { event, href }));
                     iframe.remove();
@@ -78,15 +88,18 @@ export class AuthorizeEndpointSilentClientService {
                     this.oidcClient.validateCodeFlowCallback(params, metadata.state);
 
                     return {
-                        ...params, metadata
+                        ...params,
+                        metadata,
+                        iframeUrl
                     };
                 }),
                 switchTap(({ code, sessionState }) => this.tokenStorage.storeAuthorizationCode(code, sessionState)),
-                switchMap(({ code, metadata }) => {
+                withLatestFrom(this.authConfig.current$),
+                switchMap(([{ code, metadata, iframeUrl }, authConfig]) => {
                     const payload = this.tokenUrl.createAuthorizationCodeRequestPayload({
-                        clientId: this.authConfig.clientId,
-                        clientSecret: this.authConfig.clientSecret,
-                        scope: this.authConfig.scope,
+                        clientId: authConfig.clientId,
+                        clientSecret: authConfig.clientSecret,
+                        scope: authConfig.scope,
                         redirectUri: iframeUrl,
                         code: code,
                         codeVerifier: metadata.codeVerifier,

@@ -29,3 +29,16 @@ export class IframePostMessageTimeoutError extends SimpleOidcError {
         );
     }
 }
+
+export class SessionManagementConfigurationMissingError extends SimpleOidcError {
+    constructor() {
+        super(
+            `Expected SESSION_MANAGEMENT_CONFIG to be in Injector.` +
+            `\nYou need to provide a configuration either with SessionManagementModule.forRoot() ` +
+            `or by adding your own (Observable<SessionManagementConfig> | SessionManagementConfig) ` +
+            `into the injector with the SESSION_MANAGEMENT_CONFIG injection token.`,
+            `session-management-config-missing`,
+            null
+        );
+    }
+}

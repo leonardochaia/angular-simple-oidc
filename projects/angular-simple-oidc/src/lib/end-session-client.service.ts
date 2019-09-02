@@ -1,13 +1,12 @@
 import { Injectable, Inject } from '@angular/core';
-import { switchMap, take, map, tap } from 'rxjs/operators';
+import { take, map, tap } from 'rxjs/operators';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
-import { EventsService } from './events/events.service';
-import { SimpleOidcInfoEvent } from './events/models';
-import { WINDOW_REF } from './constants';
+import { WINDOW_REF } from './providers';
 import { TokenUrlService } from 'angular-simple-oidc/core';
 import { TokenStorageService } from './token-storage.service';
 import { combineLatest } from 'rxjs';
 import { switchTap } from 'angular-simple-oidc/operators';
+import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
 // @dynamic
 @Injectable()

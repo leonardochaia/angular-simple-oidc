@@ -1,6 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { switchMap, take, map, withLatestFrom, tap } from 'rxjs/operators';
-import { AuthConfigService } from './config/auth-config.service';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
 import {
     RefreshTokenValidationService,
@@ -9,21 +8,20 @@ import {
     TokenHelperService,
     TokenRequestResult,
 } from 'angular-simple-oidc/core';
-import { EventsService } from './events/events.service';
-import { SimpleOidcInfoEvent } from './events/models';
 import { TokensValidatedEvent, TokensReadyEvent } from './auth.events';
 import { TokenStorageService } from './token-storage.service';
 import { Observable } from 'rxjs';
+import { AUTH_CONFIG_SERVICE } from './providers';
+import { ConfigService } from 'angular-simple-oidc/config';
+import { AuthConfig } from './config/models';
+import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
 @Injectable()
 export class RefreshTokenClient {
 
-    protected get authConfig() {
-        return this.config.configuration;
-    }
-
     constructor(
-        protected readonly config: AuthConfigService,
+        @Inject(AUTH_CONFIG_SERVICE)
+        protected readonly config: ConfigService<AuthConfig>,
         protected readonly tokenStorage: TokenStorageService,
         protected readonly tokenUrl: TokenUrlService,
         protected readonly tokenHelper: TokenHelperService,
@@ -35,11 +33,12 @@ export class RefreshTokenClient {
 
     public requestTokenWithRefreshCode(): Observable<TokenRequestResult> {
         return this.tokenStorage.currentState$.pipe(
+            withLatestFrom(this.config.current$),
             take(1),
-            switchMap(localState => {
+            switchMap(([localState, config]) => {
                 const payload = this.tokenUrl.createRefreshTokenRequestPayload({
-                    clientId: this.authConfig.clientId,
-                    clientSecret: this.authConfig.clientSecret,
+                    clientId: config.clientId,
+                    clientSecret: config.clientSecret,
                     refreshToken: localState.refreshToken
                 });
 

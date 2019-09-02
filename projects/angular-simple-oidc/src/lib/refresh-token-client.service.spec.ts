@@ -10,12 +10,13 @@ import {
     DecodedIdentityToken
 } from 'angular-simple-oidc/core';
 import { of } from 'rxjs';
-import { AuthConfigService } from './config/auth-config.service';
 import { TokenStorageService } from './token-storage.service';
-import { EventsService } from './events/events.service';
+import { EventsService } from 'angular-simple-oidc/events';
 import { AuthConfig } from './config/models';
 import { RefreshTokenClient } from './refresh-token-client.service';
 import { TokensReadyEvent } from './auth.events';
+import { ConfigService } from 'angular-simple-oidc/config';
+import { AUTH_CONFIG_SERVICE } from './providers';
 
 function spyOnGet<T>(obj: T, property: keyof T) {
     Object.defineProperty(obj, property, { get: () => null });
@@ -25,7 +26,7 @@ function spyOnGet<T>(obj: T, property: keyof T) {
 describe('RefrshTokenClientService', () => {
     let refreshTokenClient: RefreshTokenClient;
     let refreshTokenValidationSpy: jasmine.SpyObj<RefreshTokenValidationService>;
-    let authConfigSpy: jasmine.SpyObj<AuthConfigService>;
+    let authConfigSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
     let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
     let tokenHelperSpy: jasmine.SpyObj<TokenHelperService>;
     let tokenUrlSpy: jasmine.SpyObj<TokenUrlService>;
@@ -44,10 +45,9 @@ describe('RefrshTokenClientService', () => {
         tokenValidation: {
             disableIdTokenIATValidation: false,
             idTokenIATOffsetAllowed: 3000
-        }
+        },
+        baseUrl: 'http://base-url/',
     };
-
-    const baseUrl = 'http://base-url/';
 
     beforeEach(() => {
         refreshTokenValidationSpy = jasmine.createSpyObj('RefreshTokenValidationService', ['validateIdToken']);
@@ -66,8 +66,8 @@ describe('RefrshTokenClientService', () => {
                     useValue: refreshTokenValidationSpy
                 },
                 {
-                    provide: AuthConfigService,
-                    useValue: refreshTokenValidationSpy
+                    provide: AUTH_CONFIG_SERVICE,
+                    useValue: authConfigSpy
                 },
                 {
                     provide: TokenStorageService,
@@ -97,11 +97,8 @@ describe('RefrshTokenClientService', () => {
             ],
         });
 
-        const configSpy = spyOnGet(TestBed.get(AuthConfigService) as AuthConfigService, 'configuration');
-        configSpy.and.returnValue(config);
-
-        const baseUrlSpy = spyOnGet(TestBed.get(AuthConfigService) as AuthConfigService, 'baseUrl');
-        baseUrlSpy.and.returnValue(baseUrl);
+        const configSpy = spyOnGet(TestBed.get(AUTH_CONFIG_SERVICE) as ConfigService<AuthConfig>, 'current$');
+        configSpy.and.returnValue(of(config));
 
         stateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
 

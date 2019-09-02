@@ -3,11 +3,10 @@ import { AuthService } from './auth.service';
 import { takeUntil, delay, switchMap, take } from 'rxjs/operators';
 import { TokensReadyEvent, AccessTokenExpiredEvent, AccessTokenExpiringEvent } from './auth.events';
 import { Subject, of, merge } from 'rxjs';
-import { EventsService } from './events/events.service';
-import { SimpleOidcInfoEvent } from './events/models';
 import { TokenStorageService } from './token-storage.service';
 import { TokenHelperService } from 'angular-simple-oidc/core';
 import { filterInstanceOf } from 'angular-simple-oidc/operators';
+import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
 @NgModule({
   imports: [],

@@ -1,4 +1,4 @@
-import { SimpleOidcInfoEvent } from './events/models';
+import { SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 import { TokenRequestResult } from 'angular-simple-oidc/core';
 
 export class TokensObtainedEvent extends SimpleOidcInfoEvent<TokenRequestResult> {

@@ -1,14 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { TokenStorageService } from './token-storage.service';
-import { map, tap } from 'rxjs/operators';
+import { map, tap, switchMap, take } from 'rxjs/operators';
 import { OidcCodeFlowClient } from './oidc-code-flow-client.service';
-import { TokenHelperService, DecodedIdentityToken, SimpleOidcError, LocalState, TokenRequestResult } from 'angular-simple-oidc/core';
+import { TokenHelperService, DecodedIdentityToken, LocalState, TokenRequestResult } from 'angular-simple-oidc/core';
 import { RefreshTokenClient } from './refresh-token-client.service';
-import { EventsService } from './events/events.service';
 import { EndSessionClientService } from './end-session-client.service';
-import { AuthConfigService } from './config/auth-config.service';
 import { Observable } from 'rxjs';
-import { SimpleOidcEvent, SimpleOidcErrorEvent } from './events/models';
+import { AUTH_CONFIG_SERVICE } from './providers';
+import { ConfigService } from 'angular-simple-oidc/config';
+import { AuthConfig } from './config/models';
+import { EventsService, SimpleOidcEvent, SimpleOidcErrorEvent } from 'angular-simple-oidc/events';
 
 @Injectable()
 export class AuthService {
@@ -65,7 +66,8 @@ export class AuthService {
         protected readonly tokenStorage: TokenStorageService,
         protected readonly refreshTokenClient: RefreshTokenClient,
         protected readonly endSessionClient: EndSessionClientService,
-        protected readonly authConfig: AuthConfigService,
+        @Inject(AUTH_CONFIG_SERVICE)
+        protected readonly config: ConfigService<AuthConfig>,
         protected readonly events: EventsService,
     ) { }
 
@@ -79,8 +81,12 @@ export class AuthService {
             .pipe(tap({ error: e => this.events.dispatchError(e) }));
     }
 
-    public endSession(postLogoutRedirectUri = this.authConfig.baseUrl) {
-        return this.endSessionClient.logoutWithRedirect(postLogoutRedirectUri)
-            .pipe(tap({ error: e => this.events.dispatchError(e) }));
+    public endSession(postLogoutRedirectUri?: string) {
+        return this.config.current$
+            .pipe(
+                take(1),
+                switchMap(config => this.endSessionClient.logoutWithRedirect(postLogoutRedirectUri || config.baseUrl)),
+                tap({ error: e => this.events.dispatchError(e) }),
+            );
     }
 }

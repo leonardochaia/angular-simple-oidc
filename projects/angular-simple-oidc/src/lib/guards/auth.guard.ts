@@ -3,8 +3,7 @@ import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angul
 import { map, take, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { AuthService } from '../auth.service';
-import { EventsService } from '../events/events.service';
-import { SimpleOidcInfoEvent } from '../events/models';
+import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

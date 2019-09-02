@@ -1,6 +1,6 @@
 import { TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { TokenStorageService } from './token-storage.service';
-import { LOCAL_STORAGE_REF } from './constants';
+import { LOCAL_STORAGE_REF } from './providers';
 import { TokenStorageKeys, LocalState, TokenRequestResult } from 'angular-simple-oidc/core';
 
 describe('TokenStorageService', () => {

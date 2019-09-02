@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { DynamicIframeService } from './dynamic-iframe.service';
-import { WINDOW_REF } from '../constants';
+import { WINDOW_REF } from '../providers';
 
 function spyOnGet<T>(obj: T, property: keyof T) {
   Object.defineProperty(obj, property, { get: () => null });

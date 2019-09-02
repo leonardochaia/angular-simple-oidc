@@ -1,6 +1,6 @@
 import { TokenValidationConfig } from 'angular-simple-oidc/core';
 
-export const AuthConfigRequiredFields: (keyof AuthConfig)[] = ['clientId', 'scope', 'openIDProviderUrl'];
+export const AUTH_CONFIG_REQUIRED_FIELDS: (keyof AuthConfig)[] = ['clientId', 'scope', 'openIDProviderUrl'];
 
 export interface AuthConfig {
     /** The URL to the OpenID Provider (OP).
@@ -48,4 +48,10 @@ export interface AuthConfig {
      * It can be disabled using this boolean.
      */
     enableAuthorizationCallbackAppInitializer?: boolean;
+
+    /**
+     * The URL of this app. It will be auto calculated
+     * `${window.location.protocol}//${window.location.host}${window.location.pathname}`
+     */
+    baseUrl?: string;
 }

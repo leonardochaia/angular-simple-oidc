@@ -1,12 +1,13 @@
 import { fakeAsync, flush } from '@angular/core/testing';
 import { OidcDiscoveryDocClient } from './oidc-discovery-doc-client.service';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { AuthConfigService } from '../config/auth-config.service';
 import { AuthConfig } from '../config/models';
 import { DiscoveryDocument, JWTKeys } from 'angular-simple-oidc/core';
 import { of, throwError } from 'rxjs';
 import { ObtainDiscoveryDocumentError, ObtainJWTKeysError } from './errors';
-import { EventsService } from '../events/events.service';
+import { EventsService } from 'angular-simple-oidc/events';
+import { ConfigService } from 'angular-simple-oidc/config';
+import { urlJoin } from '../utils/url-join';
 
 
 function spyOnGet<T>(obj: T, property: keyof T) {
@@ -16,9 +17,14 @@ function spyOnGet<T>(obj: T, property: keyof T) {
 
 describe('OidcDiscoveryDocClient', () => {
     let httpSpy: jasmine.SpyObj<HttpClient>;
-    let configSpy: jasmine.SpyObj<AuthConfigService>;
+    let configSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
     let authConfigSpy: jasmine.Spy<InferableFunction>;
     let eventsSpy: jasmine.SpyObj<EventsService>;
+
+    const config: Partial<AuthConfig> = {
+        openIDProviderUrl: 'http://example.com',
+        discoveryDocumentUrl: '/.well-known/openid-configuration'
+    };
 
     function createDiscoveryClient(doc: DiscoveryDocument = {} as any) {
         httpSpy.get.and.returnValue(of(doc));
@@ -36,12 +42,9 @@ describe('OidcDiscoveryDocClient', () => {
         configSpy = jasmine.createSpyObj('AuthConfigService', ['configuration']);
         eventsSpy = jasmine.createSpyObj('EventsSpy', ['dispatch', 'dispatchError']);
 
-        authConfigSpy = spyOnGet(configSpy, 'configuration');
+        authConfigSpy = spyOnGet(configSpy, 'current$');
 
-        authConfigSpy.and.returnValue({
-            openIDProviderUrl: 'http://example.com',
-            discoveryDocumentUrl: '/.well-known/openid-configuration'
-        } as AuthConfig);
+        authConfigSpy.and.returnValue(of(config));
     });
 
     it('should create', () => {
@@ -55,7 +58,7 @@ describe('OidcDiscoveryDocClient', () => {
             const discoveryClient = createDiscoveryClient(expected);
 
             let output: DiscoveryDocument;
-            discoveryClient.requestDiscoveryDocument()
+            discoveryClient.current$
                 .subscribe(r => output = r);
 
             flush();
@@ -71,11 +74,11 @@ describe('OidcDiscoveryDocClient', () => {
                 error: 'whatever',
                 status: 404,
                 statusText: 'Not found',
-                url: discoveryClient.discoveryDocumentAbsoluteEndpoint
+                url: urlJoin(config.openIDProviderUrl, config.discoveryDocumentUrl)
             })));
 
             expect(() => {
-                discoveryClient.requestDiscoveryDocument()
+                discoveryClient.current$
                     .subscribe();
 
                 flush();
@@ -97,7 +100,7 @@ describe('OidcDiscoveryDocClient', () => {
             httpSpy.get.and.returnValue(of(expected));
 
             let output: JWTKeys;
-            discoveryClient.requestJWTKeys(doc)
+            discoveryClient.jwtKeys$
                 .subscribe(r => output = r);
 
             flush();
@@ -121,7 +124,7 @@ describe('OidcDiscoveryDocClient', () => {
             })));
 
             expect(() => {
-                discoveryClient.requestJWTKeys(doc)
+                discoveryClient.jwtKeys$
                     .subscribe();
 
                 flush();

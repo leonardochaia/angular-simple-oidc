@@ -12,12 +12,12 @@ import {
 } from 'angular-simple-oidc/core';
 import { of } from 'rxjs';
 import { OidcCodeFlowClient } from './oidc-code-flow-client.service';
-import { WINDOW_REF } from './constants';
-import { AuthConfigService } from './config/auth-config.service';
+import { WINDOW_REF, AUTH_CONFIG_SERVICE } from './providers';
 import { TokenStorageService } from './token-storage.service';
-import { EventsService } from './events/events.service';
+import { EventsService } from 'angular-simple-oidc/events';
 import { AuthConfig } from './config/models';
 import { TokensReadyEvent } from './auth.events';
+import { ConfigService } from 'angular-simple-oidc/config';
 
 function spyOnGet<T>(obj: T, property: keyof T) {
     Object.defineProperty(obj, property, { get: () => null });
@@ -27,7 +27,7 @@ function spyOnGet<T>(obj: T, property: keyof T) {
 describe('OidcCodeFlowClientService', () => {
     let codeFlowClient: OidcCodeFlowClient;
     let windowSpy: jasmine.SpyObj<Window>;
-    let authConfigSpy: jasmine.SpyObj<AuthConfigService>;
+    let authConfigSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
     let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
     let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
     let discoveryDocSpy: jasmine.Spy<InferableFunction>;
@@ -49,14 +49,13 @@ describe('OidcCodeFlowClientService', () => {
         tokenValidation: {
             disableIdTokenIATValidation: false,
             idTokenIATOffsetAllowed: 3000
-        }
+        },
+        baseUrl: 'http://base-url/',
     };
-
-    const baseUrl = 'http://base-url/';
 
     beforeEach(() => {
         windowSpy = jasmine.createSpyObj('window', ['location']);
-        authConfigSpy = jasmine.createSpyObj('AuthConfigService', ['configuration']);
+        authConfigSpy = jasmine.createSpyObj('AuthConfigService', ['current$']);
         discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', ['current$']);
         tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', [
             'storePreAuthorizationState',
@@ -84,7 +83,7 @@ describe('OidcCodeFlowClientService', () => {
                     useValue: windowSpy
                 },
                 {
-                    provide: AuthConfigService,
+                    provide: AUTH_CONFIG_SERVICE,
                     useValue: authConfigSpy
                 },
                 {
@@ -123,14 +122,11 @@ describe('OidcCodeFlowClientService', () => {
 
         codeFlowClient = TestBed.get(OidcCodeFlowClient);
 
-        const configSpy = spyOnGet(TestBed.get(AuthConfigService) as AuthConfigService, 'configuration');
-        configSpy.and.returnValue(config);
-
-        const baseUrlSpy = spyOnGet(TestBed.get(AuthConfigService) as AuthConfigService, 'baseUrl');
-        baseUrlSpy.and.returnValue(baseUrl);
+        const configSpy = spyOnGet(TestBed.get(AUTH_CONFIG_SERVICE) as ConfigService<AuthConfig>, 'current$');
+        configSpy.and.returnValue(of(config));
 
         windowLocationSpy = spyOnGet(TestBed.get(WINDOW_REF) as Window, 'location');
-        windowLocationSpy.and.returnValue({ href: baseUrl });
+        windowLocationSpy.and.returnValue({ href: config.baseUrl });
 
         stateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
     });
@@ -211,7 +207,7 @@ describe('OidcCodeFlowClientService', () => {
                     nonce: urlResult.nonce,
                     state: urlResult.state,
                     codeVerifier: urlResult.codeVerifier,
-                    preRedirectUrl: baseUrl
+                    preRedirectUrl: config.baseUrl
                 });
         }));
 
@@ -271,7 +267,7 @@ describe('OidcCodeFlowClientService', () => {
                 .subscribe();
             flush();
 
-            expect(tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl).toHaveBeenCalledWith(baseUrl);
+            expect(tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl).toHaveBeenCalledWith(config.baseUrl);
 
         }));
 
@@ -290,7 +286,7 @@ describe('OidcCodeFlowClientService', () => {
                 flush();
             }).toThrowError(AuthorizationCallbackFormatError);
 
-            expect(tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl).toHaveBeenCalledWith(baseUrl);
+            expect(tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl).toHaveBeenCalledWith(config.baseUrl);
 
         }));
 
@@ -316,7 +312,8 @@ describe('OidcCodeFlowClientService', () => {
                 .subscribe();
             flush();
 
-            expect(tokenValidationSpy.validateAuthorizeCallbackFormat).toHaveBeenCalledWith(code, state, error, baseUrl);
+            expect(tokenValidationSpy.validateAuthorizeCallbackFormat)
+                .toHaveBeenCalledWith(code, state, error, config.baseUrl);
 
         }));
 
@@ -415,7 +412,7 @@ describe('OidcCodeFlowClientService', () => {
                 clientId: config.clientId,
                 clientSecret: config.clientSecret,
                 scope: config.scope,
-                redirectUri: baseUrl,
+                redirectUri: config.baseUrl,
                 code: code,
                 codeVerifier: localState.codeVerifier
             });

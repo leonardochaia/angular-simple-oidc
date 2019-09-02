@@ -1,7 +1,12 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
-import { AUTH_CONFIG, WINDOW_PROVIDER, LOCAL_STORAGE_PROVIDER } from './lib/constants';
+import {
+  AUTH_CONFIG,
+  WINDOW_PROVIDER,
+  LOCAL_STORAGE_PROVIDER,
+  AUTH_CONFIG_SERVICE_PROVIDER,
+  AUTH_CONFIG_INITIALIZER
+} from './lib/providers';
 import { AuthConfig } from './lib/config/models';
-import { AuthConfigService } from './lib/config/auth-config.service';
 import { SIMPLE_OIDC_APP_INITIALIZER } from './lib/auth.bootstrap';
 import { OidcDiscoveryDocClient } from './lib/discovery-document/oidc-discovery-doc-client.service';
 import { OidcCodeFlowClient } from './lib/oidc-code-flow-client.service';
@@ -25,7 +30,6 @@ import { EndSessionClientService } from './lib/end-session-client.service';
     WINDOW_PROVIDER,
     LOCAL_STORAGE_PROVIDER,
 
-    AuthConfigService,
     TokenStorageService,
     TokenEndpointClientService,
     OidcDiscoveryDocClient,
@@ -46,15 +50,16 @@ export class AngularSimpleOidcModule {
   /**
    * Should be called once on your Angular Root Application Module
    */
-  public static forRoot(config: AuthConfig): ModuleWithProviders {
+  public static forRoot(config?: AuthConfig): ModuleWithProviders {
     return {
       ngModule: AngularSimpleOidcModule,
       providers: [
-        {
+        config != null ? {
           provide: AUTH_CONFIG,
-          useValue: config,
-          multi: true
-        },
+          useValue: config
+        } : [],
+        AUTH_CONFIG_SERVICE_PROVIDER,
+        AUTH_CONFIG_INITIALIZER,
         SIMPLE_OIDC_APP_INITIALIZER,
       ]
     };
