@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@angular/core';
-import { WINDOW_REF } from './constants';
+import { WINDOW_REF, AUTH_CONFIG_SERVICE } from './providers';
 import { tap, switchMap, take, map, withLatestFrom } from 'rxjs/operators';
 import { TokenStorageService } from './token-storage.service';
 import {
@@ -9,29 +9,26 @@ import {
     LocalState,
     TokenRequestResult,
 } from 'angular-simple-oidc/core';
-import { AuthConfigService } from './config/auth-config.service';
 import { urlJoin } from './utils/url-join';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
 import { TokenEndpointClientService } from './token-endpoint-client.service';
-import { EventsService } from './events/events.service';
-import { SimpleOidcInfoEvent } from './events/models';
 import { TokensValidatedEvent, TokensReadyEvent } from './auth.events';
 import { Observable } from 'rxjs';
 import { DynamicIframeService } from './dynamic-iframe/dynamic-iframe.service';
 import { switchTap } from 'angular-simple-oidc/operators';
+import { ConfigService } from 'angular-simple-oidc/config';
+import { AuthConfig } from './config/models';
+import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
 // @dynamic
 @Injectable()
 export class OidcCodeFlowClient {
 
-    protected get authConfig() {
-        return this.config.configuration;
-    }
-
     constructor(
         @Inject(WINDOW_REF)
         protected readonly window: Window,
-        protected readonly config: AuthConfigService,
+        @Inject(AUTH_CONFIG_SERVICE)
+        protected readonly config: ConfigService<AuthConfig>,
         protected readonly discoveryDocumentClient: OidcDiscoveryDocClient,
         protected readonly tokenStorage: TokenStorageService,
         protected readonly tokenValidation: TokenValidationService,
@@ -42,9 +39,10 @@ export class OidcCodeFlowClient {
     ) { }
 
     public startCodeFlow(): Observable<LocalState> {
-        const redirectUri = urlJoin(this.config.baseUrl, this.authConfig.tokenCallbackRoute);
-        return this.generateCodeFlowMetadata(redirectUri)
+        return this.config.current$
             .pipe(
+                map(config => urlJoin(config.baseUrl, config.tokenCallbackRoute)),
+                switchMap(redirectUri => this.generateCodeFlowMetadata(redirectUri)),
                 tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow`))),
                 switchMap((result) => {
 
@@ -59,24 +57,26 @@ export class OidcCodeFlowClient {
                         this.events.dispatch(new SimpleOidcInfoEvent(`Pre-authorize state stored`, state));
                         this.changeUrl(result.url);
                     }));
-                }));
+                }),
+                take(1)
+            );
     }
 
     public generateCodeFlowMetadata(redirectUri: string, idTokenHint?: string, prompt?: string) {
         return this.discoveryDocumentClient.current$
             .pipe(
+                withLatestFrom(this.config.current$),
+                map(([discoveryDocument, config]) => this.tokenUrl.createAuthorizeUrl(
+                    discoveryDocument.authorization_endpoint, {
+                        clientId: config.clientId,
+                        scope: config.scope,
+                        responseType: 'code',
+                        redirectUri,
+                        idTokenHint,
+                        prompt
+                    })
+                ),
                 take(1),
-                map((discoveryDocument) => {
-                    return this.tokenUrl.createAuthorizeUrl(
-                        discoveryDocument.authorization_endpoint, {
-                            clientId: this.authConfig.clientId,
-                            scope: this.authConfig.scope,
-                            responseType: 'code',
-                            redirectUri,
-                            idTokenHint,
-                            prompt
-                        });
-                })
             );
     }
 
@@ -112,17 +112,18 @@ export class OidcCodeFlowClient {
 
         return this.tokenStorage.currentState$
             .pipe(
-                tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow callback`))),
                 take(1),
-                map(localState => {
+                tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow callback`))),
+                withLatestFrom(this.config.current$),
+                map(([localState, config]) => {
                     const params = this.parseCodeFlowCallbackParams(this.window.location.href);
                     this.validateCodeFlowCallback(params, localState.state);
 
                     const payload = this.tokenUrl.createAuthorizationCodeRequestPayload({
-                        clientId: this.authConfig.clientId,
-                        clientSecret: this.authConfig.clientSecret,
-                        scope: this.authConfig.scope,
-                        redirectUri: this.config.baseUrl,
+                        clientId: config.clientId,
+                        clientSecret: config.clientSecret,
+                        scope: config.scope,
+                        redirectUri: config.baseUrl,
                         code: params.code,
                         codeVerifier: localState.codeVerifier
                     });
@@ -133,6 +134,7 @@ export class OidcCodeFlowClient {
                 switchMap(({ payload, localState }) => this.requestTokenWithAuthCode(payload, localState.nonce).pipe(
                     tap(() => this.changeUrl(localState.preRedirectUrl))
                 )),
+                take(1),
             );
     }
 
@@ -149,21 +151,22 @@ export class OidcCodeFlowClient {
         return this.tokenEndpointClient.call(payload)
             .pipe(
                 tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Requesting token using authorization code`, payload))),
-                withLatestFrom(discoveryDocument$, jwtKeys$),
-                tap(([result, discoveryDocument, jwtKeys]) => {
+                withLatestFrom(discoveryDocument$, jwtKeys$, this.config.current$),
+                take(1),
+                tap(([result, discoveryDocument, jwtKeys, config]) => {
 
                     this.events.dispatch(new SimpleOidcInfoEvent('Validating identity token..', {
                         result, nonce, discoveryDocument, jwtKeys
                     }));
 
                     this.tokenValidation.validateIdToken(
-                        this.authConfig.clientId,
+                        config.clientId,
                         result.idToken,
                         result.decodedIdToken,
                         nonce,
                         discoveryDocument,
                         jwtKeys,
-                        this.authConfig.tokenValidation);
+                        config.tokenValidation);
                 }),
                 tap(([result]) => {
                     this.events.dispatch(new SimpleOidcInfoEvent('Validating access token..', result));

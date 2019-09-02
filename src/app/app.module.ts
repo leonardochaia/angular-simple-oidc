@@ -23,10 +23,11 @@ import { HomeComponent } from './home/home.component';
     }),
 
     AutomaticRefreshModule,
+    SessionManagementModule.forRoot({
+      iframePath: 'assets/oidc-iframe.html'
+    }),
 
     AppRoutingModule,
-
-    SessionManagementModule
 
   ],
   declarations: [

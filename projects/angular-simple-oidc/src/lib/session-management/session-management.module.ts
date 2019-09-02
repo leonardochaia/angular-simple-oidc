@@ -1,15 +1,20 @@
-import { NgModule, OnDestroy } from '@angular/core';
-import { EventsService } from '../events/events.service';
+import { NgModule, OnDestroy, ModuleWithProviders } from '@angular/core';
 import { Subject, of } from 'rxjs';
 import { switchMap, takeUntil, tap, catchError, take, map } from 'rxjs/operators';
 import { TokensReadyEvent } from '../auth.events';
 import { SessionCheckService } from './session-check.service';
 import { SessionChangedEvent, SessionTerminatedEvent } from './events';
-import { SimpleOidcInfoEvent } from '../events/models';
 import { TokenStorageService } from '../token-storage.service';
 import { SimpleOidcError } from 'angular-simple-oidc/core';
 import { filterInstanceOf } from 'angular-simple-oidc/operators';
 import { AuthorizeEndpointSilentClientService } from './authorize-endpoint-silent-client.service';
+import {
+  SESSION_MANAGEMENT_CONFIG,
+  SESSION_MANAGEMENT_CONFIG_INITIALIZER,
+  SESSION_MANAGEMENT_CONFIG_SERVICE_PROVIDER
+} from './providers';
+import { SessionManagementConfig } from './models';
+import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
 /**
  * Implements Session Checks according to Session Management
@@ -81,6 +86,23 @@ export class SessionManagementModule implements OnDestroy {
         takeUntil(this.destroyedSubject)
       )
       .subscribe();
+  }
+
+  /**
+   * Should be called once on your Angular Root Application Module
+   */
+  public static forRoot(config?: SessionManagementConfig): ModuleWithProviders {
+    return {
+      ngModule: SessionManagementModule,
+      providers: [
+        config != null ? {
+          provide: SESSION_MANAGEMENT_CONFIG,
+          useValue: config
+        } : [],
+        SESSION_MANAGEMENT_CONFIG_SERVICE_PROVIDER,
+        SESSION_MANAGEMENT_CONFIG_INITIALIZER,
+      ]
+    };
   }
 
   public ngOnDestroy() {

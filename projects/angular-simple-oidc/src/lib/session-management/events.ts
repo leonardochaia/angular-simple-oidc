@@ -1,4 +1,4 @@
-import { SimpleOidcInfoEvent } from '../events/models';
+import { SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
 export class SessionChangedEvent extends SimpleOidcInfoEvent {
     constructor() {

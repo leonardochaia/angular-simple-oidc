@@ -4,15 +4,17 @@ import { of } from 'rxjs';
 import { SessionCheckService } from './session-check.service';
 import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
 import { TokenStorageService } from '../token-storage.service';
-import { EventsService } from '../events/events.service';
+import { EventsService } from 'angular-simple-oidc/events';
 import { DynamicIframeService } from '../dynamic-iframe/dynamic-iframe.service';
-import { WINDOW_REF } from '../constants';
-import { AuthConfigService } from '../config/auth-config.service';
+import { WINDOW_REF, AUTH_CONFIG_SERVICE } from '../providers';
 import { AuthConfig } from '../config/models';
 import { SessionCheckNotSupportedError, SessionCheckFailedError } from './errors';
 import { DynamicIframe } from '../dynamic-iframe/dynamic-iframe';
 import { take } from 'rxjs/operators';
 import { SessionChangedEvent } from './events';
+import { SESSION_MANAGEMENT_CONFIG_SERVICE } from './providers';
+import { ConfigService } from 'angular-simple-oidc/config';
+import { SessionManagementConfig } from './models';
 
 function spyOnGet<T>(obj: T, property: keyof T) {
     Object.defineProperty(obj, property, { get: () => null });
@@ -30,8 +32,12 @@ describe('Session Check Service', () => {
     let localStateSpy: jasmine.Spy<InferableFunction>;
     let eventsSpy: jasmine.SpyObj<EventsService>;
 
-    let configServiceSpy: jasmine.SpyObj<AuthConfigService>;
+    let configServiceSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
     let authConfigSpy: jasmine.Spy<InferableFunction>;
+
+    let sesionManagementConfigServiceSpy: jasmine.SpyObj<ConfigService<SessionManagementConfig>>;
+    let sesionManagementConfigSpy: jasmine.Spy<InferableFunction>;
+
 
     beforeEach(() => {
         windowSpy = jasmine.createSpyObj('window', ['addEventListener', 'removeEventListener']);
@@ -42,6 +48,7 @@ describe('Session Check Service', () => {
         configServiceSpy = jasmine.createSpyObj('AuthConfigService', ['config']);
         dynamicIframeSpy = jasmine.createSpyObj('DynamicIframe', ['setSource', 'appendTo',
             'appendToBody', 'hide', 'postMessage', 'remove']);
+        sesionManagementConfigServiceSpy = jasmine.createSpyObj('sesionManagementConfigService', ['current']);
 
         TestBed.configureTestingModule({
             providers: [
@@ -66,12 +73,16 @@ describe('Session Check Service', () => {
                     useValue: eventsSpy
                 },
                 {
-                    provide: AuthConfigService,
+                    provide: AUTH_CONFIG_SERVICE,
                     useValue: configServiceSpy
                 },
                 {
                     provide: DynamicIframeService,
                     useValue: dynamicIframeServiceSpy
+                },
+                {
+                    provide: SESSION_MANAGEMENT_CONFIG_SERVICE,
+                    useValue: sesionManagementConfigServiceSpy
                 },
                 SessionCheckService
             ],
@@ -88,11 +99,17 @@ describe('Session Check Service', () => {
             sessionState: 'session-state'
         } as Partial<LocalState>));
 
-        authConfigSpy = spyOnGet(TestBed.get(AuthConfigService) as AuthConfigService, 'configuration');
-        authConfigSpy.and.returnValue({
+        authConfigSpy = spyOnGet(TestBed.get(AUTH_CONFIG_SERVICE) as ConfigService<AuthConfig>, 'current$');
+        authConfigSpy.and.returnValue(of({
             clientId: 'client-id',
             openIDProviderUrl: 'http://my-idp/identity'
-        } as Partial<AuthConfig>);
+        } as Partial<AuthConfig>));
+
+        sesionManagementConfigSpy = spyOnGet(
+            TestBed.get(SESSION_MANAGEMENT_CONFIG_SERVICE) as ConfigService<SessionManagementConfig>, 'current$');
+        sesionManagementConfigSpy.and.returnValue(of({
+            opIframePollInterval: 1 * 1000
+        } as Partial<SessionManagementConfig>));
 
         tokenStorageSpy.removeAll.and.returnValue(of({} as any));
 

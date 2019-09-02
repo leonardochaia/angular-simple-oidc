@@ -3,15 +3,17 @@ import { DiscoveryDocument, LocalState, TokenUrlService } from 'angular-simple-o
 import { of } from 'rxjs';
 import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
 import { TokenStorageService } from '../token-storage.service';
-import { EventsService } from '../events/events.service';
+import { EventsService } from 'angular-simple-oidc/events';
 import { DynamicIframeService } from '../dynamic-iframe/dynamic-iframe.service';
-import { WINDOW_REF } from '../constants';
-import { AuthConfigService } from '../config/auth-config.service';
+import { WINDOW_REF, AUTH_CONFIG_SERVICE } from '../providers';
 import { AuthConfig } from '../config/models';
 import { DynamicIframe } from '../dynamic-iframe/dynamic-iframe';
 import { AuthorizeEndpointSilentClientService } from './authorize-endpoint-silent-client.service';
 import { OidcCodeFlowClient } from '../oidc-code-flow-client.service';
 import { IframePostMessageTimeoutError } from './errors';
+import { ConfigService } from 'angular-simple-oidc/config';
+import { SESSION_MANAGEMENT_CONFIG_SERVICE } from './providers';
+import { SessionManagementConfig } from './models';
 
 function spyOnGet<T>(obj: T, property: keyof T) {
     Object.defineProperty(obj, property, { get: () => null });
@@ -31,11 +33,16 @@ describe('Authorize Endpoint Silent Client ', () => {
     let eventsSpy: jasmine.SpyObj<EventsService>;
     let oidcCodeFlowClientSpy: jasmine.SpyObj<OidcCodeFlowClient>;
 
-    let configServiceSpy: jasmine.SpyObj<AuthConfigService>;
+    let configServiceSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
     let authConfigSpy: jasmine.Spy<InferableFunction>;
+
+    let sessionConfigServiceSpy: jasmine.SpyObj<ConfigService<SessionManagementConfig>>;
+    let sessionConfigSpy: jasmine.Spy<InferableFunction>;
 
     let postFromIframeToWindow: EventListener;
     const expectedOrigin = new URL('http://my-idp/identity').origin;
+
+    const iframeUrl = 'http://base-url/iframe/path.html';
 
     beforeEach(() => {
         windowSpy = jasmine.createSpyObj('window', ['addEventListener', 'removeEventListener']);
@@ -44,7 +51,8 @@ describe('Authorize Endpoint Silent Client ', () => {
         tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', ['storeAuthorizationCode']);
         tokenUrlSpy = jasmine.createSpyObj('TokenUrlService', ['createAuthorizationCodeRequestPayload']);
         eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
-        configServiceSpy = jasmine.createSpyObj('AuthConfigService', ['config']);
+        configServiceSpy = jasmine.createSpyObj('AuthConfigService', ['current$']);
+        sessionConfigServiceSpy = jasmine.createSpyObj('SessionConfigService', ['current$']);
         oidcCodeFlowClientSpy = jasmine.createSpyObj('OidcCodeFlowClient', ['generateCodeFlowMetadata',
             'parseCodeFlowCallbackParams', 'validateCodeFlowCallback', 'requestTokenWithAuthCode']);
         dynamicIframeSpy = jasmine.createSpyObj('DynamicIframe', ['setSource', 'appendTo',
@@ -73,8 +81,12 @@ describe('Authorize Endpoint Silent Client ', () => {
                     useValue: eventsSpy
                 },
                 {
-                    provide: AuthConfigService,
+                    provide: AUTH_CONFIG_SERVICE,
                     useValue: configServiceSpy
+                },
+                {
+                    provide: SESSION_MANAGEMENT_CONFIG_SERVICE,
+                    useValue: sessionConfigServiceSpy
                 },
                 {
                     provide: DynamicIframeService,
@@ -103,13 +115,19 @@ describe('Authorize Endpoint Silent Client ', () => {
             sessionState: 'session-state'
         } as Partial<LocalState>));
 
-        authConfigSpy = spyOnGet(TestBed.get(AuthConfigService) as AuthConfigService, 'configuration');
-        authConfigSpy.and.returnValue({
+        authConfigSpy = spyOnGet(TestBed.get(AUTH_CONFIG_SERVICE) as ConfigService<AuthConfig>, 'current$');
+        authConfigSpy.and.returnValue(of({
             clientId: 'client-id',
-            openIDProviderUrl: 'http://my-idp/identity'
-        } as Partial<AuthConfig>);
+            openIDProviderUrl: 'http://my-idp/identity',
+            baseUrl: 'http://base-url/',
+        } as Partial<AuthConfig>));
 
-        TestBed.get(AuthConfigService).baseUrl = 'http://base-url/';
+        sessionConfigSpy = spyOnGet(
+            TestBed.get(SESSION_MANAGEMENT_CONFIG_SERVICE) as ConfigService<SessionManagementConfig>,
+            'current$');
+        sessionConfigSpy.and.returnValue(of({
+            iframePath: 'iframe/path.html'
+        } as Partial<SessionManagementConfig>));
 
         authorizeClientSilent = TestBed.get(AuthorizeEndpointSilentClientService);
 
@@ -140,8 +158,6 @@ describe('Authorize Endpoint Silent Client ', () => {
 
     it('Generates URL with id_token_hint and prompt none', fakeAsync(() => {
 
-        const iframeUrl = 'http://base-url/assets/oidc-iframe.html';
-
         authorizeClientSilent.startCodeFlowInIframe()
             .subscribe();
 
@@ -158,8 +174,6 @@ describe('Authorize Endpoint Silent Client ', () => {
 
     it('Obtains URL from iframe correctly', fakeAsync(() => {
 
-        const iframeUrl = 'http://base-url/assets/oidc-iframe.html';
-
         authorizeClientSilent.startCodeFlowInIframe()
             .subscribe();
 
@@ -175,8 +189,6 @@ describe('Authorize Endpoint Silent Client ', () => {
     }));
 
     it('Validates the callback', fakeAsync(() => {
-
-        const iframeUrl = 'http://base-url/assets/oidc-iframe.html';
 
         const state = 'state';
         const expectedUrl = `${iframeUrl}?code=auth-code`;
@@ -204,8 +216,6 @@ describe('Authorize Endpoint Silent Client ', () => {
     }));
 
     it('Uses timeout if iframe never post back', fakeAsync(() => {
-
-        const iframeUrl = 'http://base-url/assets/oidc-iframe.html';
 
         const state = 'state';
         const expectedUrl = `${iframeUrl}?code=auth-code`;

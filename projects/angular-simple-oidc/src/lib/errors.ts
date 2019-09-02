@@ -20,3 +20,16 @@ export class TokenEndpointError extends SimpleOidcError {
         // TODO: Use errors from https://tools.ietf.org/html/rfc6749#section-5.2
     }
 }
+
+export class AuthenticationConfigurationMissingError extends SimpleOidcError {
+    constructor() {
+        super(
+            `Expected AUTH_CONFIG to be in Injector.` +
+            `\nYou need to provide a configuration either with AngularSimpleOidc.forRoot() ` +
+            `or by adding your own (Observable<AuthConfig> | AuthConfig) ` +
+            `into the injector with the AUTH_CONFIG injection token.`,
+            `auth-config-missing`,
+            null
+        );
+    }
+}

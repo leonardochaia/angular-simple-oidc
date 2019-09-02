@@ -3,9 +3,9 @@ import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-
 import { DiscoveryDocument, LocalState, TokenUrlService } from 'angular-simple-oidc/core';
 import { of } from 'rxjs';
 import { EndSessionClientService } from './end-session-client.service';
-import { WINDOW_REF } from './constants';
+import { WINDOW_REF } from './providers';
 import { TokenStorageService } from './token-storage.service';
-import { EventsService } from './events/events.service';
+import { EventsService } from 'angular-simple-oidc/events';
 
 function spyOnGet<T>(obj: T, property: keyof T) {
     Object.defineProperty(obj, property, { get: () => null });

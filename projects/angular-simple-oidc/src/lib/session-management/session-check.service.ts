@@ -1,17 +1,19 @@
 import { Injectable, OnDestroy, Inject } from '@angular/core';
 import { OidcDiscoveryDocClient } from '../discovery-document/oidc-discovery-doc-client.service';
 import { DynamicIframeService } from '../dynamic-iframe/dynamic-iframe.service';
-import { take, map, tap, switchMap, takeUntil, filter, finalize } from 'rxjs/operators';
+import { take, map, tap, switchMap, takeUntil, filter, finalize, withLatestFrom } from 'rxjs/operators';
 import { SessionCheckNotSupportedError, SessionCheckFailedError } from './errors';
-import { AuthConfigService } from '../config/auth-config.service';
 import { TokenStorageService } from '../token-storage.service';
 import { DynamicIframe } from '../dynamic-iframe/dynamic-iframe';
 import { interval, fromEvent, Subject, combineLatest } from 'rxjs';
-import { WINDOW_REF } from '../constants';
-import { EventsService } from '../events/events.service';
+import { WINDOW_REF, AUTH_CONFIG_SERVICE } from '../providers';
 import { SessionChangedEvent } from './events';
 import { LocalState } from 'angular-simple-oidc/core';
-import { SimpleOidcInfoEvent } from '../events/models';
+import { SessionManagementConfig } from './models';
+import { SESSION_MANAGEMENT_CONFIG_SERVICE } from './providers';
+import { ConfigService } from 'angular-simple-oidc/config';
+import { AuthConfig } from '../config/models';
+import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
 // @dynamic
 @Injectable()
@@ -19,17 +21,16 @@ export class SessionCheckService implements OnDestroy {
 
     protected destroyedSubject = new Subject();
 
-    protected get expectedIframeOrigin() {
-        return new URL(this.config.configuration.openIDProviderUrl).origin;
-    }
-
     constructor(
         @Inject(WINDOW_REF)
         protected readonly window: Window,
         protected readonly discoveryClient: OidcDiscoveryDocClient,
         protected readonly dynamicIframe: DynamicIframeService,
         protected readonly tokenStorage: TokenStorageService,
-        protected readonly config: AuthConfigService,
+        @Inject(AUTH_CONFIG_SERVICE)
+        protected readonly config: ConfigService<AuthConfig>,
+        @Inject(SESSION_MANAGEMENT_CONFIG_SERVICE)
+        protected readonly sessionConfig: ConfigService<SessionManagementConfig>,
         protected readonly events: EventsService,
     ) { }
 
@@ -39,8 +40,6 @@ export class SessionCheckService implements OnDestroy {
     }
 
     public startSessionCheck() {
-        // TODO: Configuration
-        const opIframePollTime = 1 * 1000;
         const localState$ = this.tokenStorage.currentState$
             .pipe(take(1));
 
@@ -53,7 +52,6 @@ export class SessionCheckService implements OnDestroy {
 
         return combineLatest(doc$, localState$)
             .pipe(
-                take(1),
                 tap(() => this.events.dispatch(new SimpleOidcInfoEvent('Starting Session Check'))),
                 map(([doc, localState]) => {
                     if (!doc.check_session_iframe || !localState.sessionState) {
@@ -64,15 +62,21 @@ export class SessionCheckService implements OnDestroy {
                         return localState;
                     }
                 }),
-                switchMap(localState => {
-                    const pollIframe$ = interval(opIframePollTime)
+                withLatestFrom(this.config.current$, this.sessionConfig.current$),
+                take(1),
+                switchMap(([localState, authConfig, sessionConfig]) => {
+
+                    const expectedIframeOrigin = new URL(authConfig.openIDProviderUrl).origin;
+
+                    const pollIframe$ = interval(sessionConfig.opIframePollInterval)
                         .pipe(
-                            tap(() => this.checkSession(iframe, localState)),
+                            map(() => `${authConfig.clientId.toLowerCase()} ${localState.sessionState}`),
+                            tap(msg => iframe.postMessage(msg, expectedIframeOrigin)),
                         );
 
                     const listen$ = fromEvent(this.window, 'message')
                         .pipe(
-                            filter((e: MessageEvent) => e.origin === this.expectedIframeOrigin),
+                            filter((e: MessageEvent) => e.origin === expectedIframeOrigin),
                             map((e: MessageEvent) => this.fireEventsFromMessage(e)),
                             filter(msg => !!msg)  // only the messages we care
                         );
@@ -85,11 +89,6 @@ export class SessionCheckService implements OnDestroy {
                 finalize(() => iframe.remove()),
                 takeUntil(this.destroyedSubject.asObservable()),
             );
-    }
-
-    protected checkSession(iframe: DynamicIframe, state: LocalState) {
-        const msg = `${this.config.configuration.clientId.toLowerCase()} ${state.sessionState}`;
-        iframe.postMessage(msg, this.expectedIframeOrigin);
     }
 
     /**

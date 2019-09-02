@@ -1,7 +1,6 @@
 import { fakeAsync, tick, flush } from '@angular/core/testing';
 import { TokenEventsModule } from './token-events.module';
 import { AuthService } from './auth.service';
-import { EventsService } from './events/events.service';
 import { TokenStorageService } from './token-storage.service';
 import {
     TokenHelperService,
@@ -10,7 +9,7 @@ import {
 } from 'angular-simple-oidc/core';
 import { of, Subject } from 'rxjs';
 import { TokensReadyEvent, AccessTokenExpiringEvent, AccessTokenExpiredEvent } from './auth.events';
-import { SimpleOidcInfoEvent } from './events/models';
+import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
 function spyOnGet<T>(obj: T, property: keyof T) {
     Object.defineProperty(obj, property, { get: () => null });

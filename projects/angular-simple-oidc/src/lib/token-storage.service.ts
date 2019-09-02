@@ -6,7 +6,7 @@ import {
     DecodedIdentityToken
 } from 'angular-simple-oidc/core';
 import { of, BehaviorSubject } from 'rxjs';
-import { LOCAL_STORAGE_REF } from './constants';
+import { LOCAL_STORAGE_REF } from './providers';
 
 // @dynamic
 @Injectable()

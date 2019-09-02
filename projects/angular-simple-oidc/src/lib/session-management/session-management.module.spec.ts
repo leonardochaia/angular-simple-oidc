@@ -2,7 +2,7 @@ import { LocalState, SimpleOidcError, TokenRequestResult } from 'angular-simple-
 import { of, throwError } from 'rxjs';
 import { SessionCheckService } from './session-check.service';
 import { TokenStorageService } from '../token-storage.service';
-import { EventsService } from '../events/events.service';
+import { EventsService } from 'angular-simple-oidc/events';
 import { SessionChangedEvent, SessionTerminatedEvent } from './events';
 import { SessionManagementModule } from './session-management.module';
 import { AuthorizeEndpointSilentClientService } from './authorize-endpoint-silent-client.service';

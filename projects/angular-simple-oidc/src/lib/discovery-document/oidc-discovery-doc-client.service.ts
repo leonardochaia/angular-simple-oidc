@@ -1,54 +1,43 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { throwError, of } from 'rxjs';
-import { switchMap, catchError, shareReplay, tap } from 'rxjs/operators';
+import { throwError } from 'rxjs';
+import { switchMap, catchError, shareReplay, tap, map, take } from 'rxjs/operators';
 import { DiscoveryDocument, JWTKeys } from 'angular-simple-oidc/core';
 import { urlJoin } from '../utils/url-join';
-import { AuthConfigService } from '../config/auth-config.service';
 import { ObtainDiscoveryDocumentError, ObtainJWTKeysError } from './errors';
-import { EventsService } from '../events/events.service';
-import { SimpleOidcInfoEvent } from '../events/models';
+import { ConfigService } from 'angular-simple-oidc/config';
+import { AuthConfig } from '../config/models';
+import { AUTH_CONFIG_SERVICE } from '../providers';
+import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
 @Injectable()
 export class OidcDiscoveryDocClient {
 
-    public get discoveryDocumentAbsoluteEndpoint() {
-        return urlJoin(this.config.configuration.openIDProviderUrl,
-            this.config.configuration.discoveryDocumentUrl);
-    }
-
-    public readonly current$ = this.requestDiscoveryDocument()
-        .pipe(shareReplay());
+    public readonly current$ = this.config.current$
+        .pipe(
+            map(config => urlJoin(config.openIDProviderUrl, config.discoveryDocumentUrl)),
+            tap(url => this.events.dispatch(new SimpleOidcInfoEvent('Obtaining discovery document', url))),
+            switchMap(url => this.http.get<DiscoveryDocument>(url)),
+            tap(d => this.events.dispatch(new SimpleOidcInfoEvent('Discovery Document obtained', d))),
+            catchError(e => throwError(new ObtainDiscoveryDocumentError(e))),
+            take(1),
+            shareReplay()
+        );
 
     public readonly jwtKeys$ = this.current$
         .pipe(
-            switchMap(doc => this.requestJWTKeys(doc)),
+            tap(doc => this.events.dispatch(new SimpleOidcInfoEvent('Obtaining JWT Keys', doc.jwks_uri))),
+            switchMap(doc => this.http.get<JWTKeys>(doc.jwks_uri)),
+            tap(j => this.events.dispatch(new SimpleOidcInfoEvent('JWT Keys obtained', j))),
+            catchError(e => throwError(new ObtainJWTKeysError(e))),
+            take(1),
             shareReplay()
         );
 
     constructor(
-        protected readonly config: AuthConfigService,
+        @Inject(AUTH_CONFIG_SERVICE)
+        protected readonly config: ConfigService<AuthConfig>,
         protected readonly http: HttpClient,
-        protected readonly events: EventsService) { }
-
-    public requestDiscoveryDocument() {
-        return of(null)
-            .pipe(
-                tap(() => this.events.dispatch(new SimpleOidcInfoEvent('Obtaining discovery document',
-                    this.discoveryDocumentAbsoluteEndpoint))),
-                switchMap(() => this.http.get<DiscoveryDocument>(this.discoveryDocumentAbsoluteEndpoint)),
-                tap(d => this.events.dispatch(new SimpleOidcInfoEvent('Discovery Document obtained', d))),
-                catchError(e => throwError(new ObtainDiscoveryDocumentError(e)))
-            );
-    }
-
-    public requestJWTKeys(doc: DiscoveryDocument) {
-        return of(null)
-            .pipe(
-                tap(() => this.events.dispatch(new SimpleOidcInfoEvent('Obtaining JWT Keys', doc.jwks_uri))),
-                switchMap(() => this.http.get<JWTKeys>(doc.jwks_uri)),
-                tap(j => this.events.dispatch(new SimpleOidcInfoEvent('JWT Keys obtained', j))),
-                catchError(e => throwError(new ObtainJWTKeysError(e)))
-            );
-    }
+        protected readonly events: EventsService,
+    ) { }
 }

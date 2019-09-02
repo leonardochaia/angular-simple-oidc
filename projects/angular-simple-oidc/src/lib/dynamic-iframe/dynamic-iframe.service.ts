@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
 import { DynamicIframe } from './dynamic-iframe';
-import { WINDOW_REF } from '../constants';
+import { WINDOW_REF } from '../providers';
 
 // @dynamic
 @Injectable({
