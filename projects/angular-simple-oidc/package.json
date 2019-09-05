@@ -1,6 +1,31 @@
 {
   "name": "angular-simple-oidc",
-  "version": "0.0.1",
+  "version": "8.0.0",
+  "description": "Angular Library implementing Open Id Connect specification. Code Flow, Refresh Tokens, Session Management, Discovery Document.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leonardochaia/angular-simple-oidc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leonardochaia/angular-simple-oidc"
+  },
+  "homepage": "https://github.com/leonardochaia/angular-simple-oidc",
+  "license": "MIT",
+  "keywords": [
+    "angular",
+    "oidc",
+    "openid",
+    "openid connect",
+    "open id connect",
+    "authentication",
+    "oauth",
+    "oauth2",
+    "angular library"
+  ],
+  "author": {
+    "name": "Leonardo Chaia",
+    "url": "https://github.com/leonardochaia"
+  },
   "peerDependencies": {
     "@angular/common": "^8.1.2",
     "@angular/core": "^8.1.2"
