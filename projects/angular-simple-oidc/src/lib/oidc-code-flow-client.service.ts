@@ -1,4 +1,4 @@
-import { Injectable, Inject, Injector } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { WINDOW_REF, AUTH_CONFIG_SERVICE } from './providers';
 import { tap, switchMap, take, map, withLatestFrom } from 'rxjs/operators';
 import { TokenStorageService } from './token-storage.service';
@@ -19,19 +19,11 @@ import { switchTap } from 'angular-simple-oidc/operators';
 import { ConfigService } from 'angular-simple-oidc/config';
 import { AuthConfig } from './config/models';
 import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
-import { Router } from '@angular/router';
 import { StartCodeFlowParameters } from './models';
 
 // @dynamic
 @Injectable()
 export class OidcCodeFlowClient {
-
-    protected get router() {
-        // use the injector directly
-        // to support being used in an APP_INITIALIZER
-        return this.injector.get(Router, null);
-    }
-
     constructor(
         @Inject(WINDOW_REF)
         protected readonly window: Window,
@@ -43,8 +35,7 @@ export class OidcCodeFlowClient {
         protected readonly tokenUrl: TokenUrlService,
         protected readonly tokenEndpointClient: TokenEndpointClientService,
         protected readonly events: EventsService,
-        protected readonly dynamicIframe: DynamicIframeService,
-        protected readonly injector: Injector,
+        protected readonly dynamicIframe: DynamicIframeService
     ) { }
 
     public startCodeFlow(options: StartCodeFlowParameters = {}): Observable<LocalState> {
@@ -73,7 +64,7 @@ export class OidcCodeFlowClient {
                         preRedirectUrl: opts.returnUrlAfterCallback
                     }).pipe(tap((state) => {
                         this.events.dispatch(new SimpleOidcInfoEvent(`Pre-authorize state stored`, state));
-                        this.changeUrl(result.url);
+                        this.redirectToUrl(result.url);
                     }));
                 }),
                 take(1)
@@ -150,16 +141,7 @@ export class OidcCodeFlowClient {
                 }),
                 switchTap(({ params }) => this.tokenStorage.storeAuthorizationCode(params.code, params.sessionState)),
                 switchMap(({ payload, localState }) => this.requestTokenWithAuthCode(payload, localState.nonce).pipe(
-                    tap(() => {
-                        if (this.router) {
-                            this.router.navigateByUrl(localState.preRedirectUrl);
-                        } else {
-                            // if not using the router, we're able to return to the original
-                            // state anyways, but we do a full page reload again.
-                            // TODO: Support other routers?
-                            this.changeUrl(localState.preRedirectUrl);
-                        }
-                    })
+                    tap(() => this.historyChangeUrl(localState.preRedirectUrl))
                 )),
                 take(1),
             );
@@ -220,8 +202,17 @@ export class OidcCodeFlowClient {
             );
     }
 
-    protected changeUrl(url: string) {
+    protected redirectToUrl(url: string) {
         this.events.dispatch(new SimpleOidcInfoEvent(`Redirecting`, url));
         this.window.location.href = url;
+    }
+
+    protected historyChangeUrl(url: string) {
+        if (this.window.history) {
+            this.events.dispatch(new SimpleOidcInfoEvent(`Changing URL with history API`, url));
+            this.window.history.pushState({}, null, url);
+        } else {
+            this.redirectToUrl(url);
+        }
     }
 }

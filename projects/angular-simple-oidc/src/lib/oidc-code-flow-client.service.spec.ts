@@ -18,8 +18,6 @@ import { EventsService } from 'angular-simple-oidc/events';
 import { AuthConfig } from './config/models';
 import { TokensReadyEvent } from './auth.events';
 import { ConfigService } from 'angular-simple-oidc/config';
-import { Injector } from '@angular/core';
-import { Router } from '@angular/router';
 import { urlJoin } from './utils/url-join';
 
 function spyOnGet<T>(obj: T, property: keyof T) {
@@ -38,8 +36,6 @@ describe('OidcCodeFlowClientService', () => {
     let tokenValidationSpy: jasmine.SpyObj<TokenValidationService>;
     let tokenEndpointSpy: jasmine.SpyObj<TokenEndpointClientService>;
     let eventsSpy: jasmine.SpyObj<EventsService>;
-    let injectorSpy: jasmine.SpyObj<Injector>;
-    let routerSpy: jasmine.SpyObj<Router>;
     let windowLocationSpy: jasmine.Spy<InferableFunction>;
     let stateSpy: jasmine.Spy<InferableFunction>;
     let jwtKeysSpy: jasmine.Spy<InferableFunction>;
@@ -59,7 +55,7 @@ describe('OidcCodeFlowClientService', () => {
     };
 
     beforeEach(() => {
-        windowSpy = jasmine.createSpyObj('window', ['location']);
+        windowSpy = jasmine.createSpyObj('window', ['location', 'history']);
         authConfigSpy = jasmine.createSpyObj('AuthConfigService', ['current$']);
         discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', ['current$']);
         tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', [
@@ -80,8 +76,6 @@ describe('OidcCodeFlowClientService', () => {
             'validateAuthorizeCallbackState']);
         tokenEndpointSpy = jasmine.createSpyObj('TokenEndpointClientService', ['call']);
         eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
-        injectorSpy = jasmine.createSpyObj('Injector', ['get']);
-        routerSpy = jasmine.createSpyObj('Router', ['navigateByUrl']);
 
         TestBed.configureTestingModule({
             providers: [
@@ -117,10 +111,6 @@ describe('OidcCodeFlowClientService', () => {
                     provide: EventsService,
                     useValue: eventsSpy
                 },
-                {
-                    provide: Router,
-                    useValue: routerSpy
-                },
                 OidcCodeFlowClient
             ],
         });
@@ -138,6 +128,7 @@ describe('OidcCodeFlowClientService', () => {
 
         windowLocationSpy = spyOnGet(TestBed.get(WINDOW_REF) as Window, 'location');
         windowLocationSpy.and.returnValue({ href: config.baseUrl });
+        spyOnGet(TestBed.get(WINDOW_REF) as Window, 'history').and.returnValue({ pushState: () => { } });
 
         stateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
     });
@@ -242,7 +233,7 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
 
-            const changeUrlSpy = spyOn(codeFlowClient as any, 'changeUrl')
+            const changeUrlSpy = spyOn(codeFlowClient as any, 'redirectToUrl')
                 .and.returnValue(null);
 
             codeFlowClient.startCodeFlow()
@@ -681,10 +672,14 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenEndpointSpy.call.and.returnValue(of(tokenResponse));
 
+            const changeUrlSpy = spyOn(codeFlowClient as any, 'historyChangeUrl')
+                .and.returnValue(null);
+
             codeFlowClient.codeFlowCallback()
                 .subscribe();
             flush();
-            expect(routerSpy.navigateByUrl).toHaveBeenCalledWith(localState.preRedirectUrl);
+
+            expect(changeUrlSpy).toHaveBeenCalledWith(localState.preRedirectUrl);
         }));
 
     });
