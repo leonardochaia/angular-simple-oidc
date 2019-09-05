@@ -9,6 +9,7 @@ import { ConfigService } from 'angular-simple-oidc/config';
 import { AuthConfig } from '../config/models';
 import { AUTH_CONFIG_SERVICE } from '../providers';
 import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
+import { DiscoveryDocumentObtainedEvent } from './events';
 
 @Injectable()
 export class OidcDiscoveryDocClient {
@@ -18,7 +19,7 @@ export class OidcDiscoveryDocClient {
             map(config => urlJoin(config.openIDProviderUrl, config.discoveryDocumentUrl)),
             tap(url => this.events.dispatch(new SimpleOidcInfoEvent('Obtaining discovery document', url))),
             switchMap(url => this.http.get<DiscoveryDocument>(url)),
-            tap(d => this.events.dispatch(new SimpleOidcInfoEvent('Discovery Document obtained', d))),
+            tap(doc => this.events.dispatch(new DiscoveryDocumentObtainedEvent(doc))),
             catchError(e => throwError(new ObtainDiscoveryDocumentError(e))),
             take(1),
             shareReplay()

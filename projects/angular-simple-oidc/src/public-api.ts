@@ -10,6 +10,7 @@ export { EndSessionClientService } from './lib/end-session-client.service';
 export { OidcCodeFlowClient } from './lib/oidc-code-flow-client.service';
 export { TokenStorageService } from './lib/token-storage.service';
 export { OidcDiscoveryDocClient } from './lib/discovery-document/oidc-discovery-doc-client.service';
+export * from './lib/discovery-document/events';
 export { AuthConfig } from './lib/config/models';
 
 export * from './lib/errors';
