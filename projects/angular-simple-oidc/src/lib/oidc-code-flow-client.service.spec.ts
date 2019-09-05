@@ -18,6 +18,9 @@ import { EventsService } from 'angular-simple-oidc/events';
 import { AuthConfig } from './config/models';
 import { TokensReadyEvent } from './auth.events';
 import { ConfigService } from 'angular-simple-oidc/config';
+import { Injector } from '@angular/core';
+import { Router } from '@angular/router';
+import { urlJoin } from './utils/url-join';
 
 function spyOnGet<T>(obj: T, property: keyof T) {
     Object.defineProperty(obj, property, { get: () => null });
@@ -35,6 +38,8 @@ describe('OidcCodeFlowClientService', () => {
     let tokenValidationSpy: jasmine.SpyObj<TokenValidationService>;
     let tokenEndpointSpy: jasmine.SpyObj<TokenEndpointClientService>;
     let eventsSpy: jasmine.SpyObj<EventsService>;
+    let injectorSpy: jasmine.SpyObj<Injector>;
+    let routerSpy: jasmine.SpyObj<Router>;
     let windowLocationSpy: jasmine.Spy<InferableFunction>;
     let stateSpy: jasmine.Spy<InferableFunction>;
     let jwtKeysSpy: jasmine.Spy<InferableFunction>;
@@ -75,6 +80,8 @@ describe('OidcCodeFlowClientService', () => {
             'validateAuthorizeCallbackState']);
         tokenEndpointSpy = jasmine.createSpyObj('TokenEndpointClientService', ['call']);
         eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
+        injectorSpy = jasmine.createSpyObj('Injector', ['get']);
+        routerSpy = jasmine.createSpyObj('Router', ['navigateByUrl']);
 
         TestBed.configureTestingModule({
             providers: [
@@ -109,6 +116,10 @@ describe('OidcCodeFlowClientService', () => {
                 {
                     provide: EventsService,
                     useValue: eventsSpy
+                },
+                {
+                    provide: Router,
+                    useValue: routerSpy
                 },
                 OidcCodeFlowClient
             ],
@@ -240,6 +251,76 @@ describe('OidcCodeFlowClientService', () => {
 
             expect(tokenStorageSpy.storePreAuthorizationState).toHaveBeenCalled();
             expect(changeUrlSpy).toHaveBeenCalledWith(urlResult.url);
+        }));
+
+        it('Should store provided return URL in storage', fakeAsync(() => {
+
+            const doc: Partial<DiscoveryDocument> = {
+                authorization_endpoint: 'http://idp/authorize'
+            };
+
+            discoveryDocSpy.and.returnValue(of(doc));
+
+            tokenStorageSpy.storePreAuthorizationState.and.returnValue(of({} as any));
+
+            const urlResult = {
+                codeChallenge: 'challenge',
+                codeVerifier: 'verifier',
+                nonce: 'nonce',
+                state: 'state',
+                url: 'url'
+            };
+
+            tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
+
+            const returnUrl = 'http://return-url';
+
+            codeFlowClient.startCodeFlow({
+                returnUrlAfterCallback: returnUrl
+            })
+                .subscribe();
+            flush();
+
+            expect(tokenStorageSpy.storePreAuthorizationState).toHaveBeenCalledWith({
+                nonce: urlResult.nonce,
+                state: urlResult.state,
+                codeVerifier: urlResult.codeVerifier,
+                preRedirectUrl: returnUrl
+            });
+        }));
+
+        it('Should default to current url for return url', fakeAsync(() => {
+
+            const doc: Partial<DiscoveryDocument> = {
+                authorization_endpoint: 'http://idp/authorize'
+            };
+
+            discoveryDocSpy.and.returnValue(of(doc));
+
+            tokenStorageSpy.storePreAuthorizationState.and.returnValue(of({} as any));
+
+            const urlResult = {
+                codeChallenge: 'challenge',
+                codeVerifier: 'verifier',
+                nonce: 'nonce',
+                state: 'state',
+                url: 'url'
+            };
+
+            tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
+            const currentLocation = 'http://current-location';
+            windowLocationSpy.and.returnValue({ href: currentLocation });
+
+            codeFlowClient.startCodeFlow()
+                .subscribe();
+            flush();
+
+            expect(tokenStorageSpy.storePreAuthorizationState).toHaveBeenCalledWith({
+                nonce: urlResult.nonce,
+                state: urlResult.state,
+                codeVerifier: urlResult.codeVerifier,
+                preRedirectUrl: currentLocation
+            });
         }));
     });
 
@@ -412,7 +493,7 @@ describe('OidcCodeFlowClientService', () => {
                 clientId: config.clientId,
                 clientSecret: config.clientSecret,
                 scope: config.scope,
-                redirectUri: config.baseUrl,
+                redirectUri: urlJoin(config.baseUrl, config.tokenCallbackRoute),
                 code: code,
                 codeVerifier: localState.codeVerifier
             });
@@ -546,6 +627,64 @@ describe('OidcCodeFlowClientService', () => {
             expect(tokenStorageSpy.storeOriginalIdToken).toHaveBeenCalledWith(tokenResponse.idToken);
 
             expect(eventsSpy.dispatch).toHaveBeenCalledWith(new TokensReadyEvent(tokenResponse));
+        }));
+
+        it('should redirect to original state using router', fakeAsync(() => {
+
+            const state = 'state';
+            const code = 'code';
+            const sessionState = 'session-state';
+            const error = null;
+
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
+                .and.returnValue({
+                    code,
+                    state,
+                    sessionState,
+                    error
+                });
+
+            const doc: Partial<DiscoveryDocument> = {};
+
+            discoveryDocSpy.and.returnValue(of(doc));
+
+            const jwtKeys: Partial<JWTKeys> = {};
+
+            jwtKeysSpy.and.returnValue(of(jwtKeys));
+
+            const localState: Partial<LocalState> = {
+                preRedirectUrl: 'http://pre-redirect-uri'
+            };
+
+            stateSpy.and.returnValue(of(localState));
+
+            const freshState: Partial<LocalState> = {
+                authorizationCode: code,
+                codeVerifier: 'verifier'
+            };
+
+            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of(freshState as any));
+
+            tokenStorageSpy.clearPreAuthorizationState.and.returnValue(of({} as any));
+            tokenStorageSpy.storeTokens.and.returnValue(of({} as any));
+            tokenStorageSpy.storeOriginalIdToken.and.returnValue(of({} as any));
+
+            const tokenResponse: TokenRequestResult = {
+                accessToken: 'access-token',
+                accessTokenExpiresAt: new Date().getTime(),
+                decodedIdToken: {
+                    at_hash: 'hash'
+                } as any,
+                idToken: 'id-token',
+                refreshToken: 'refresh-token'
+            };
+
+            tokenEndpointSpy.call.and.returnValue(of(tokenResponse));
+
+            codeFlowClient.codeFlowCallback()
+                .subscribe();
+            flush();
+            expect(routerSpy.navigateByUrl).toHaveBeenCalledWith(localState.preRedirectUrl);
         }));
 
     });

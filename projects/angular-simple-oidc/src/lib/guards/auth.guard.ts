@@ -23,7 +23,9 @@ export class AuthGuard implements CanActivate {
           if (!authenticated) {
             this.events.dispatch(new SimpleOidcInfoEvent(`Route requires auth. No token or it's expired.`,
               { route: state.url }));
-            return this.auth.startCodeFlow()
+            return this.auth.startCodeFlow({
+              returnUrlAfterCallback: state.url
+            })
               // return false so that route change does not happen
               .pipe(map(() => false));
           }

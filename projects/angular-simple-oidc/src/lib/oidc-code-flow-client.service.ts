@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, Inject, Injector } from '@angular/core';
 import { WINDOW_REF, AUTH_CONFIG_SERVICE } from './providers';
 import { tap, switchMap, take, map, withLatestFrom } from 'rxjs/operators';
 import { TokenStorageService } from './token-storage.service';
@@ -19,10 +19,18 @@ import { switchTap } from 'angular-simple-oidc/operators';
 import { ConfigService } from 'angular-simple-oidc/config';
 import { AuthConfig } from './config/models';
 import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
+import { Router } from '@angular/router';
+import { StartCodeFlowParameters } from './models';
 
 // @dynamic
 @Injectable()
 export class OidcCodeFlowClient {
+
+    protected get router() {
+        // use the injector directly
+        // to support being used in an APP_INITIALIZER
+        return this.injector.get(Router, null);
+    }
 
     constructor(
         @Inject(WINDOW_REF)
@@ -35,10 +43,19 @@ export class OidcCodeFlowClient {
         protected readonly tokenUrl: TokenUrlService,
         protected readonly tokenEndpointClient: TokenEndpointClientService,
         protected readonly events: EventsService,
-        protected readonly dynamicIframe: DynamicIframeService
+        protected readonly dynamicIframe: DynamicIframeService,
+        protected readonly injector: Injector,
     ) { }
 
-    public startCodeFlow(): Observable<LocalState> {
+    public startCodeFlow(options: StartCodeFlowParameters = {}): Observable<LocalState> {
+        const opts: StartCodeFlowParameters = {
+            ...options,
+        };
+
+        if (!opts.returnUrlAfterCallback) {
+            opts.returnUrlAfterCallback = this.window.location.href;
+        }
+
         return this.config.current$
             .pipe(
                 map(config => urlJoin(config.baseUrl, config.tokenCallbackRoute)),
@@ -48,11 +65,12 @@ export class OidcCodeFlowClient {
 
                     this.events.dispatch(new SimpleOidcInfoEvent(`Authorize URL generated`, result));
 
+
                     return this.tokenStorage.storePreAuthorizationState({
                         nonce: result.nonce,
                         state: result.state,
                         codeVerifier: result.codeVerifier,
-                        preRedirectUrl: this.window.location.href
+                        preRedirectUrl: opts.returnUrlAfterCallback
                     }).pipe(tap((state) => {
                         this.events.dispatch(new SimpleOidcInfoEvent(`Pre-authorize state stored`, state));
                         this.changeUrl(result.url);
@@ -68,13 +86,13 @@ export class OidcCodeFlowClient {
                 withLatestFrom(this.config.current$),
                 map(([discoveryDocument, config]) => this.tokenUrl.createAuthorizeUrl(
                     discoveryDocument.authorization_endpoint, {
-                        clientId: config.clientId,
-                        scope: config.scope,
-                        responseType: 'code',
-                        redirectUri,
-                        idTokenHint,
-                        prompt
-                    })
+                    clientId: config.clientId,
+                    scope: config.scope,
+                    responseType: 'code',
+                    redirectUri,
+                    idTokenHint,
+                    prompt
+                })
                 ),
                 take(1),
             );
@@ -123,7 +141,7 @@ export class OidcCodeFlowClient {
                         clientId: config.clientId,
                         clientSecret: config.clientSecret,
                         scope: config.scope,
-                        redirectUri: config.baseUrl,
+                        redirectUri: urlJoin(config.baseUrl, config.tokenCallbackRoute),
                         code: params.code,
                         codeVerifier: localState.codeVerifier
                     });
@@ -132,7 +150,16 @@ export class OidcCodeFlowClient {
                 }),
                 switchTap(({ params }) => this.tokenStorage.storeAuthorizationCode(params.code, params.sessionState)),
                 switchMap(({ payload, localState }) => this.requestTokenWithAuthCode(payload, localState.nonce).pipe(
-                    tap(() => this.changeUrl(localState.preRedirectUrl))
+                    tap(() => {
+                        if (this.router) {
+                            this.router.navigateByUrl(localState.preRedirectUrl);
+                        } else {
+                            // if not using the router, we're able to return to the original
+                            // state anyways, but we do a full page reload again.
+                            // TODO: Support other routers?
+                            this.changeUrl(localState.preRedirectUrl);
+                        }
+                    })
                 )),
                 take(1),
             );
