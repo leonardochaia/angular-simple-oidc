@@ -57,7 +57,11 @@ export function authConfigFactory(
     return () => config$.pipe(
         map(config => {
             if (config.openIDProviderUrl) {
-                config.openIDProviderUrl = config.openIDProviderUrl.toLowerCase();
+                // do not modify the provided objects.
+                return {
+                    ...config,
+                    openIDProviderUrl: config.openIDProviderUrl.toLowerCase()
+                };
             }
             return config;
         }),
