@@ -8,6 +8,11 @@ const routes: Routes = [
     path: '',
     canActivate: [AuthGuard],
     component: HomeComponent
+  },
+  {
+    path: 'foo',
+    canActivate: [AuthGuard],
+    component: HomeComponent
   }
 ];
 

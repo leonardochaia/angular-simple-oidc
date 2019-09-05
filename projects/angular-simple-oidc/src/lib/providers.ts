@@ -42,6 +42,11 @@ const defaultConfig: Partial<AuthConfig> = {
     enableAuthorizationCallbackAppInitializer: true
 };
 
+function getApplicationBaseUrl() {
+    const base = document.querySelector('base');
+    return base && base.href || '';
+}
+
 export function authConfigFactory(
     configInput: Observable<AuthConfig> | AuthConfig,
     configService: ConfigService<AuthConfig>,
@@ -68,7 +73,7 @@ export function authConfigFactory(
         tap(config => configService.configure(config, {
             defaultConfig: {
                 ...defaultConfig,
-                baseUrl: `${window.location.protocol}//${window.location.host}${window.location.pathname}`,
+                baseUrl: getApplicationBaseUrl(),
             },
             requiredFields: AUTH_CONFIG_REQUIRED_FIELDS
         })),

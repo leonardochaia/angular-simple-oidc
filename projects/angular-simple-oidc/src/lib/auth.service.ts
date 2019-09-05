@@ -10,6 +10,7 @@ import { AUTH_CONFIG_SERVICE } from './providers';
 import { ConfigService } from 'angular-simple-oidc/config';
 import { AuthConfig } from './config/models';
 import { EventsService, SimpleOidcEvent, SimpleOidcErrorEvent } from 'angular-simple-oidc/events';
+import { StartCodeFlowParameters } from './models';
 
 @Injectable()
 export class AuthService {
@@ -71,8 +72,8 @@ export class AuthService {
         protected readonly events: EventsService,
     ) { }
 
-    public startCodeFlow(): Observable<LocalState> {
-        return this.oidcClient.startCodeFlow()
+    public startCodeFlow(options?: StartCodeFlowParameters): Observable<LocalState> {
+        return this.oidcClient.startCodeFlow(options)
             .pipe(tap({ error: e => this.events.dispatchError(e) }));
     }
 
