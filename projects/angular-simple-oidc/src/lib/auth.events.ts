@@ -29,7 +29,7 @@ export class TokensReadyEvent extends SimpleOidcInfoEvent<TokenRequestResult> {
     }
 }
 
-export class AccessTokenExpiredEvent extends SimpleOidcInfoEvent {
+export class AccessTokenExpiredEvent extends SimpleOidcInfoEvent<{ token: string, expiredAt: Date, now?: Date }> {
     constructor(payload: { token: string, expiredAt: Date, now?: Date }) {
         super(
             `Access token has expired`,
@@ -38,7 +38,7 @@ export class AccessTokenExpiredEvent extends SimpleOidcInfoEvent {
     }
 }
 
-export class AccessTokenExpiringEvent extends SimpleOidcInfoEvent {
+export class AccessTokenExpiringEvent extends SimpleOidcInfoEvent<{ token: string, expiresAt: Date, now?: Date }> {
     constructor(payload: { token: string, expiresAt: Date, now?: Date }) {
         super(
             `Access token is almost expired`,
