@@ -29,6 +29,8 @@ export class HomeComponent {
     return this.auth.isLoggedIn$;
   }
 
+  public profile$ = this.auth.userInfo$;
+
   public get accessTokenExpiration$() {
     return this.auth.tokenExpiration$
       .pipe(

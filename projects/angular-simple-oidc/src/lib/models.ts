@@ -6,3 +6,7 @@ export interface StartCodeFlowParameters {
      */
     returnUrlAfterCallback?: string;
 }
+
+export interface ClaimCollection {
+    [key: string]: string | (string[]);
+}

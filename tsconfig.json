@@ -28,9 +28,9 @@
         // "./projects/angular-simple-oic/src/*"
         "dist/angular-simple-oidc/*"
       ]
-    },
+    }
   },
-    "angularCompilerOptions": {
+  "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,
     "strictInjectionParameters": true
   }

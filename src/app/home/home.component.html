@@ -26,4 +26,8 @@
     <textarea [value]="identityToken$ | async" style="display:block; width: 100%;" readonly></textarea>
     <pre>{{identityTokenDecoded$ | async | json}}</pre>
   </li>
+  <li>
+    Profile
+    <pre>{{profile$ | async | json}}</pre>
+  </li>
 </ul>

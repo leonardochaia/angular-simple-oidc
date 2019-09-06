@@ -19,6 +19,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { RefreshTokenClient } from './lib/refresh-token-client.service';
 import { TokenEventsModule } from './lib/token-events.module';
 import { EndSessionClientService } from './lib/end-session-client.service';
+import { UserInfoClientService } from './lib/user-info-client.service';
 
 @NgModule({
   imports: [
@@ -36,6 +37,7 @@ import { EndSessionClientService } from './lib/end-session-client.service';
     OidcCodeFlowClient,
     RefreshTokenClient,
     EndSessionClientService,
+    UserInfoClientService,
 
     AuthService,
     AuthGuard,
