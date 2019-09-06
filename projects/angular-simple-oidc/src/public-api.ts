@@ -15,6 +15,7 @@ export { AuthConfig } from './lib/config/models';
 
 export * from './lib/errors';
 export * from './lib/auth.events';
+export * from './lib/models';
 export {
     AUTH_CONFIG,
     AUTH_CONFIG_SERVICE,
