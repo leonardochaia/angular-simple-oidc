@@ -1,4 +1,4 @@
-import { SimpleOidcError } from 'angular-simple-oidc/core';
+import { SimpleOidcError, DiscoveryDocument } from 'angular-simple-oidc/core';
 
 export class TokenEndpointUnexpectedError extends SimpleOidcError {
     constructor(context: any) {
@@ -33,3 +33,14 @@ export class AuthenticationConfigurationMissingError extends SimpleOidcError {
         );
     }
 }
+
+export class UserInfoNotSupportedError extends SimpleOidcError {
+    constructor(doc: DiscoveryDocument) {
+        super(
+            `User Info is not supported, or it's URL was not in discovery document`,
+            `user-info-not-suppo`,
+            doc
+        );
+    }
+}
+

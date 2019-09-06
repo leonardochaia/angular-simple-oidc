@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
 import { TokenStorageService } from './token-storage.service';
-import { map, tap, switchMap, take } from 'rxjs/operators';
+import { map, tap, switchMap, take, shareReplay } from 'rxjs/operators';
 import { OidcCodeFlowClient } from './oidc-code-flow-client.service';
 import { TokenHelperService, DecodedIdentityToken, LocalState, TokenRequestResult } from 'angular-simple-oidc/core';
 import { RefreshTokenClient } from './refresh-token-client.service';
@@ -10,7 +10,10 @@ import { AUTH_CONFIG_SERVICE } from './providers';
 import { ConfigService } from 'angular-simple-oidc/config';
 import { AuthConfig } from './config/models';
 import { EventsService, SimpleOidcEvent, SimpleOidcErrorEvent } from 'angular-simple-oidc/events';
-import { StartCodeFlowParameters } from './models';
+import { StartCodeFlowParameters, ClaimCollection } from './models';
+import { UserInfoClientService } from './user-info-client.service';
+import { filterInstanceOf } from 'angular-simple-oidc/operators';
+import { TokensReadyEvent } from './auth.events';
 
 @Injectable()
 export class AuthService {
@@ -53,6 +56,12 @@ export class AuthService {
             .pipe(map(s => s.decodedIdentityToken));
     }
 
+    public readonly userInfo$: Observable<ClaimCollection> = this.events$.pipe(
+        filterInstanceOf(TokensReadyEvent),
+        switchMap(() => this.userInfoClient.getUserInfo()),
+        shareReplay()
+    );
+
     public get events$(): Observable<SimpleOidcEvent> {
         return this.events.events$;
     }
@@ -70,6 +79,7 @@ export class AuthService {
         @Inject(AUTH_CONFIG_SERVICE)
         protected readonly config: ConfigService<AuthConfig>,
         protected readonly events: EventsService,
+        protected readonly userInfoClient: UserInfoClientService
     ) { }
 
     public startCodeFlow(options?: StartCodeFlowParameters): Observable<LocalState> {

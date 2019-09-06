@@ -1,5 +1,6 @@
 import { SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 import { TokenRequestResult } from 'angular-simple-oidc/core';
+import { ClaimCollection } from './models';
 
 export class TokensObtainedEvent extends SimpleOidcInfoEvent<TokenRequestResult> {
     constructor(tokens: TokenRequestResult) {
@@ -41,6 +42,15 @@ export class AccessTokenExpiringEvent extends SimpleOidcInfoEvent {
     constructor(payload: { token: string, expiresAt: Date, now?: Date }) {
         super(
             `Access token is almost expired`,
+            payload
+        );
+    }
+}
+
+export class UserInfoObtainedEvent extends SimpleOidcInfoEvent<ClaimCollection> {
+    constructor(payload: ClaimCollection) {
+        super(
+            `Obtained User Profile`,
             payload
         );
     }
