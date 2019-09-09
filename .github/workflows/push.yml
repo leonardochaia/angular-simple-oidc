@@ -7,10 +7,11 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
-        name: Install Packages using Yarn
         with:
           node-version: "10.x"
-        run: yarn install
+
+      - run: yarn install
+        name: Install Packages using Yarn
 
       - run: yarn build angular-simple-oidc
         name: Build angular-simple-oidc
