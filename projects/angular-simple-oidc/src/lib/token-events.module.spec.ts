@@ -120,20 +120,20 @@ describe('TokenEventsModule', () => {
 
             createEventsModule();
             tick(60000);
-            let expected = new AccessTokenExpiringEvent({
+            const expected1 = new AccessTokenExpiringEvent({
                 token: tokens.accessToken,
                 expiresAt: new Date(tokens.accessTokenExpiresAt),
                 now: new Date()
             });
-            expect(eventServiceSpy.dispatch).toHaveBeenCalledWith(expected);
+            expect(eventServiceSpy.dispatch).toHaveBeenCalledWith(expected1);
 
             tick(60000);
-            expected = new AccessTokenExpiredEvent({
+            const expected2 = new AccessTokenExpiredEvent({
                 token: tokens.accessToken,
                 expiredAt: new Date(tokens.accessTokenExpiresAt),
                 now: new Date()
             });
-            expect(eventServiceSpy.dispatch).toHaveBeenCalledWith(expected);
+            expect(eventServiceSpy.dispatch).toHaveBeenCalledWith(expected2);
         }));
 
         it('should not configure dispatchers if no access token', fakeAsync(() => {
