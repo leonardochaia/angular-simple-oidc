@@ -1,0 +1,28 @@
+on: push
+name: Run tests on push
+jobs:
+  installPackages:
+    name: Install packages
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install packages
+      uses: Borales/actions-yarn@master
+      with:
+        entrypoint: yarn
+        args: install
+    - name: Build sample app
+      uses: Borales/actions-yarn@master
+      with:
+        entrypoint: yarn
+        args: build --prod
+    - name: Build angular-simple-oidc
+      uses: Borales/actions-yarn@master
+      with:
+        entrypoint: yarn
+        args: build angular-simple-oidc
+    - name: Test angular-simple-oidc
+      uses: ianwalter/puppeteer@v2.0.0
+      with:
+        entrypoint: yarn
+        args: test-lib-ci
