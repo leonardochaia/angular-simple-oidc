@@ -46,7 +46,7 @@ export class AuthorizeEndpointPopupClientService implements OnDestroy {
             .pipe(
                 tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow in child window`))),
                 switchMap((redirectUri) =>
-                    this.oidcClient.generateCodeFlowMetadata(redirectUri, null, null, 'popup')
+                    this.oidcClient.generateCodeFlowMetadata({ redirectUri, display: 'popup', })
                         .pipe(map(metadata => ({ metadata, redirectUri })))
                 ),
                 take(1),

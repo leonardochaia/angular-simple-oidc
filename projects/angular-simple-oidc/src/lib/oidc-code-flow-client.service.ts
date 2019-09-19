@@ -8,6 +8,7 @@ import {
     AuthorizationCallbackFormatError,
     LocalState,
     TokenRequestResult,
+    CreateAuthorizeUrlParams,
 } from 'angular-simple-oidc/core';
 import { urlJoin } from './utils/url-join';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
@@ -50,13 +51,10 @@ export class OidcCodeFlowClient {
         return this.config.current$
             .pipe(
                 map(config => urlJoin(config.baseUrl, config.tokenCallbackRoute)),
-                switchMap(redirectUri => this.generateCodeFlowMetadata(redirectUri)),
+                switchMap(redirectUri => this.generateCodeFlowMetadata({ redirectUri })),
                 tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow`))),
                 switchMap((result) => {
-
                     this.events.dispatch(new SimpleOidcInfoEvent(`Authorize URL generated`, result));
-
-
                     return this.tokenStorage.storePreAuthorizationState({
                         nonce: result.nonce,
                         state: result.state,
@@ -71,7 +69,8 @@ export class OidcCodeFlowClient {
             );
     }
 
-    public generateCodeFlowMetadata(redirectUri: string, idTokenHint?: string, prompt?: string, display?: string) {
+    public generateCodeFlowMetadata(
+        params: Omit<CreateAuthorizeUrlParams, 'clientId' | 'scope' | 'responseType'>) {
         return this.discoveryDocumentClient.current$
             .pipe(
                 withLatestFrom(this.config.current$),
@@ -80,12 +79,8 @@ export class OidcCodeFlowClient {
                     clientId: config.clientId,
                     scope: config.scope,
                     responseType: 'code',
-                    redirectUri,
-                    idTokenHint,
-                    prompt,
-                    display
-                })
-                ),
+                    ...params,
+                })),
                 take(1),
             );
     }

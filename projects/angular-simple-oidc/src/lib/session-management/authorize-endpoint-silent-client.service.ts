@@ -47,8 +47,13 @@ export class AuthorizeEndpointSilentClientService {
                 tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow in iframe`))),
                 withLatestFrom(iframeUrl$),
                 switchMap(([{ identityToken }, iframeUrl]) =>
-                    this.oidcClient.generateCodeFlowMetadata(iframeUrl, identityToken, 'none')
-                        .pipe(map(metadata => ({ metadata, iframeUrl })))
+                    this.oidcClient.generateCodeFlowMetadata({
+                        redirectUri: iframeUrl,
+                        prompt: 'none',
+                        idTokenHint: identityToken
+                    }).pipe(
+                        map(metadata => ({ metadata, iframeUrl }))
+                    )
                 ),
                 withLatestFrom(this.sessionConfig.current$),
                 take(1),

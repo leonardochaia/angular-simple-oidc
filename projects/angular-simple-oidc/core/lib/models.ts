@@ -111,3 +111,16 @@ export interface JWTKey {
 export interface JWTKeys {
     keys: JWTKey[];
 }
+
+export interface CreateAuthorizeUrlParams {
+    clientId: string;
+    scope: string;
+    redirectUri: string;
+    prompt?: string;
+    loginHint?: string;
+    uiLocales?: string;
+    acrValues?: string;
+    responseType: 'code' | 'token' | 'id_token token';
+    idTokenHint?: string;
+    display?: string;
+}
