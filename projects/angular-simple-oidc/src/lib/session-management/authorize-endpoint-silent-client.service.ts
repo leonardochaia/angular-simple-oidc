@@ -7,7 +7,6 @@ import { fromEvent, throwError, Observable } from 'rxjs';
 import { WINDOW_REF, AUTH_CONFIG_SERVICE } from '../providers';
 import { TokenUrlService, TokenRequestResult } from 'angular-simple-oidc/core';
 import { urlJoin } from '../utils/url-join';
-import { switchTap } from 'angular-simple-oidc/operators';
 import { OidcCodeFlowClient } from '../oidc-code-flow-client.service';
 import { IframePostMessageTimeoutError } from './errors';
 import { ConfigService } from 'angular-simple-oidc/config';
@@ -48,8 +47,13 @@ export class AuthorizeEndpointSilentClientService {
                 tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow in iframe`))),
                 withLatestFrom(iframeUrl$),
                 switchMap(([{ identityToken }, iframeUrl]) =>
-                    this.oidcClient.generateCodeFlowMetadata(iframeUrl, identityToken, 'none')
-                        .pipe(map(metadata => ({ metadata, iframeUrl })))
+                    this.oidcClient.generateCodeFlowMetadata({
+                        redirectUri: iframeUrl,
+                        prompt: 'none',
+                        idTokenHint: identityToken
+                    }).pipe(
+                        map(metadata => ({ metadata, iframeUrl }))
+                    )
                 ),
                 withLatestFrom(this.sessionConfig.current$),
                 take(1),
@@ -84,29 +88,13 @@ export class AuthorizeEndpointSilentClientService {
                     this.events.dispatch(new SimpleOidcInfoEvent(`Obtained data from iframe`, { event, href }));
                     iframe.remove();
 
-                    const params = this.oidcClient.parseCodeFlowCallbackParams(href);
-                    this.oidcClient.validateCodeFlowCallback(params, metadata.state);
-
                     return {
-                        ...params,
-                        metadata,
-                        iframeUrl
+                        href,
+                        iframeUrl,
+                        metadata
                     };
                 }),
-                switchTap(({ code, sessionState }) => this.tokenStorage.storeAuthorizationCode(code, sessionState)),
-                withLatestFrom(this.authConfig.current$),
-                switchMap(([{ code, metadata, iframeUrl }, authConfig]) => {
-                    const payload = this.tokenUrl.createAuthorizationCodeRequestPayload({
-                        clientId: authConfig.clientId,
-                        clientSecret: authConfig.clientSecret,
-                        scope: authConfig.scope,
-                        redirectUri: iframeUrl,
-                        code: code,
-                        codeVerifier: metadata.codeVerifier,
-                    });
-
-                    return this.oidcClient.requestTokenWithAuthCode(payload, metadata.nonce);
-                })
+                switchMap(({ href, iframeUrl, metadata }) => this.oidcClient.codeFlowCallback(href, iframeUrl, metadata))
             );
     }
 }

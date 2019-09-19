@@ -3,6 +3,7 @@ import { HttpParams } from '@angular/common/http';
 import { TokenCryptoService } from './token-crypto.service';
 import { validateObjectRequiredProps } from './validate-object-required-props';
 import { RequiredParemetersMissingError } from './errors';
+import { CreateAuthorizeUrlParams } from './models';
 
 @Injectable()
 export class TokenUrlService {
@@ -67,17 +68,7 @@ export class TokenUrlService {
 
     public createAuthorizeUrl(
         authorizeEndpointUrl: string,
-        params: {
-            clientId: string,
-            scope: string,
-            redirectUri: string,
-            prompt?: string,
-            loginHint?: string,
-            uiLocales?: string,
-            acrValues?: string
-            responseType: 'code' | 'token' | 'id_token token',
-            idTokenHint?: string,
-        }) {
+        params: CreateAuthorizeUrlParams) {
 
         if (!authorizeEndpointUrl || !authorizeEndpointUrl.length) {
             throw new RequiredParemetersMissingError(`authorizeEndpointUrl`, arguments);
@@ -121,6 +112,10 @@ export class TokenUrlService {
 
         if (params.idTokenHint) {
             httpParams = httpParams.set('id_token_hint', params.idTokenHint);
+        }
+
+        if (params.display) {
+            httpParams = httpParams.set('display', params.display);
         }
 
         const url = `${authorizeEndpointUrl}?${httpParams}`;

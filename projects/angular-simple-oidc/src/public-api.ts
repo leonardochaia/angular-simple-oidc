@@ -37,3 +37,12 @@ export {
     SESSION_MANAGEMENT_CONFIG,
     SESSION_MANAGEMENT_CONFIG_SERVICE
 } from './lib/session-management/providers';
+
+export { PopupAuthorizationModule } from './lib/popup-authorization/popup-authorization.module';
+export { AuthorizeEndpointPopupClientService } from './lib/popup-authorization/authorize-endpoint-popup-client.service';
+export * from './lib/popup-authorization/errors';
+export * from './lib/popup-authorization/models';
+export {
+    POPUP_AUTHORIZATION_CONFIG,
+    POPUP_AUTHORIZATION_CONFIG_SERVICE
+} from './lib/popup-authorization/providers';

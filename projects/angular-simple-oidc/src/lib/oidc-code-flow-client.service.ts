@@ -8,6 +8,7 @@ import {
     AuthorizationCallbackFormatError,
     LocalState,
     TokenRequestResult,
+    CreateAuthorizeUrlParams,
 } from 'angular-simple-oidc/core';
 import { urlJoin } from './utils/url-join';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
@@ -50,13 +51,10 @@ export class OidcCodeFlowClient {
         return this.config.current$
             .pipe(
                 map(config => urlJoin(config.baseUrl, config.tokenCallbackRoute)),
-                switchMap(redirectUri => this.generateCodeFlowMetadata(redirectUri)),
+                switchMap(redirectUri => this.generateCodeFlowMetadata({ redirectUri })),
                 tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow`))),
                 switchMap((result) => {
-
                     this.events.dispatch(new SimpleOidcInfoEvent(`Authorize URL generated`, result));
-
-
                     return this.tokenStorage.storePreAuthorizationState({
                         nonce: result.nonce,
                         state: result.state,
@@ -71,7 +69,8 @@ export class OidcCodeFlowClient {
             );
     }
 
-    public generateCodeFlowMetadata(redirectUri: string, idTokenHint?: string, prompt?: string) {
+    public generateCodeFlowMetadata(
+        params: Omit<CreateAuthorizeUrlParams, 'clientId' | 'scope' | 'responseType'>) {
         return this.discoveryDocumentClient.current$
             .pipe(
                 withLatestFrom(this.config.current$),
@@ -80,11 +79,8 @@ export class OidcCodeFlowClient {
                     clientId: config.clientId,
                     scope: config.scope,
                     responseType: 'code',
-                    redirectUri,
-                    idTokenHint,
-                    prompt
-                })
-                ),
+                    ...params,
+                })),
                 take(1),
             );
     }
@@ -117,37 +113,54 @@ export class OidcCodeFlowClient {
             { code, state }));
     }
 
-    public codeFlowCallback(): Observable<TokenRequestResult> {
+    public codeFlowCallback(
+        href: string,
+        redirectUri: string,
+        metadata: { state: string, nonce: string, codeVerifier: string }) {
 
+        const params = this.parseCodeFlowCallbackParams(href);
+        this.validateCodeFlowCallback(params, metadata.state);
+
+        return this.tokenStorage.storeAuthorizationCode(params.code, params.sessionState)
+            .pipe(
+                switchMap(() => this.config.current$),
+                switchMap(authConfig => {
+                    const payload = this.tokenUrl.createAuthorizationCodeRequestPayload({
+                        clientId: authConfig.clientId,
+                        clientSecret: authConfig.clientSecret,
+                        scope: authConfig.scope,
+                        redirectUri,
+                        code: params.code,
+                        codeVerifier: metadata.codeVerifier,
+                    });
+
+                    return this.requestTokenWithAuthCode(payload, metadata.nonce);
+                })
+            );
+    }
+
+    public currentWindowCodeFlowCallback(): Observable<TokenRequestResult> {
         return this.tokenStorage.currentState$
             .pipe(
-                take(1),
+                take(1), // we will be trigger currentState$ below
                 tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow callback`))),
                 withLatestFrom(this.config.current$),
                 map(([localState, config]) => {
-                    const params = this.parseCodeFlowCallbackParams(this.window.location.href);
-                    this.validateCodeFlowCallback(params, localState.state);
-
-                    const payload = this.tokenUrl.createAuthorizationCodeRequestPayload({
-                        clientId: config.clientId,
-                        clientSecret: config.clientSecret,
-                        scope: config.scope,
-                        redirectUri: urlJoin(config.baseUrl, config.tokenCallbackRoute),
-                        code: params.code,
-                        codeVerifier: localState.codeVerifier
-                    });
-
-                    return { params, payload, localState };
+                    const redirectUri = urlJoin(config.baseUrl, config.tokenCallbackRoute);
+                    return {
+                        localState,
+                        redirectUri
+                    };
                 }),
-                switchTap(({ params }) => this.tokenStorage.storeAuthorizationCode(params.code, params.sessionState)),
-                switchMap(({ payload, localState }) => this.requestTokenWithAuthCode(payload, localState.nonce).pipe(
-                    tap(() => this.historyChangeUrl(localState.preRedirectUrl))
-                )),
+                switchMap(({ localState, redirectUri }) =>
+                    this.codeFlowCallback(this.window.location.href, redirectUri, localState).pipe(
+                        tap(() => this.historyChangeUrl(localState.preRedirectUrl))
+                    )),
                 take(1),
             );
     }
 
-    public requestTokenWithAuthCode(payload: string, nonce: string) {
+    public requestTokenWithAuthCode(payload: string, nonce: string): Observable<TokenRequestResult> {
 
         // The discovery document for issuer
         const discoveryDocument$ = this.discoveryDocumentClient.current$
@@ -182,22 +195,20 @@ export class OidcCodeFlowClient {
                     this.tokenValidation.validateAccessToken(result.accessToken,
                         result.decodedIdToken.at_hash);
                 }),
-                switchMap((r) => {
+                switchTap(() => {
                     this.events.dispatch(new SimpleOidcInfoEvent('Clearing pre-authorize state..'));
-                    return this.tokenStorage.clearPreAuthorizationState()
-                        .pipe(map(() => r));
+                    return this.tokenStorage.clearPreAuthorizationState();
                 }),
-                tap(([result]) => this.events.dispatch(new TokensValidatedEvent(result))),
-                switchMap(([result]) => {
+                switchTap(([result]) => {
+                    this.events.dispatch(new TokensValidatedEvent(result));
                     this.events.dispatch(new SimpleOidcInfoEvent('Storing tokens..', result));
-                    return this.tokenStorage.storeTokens(result)
-                        .pipe(map(() => result));
+                    return this.tokenStorage.storeTokens(result);
                 }),
-                switchMap(result => {
+                switchTap(([result]) => {
                     this.events.dispatch(new SimpleOidcInfoEvent('Storing original Identity Token..', result.idToken));
-                    return this.tokenStorage.storeOriginalIdToken(result.idToken)
-                        .pipe(map(() => result));
+                    return this.tokenStorage.storeOriginalIdToken(result.idToken);
                 }),
+                map(([result]) => result),
                 tap((result) => this.events.dispatch(new TokensReadyEvent(result))),
             );
     }
