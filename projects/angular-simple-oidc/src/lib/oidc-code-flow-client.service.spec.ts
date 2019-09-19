@@ -162,7 +162,7 @@ describe('OidcCodeFlowClientService', () => {
             const idTokenHint = 'id-token-hint';
             const prompt = 'prompt';
 
-            codeFlowClient.generateCodeFlowMetadata(redirectUri, idTokenHint, prompt)
+            codeFlowClient.generateCodeFlowMetadata({ redirectUri, idTokenHint, prompt })
                 .subscribe();
             flush();
 
@@ -174,7 +174,6 @@ describe('OidcCodeFlowClientService', () => {
                     redirectUri: redirectUri,
                     idTokenHint: idTokenHint,
                     prompt: prompt,
-                    display: undefined
                 });
         }));
     });

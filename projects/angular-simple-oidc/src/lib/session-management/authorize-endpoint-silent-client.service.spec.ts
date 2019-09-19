@@ -169,7 +169,7 @@ describe('Authorize Endpoint Silent Client ', () => {
         flush();
 
         expect(oidcCodeFlowClientSpy.generateCodeFlowMetadata)
-            .toHaveBeenCalledWith(iframeUrl, 'id-token', 'none');
+            .toHaveBeenCalledWith({ redirectUri: iframeUrl, idTokenHint: 'id-token', prompt: 'none' });
     }));
 
     it('Obtains URL from iframe correctly', fakeAsync(() => {

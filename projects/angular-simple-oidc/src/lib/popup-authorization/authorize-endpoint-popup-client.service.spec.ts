@@ -145,7 +145,7 @@ describe('Authorize Endpoint Popup Client ', () => {
         flush();
 
         expect(oidcCodeFlowClientSpy.generateCodeFlowMetadata)
-            .toHaveBeenCalledWith(iframeUrl, null, null, 'popup');
+            .toHaveBeenCalledWith({ redirectUri: iframeUrl, display: 'popup' });
     }));
 
     it('Obtains URL from window correctly', fakeAsync(() => {
