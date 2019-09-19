@@ -7,7 +7,8 @@ import { AppComponent } from './app.component';
 import {
   AngularSimpleOidcModule,
   AutomaticRefreshModule,
-  SessionManagementModule
+  SessionManagementModule,
+  PopupAuthorizationModule
 } from 'angular-simple-oidc';
 import { HomeComponent } from './home/home.component';
 
@@ -23,6 +24,9 @@ import { HomeComponent } from './home/home.component';
     }),
 
     AutomaticRefreshModule,
+    PopupAuthorizationModule.forRoot({
+      childWindowPath: 'assets/oidc-iframe.html'
+    }),
     SessionManagementModule.forRoot({
       iframePath: 'assets/oidc-iframe.html'
     }),

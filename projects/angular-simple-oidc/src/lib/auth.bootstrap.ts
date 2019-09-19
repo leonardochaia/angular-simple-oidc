@@ -22,7 +22,7 @@ export function simpleOidcInitializer(
         switchMap(config => {
           if (config.enableAuthorizationCallbackAppInitializer
             && window.location.pathname.includes(config.tokenCallbackRoute)) {
-            return oidcCodeFlowClient.codeFlowCallback();
+            return oidcCodeFlowClient.currentWindowCodeFlowCallback();
           } else {
             return of(null);
           }

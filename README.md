@@ -7,6 +7,7 @@ An Angular (currently 8+, lower versions could be supported) library for the [Op
 * Refresh Tokens
 * Automatic Token Refresh before token expiring
 * Session Checks
+* Code Flow in popup
 
 ## Motivation
 
@@ -51,7 +52,8 @@ import { AppComponent } from './app.component';
 import {
   AngularSimpleOidcModule,
   AutomaticRefreshModule,
-  SessionManagementModule
+  SessionManagementModule,
+  PopupAuthorizationModule
 } from 'angular-simple-oidc';
 
 @NgModule({
@@ -72,6 +74,11 @@ import {
     // SessionManagementModule.forRoot({
     //   iframePath: "assets/oidc-iframe.html"
     // })
+
+    // For popup code flow (read below)
+    // PopupAuthorizationModule.forRoot({
+    //   childWindowPath: 'assets/oidc-iframe.html'
+    // }),
 
   ],
   declarations: [
@@ -245,3 +252,27 @@ You'll need to provide an HTML file in your `/assets` directory with the below c
 
 </html>
 ```
+
+## Popup code flow
+
+Code flow can be executed in a poup using the `PopupAuthorizationModule`. This is most useful when the `SessionTerminatedEvent` has been fired, and the user may log-in using the same credentials without loosing the current app state, since there's no redirect. Be aware that the user may log-in using different credentials, to which you'll have to react accordingly.
+
+To configure the popup, firstinclude the module on your `app.module` and provide a `childWindowPath` which can be the same file as the `iframeUrl` of the `SessionManagementModule`
+
+You'd then use the `AuthorizeEndpointPopupClientService` like so:
+
+```typescript
+class MyComponent {
+  
+  constructor(
+    private readonly authorizePopupClient: AuthorizeEndpointPopupClientService,
+  ) { }
+
+  public popup() {
+    this.authorizePopupClient.startCodeFlowInPopup()
+          .subscribe();
+  }
+}
+```
+
+Check the [`home.component.ts`](./src/app/home/home.component.ts) for a full example

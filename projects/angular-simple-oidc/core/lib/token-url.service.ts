@@ -77,6 +77,7 @@ export class TokenUrlService {
             acrValues?: string
             responseType: 'code' | 'token' | 'id_token token',
             idTokenHint?: string,
+            display?: string
         }) {
 
         if (!authorizeEndpointUrl || !authorizeEndpointUrl.length) {

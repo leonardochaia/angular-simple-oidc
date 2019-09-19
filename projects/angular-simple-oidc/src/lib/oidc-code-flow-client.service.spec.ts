@@ -173,7 +173,8 @@ describe('OidcCodeFlowClientService', () => {
                     scope: config.scope,
                     redirectUri: redirectUri,
                     idTokenHint: idTokenHint,
-                    prompt: prompt
+                    prompt: prompt,
+                    display: undefined
                 });
         }));
     });
@@ -335,7 +336,7 @@ describe('OidcCodeFlowClientService', () => {
 
             stateSpy.and.returnValue(of({}));
 
-            codeFlowClient.codeFlowCallback()
+            codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
             flush();
 
@@ -353,7 +354,7 @@ describe('OidcCodeFlowClientService', () => {
             }));
 
             expect(() => {
-                codeFlowClient.codeFlowCallback()
+                codeFlowClient.currentWindowCodeFlowCallback()
                     .subscribe();
                 flush();
             }).toThrowError(AuthorizationCallbackFormatError);
@@ -380,7 +381,7 @@ describe('OidcCodeFlowClientService', () => {
 
             stateSpy.and.returnValue(of({}));
 
-            codeFlowClient.codeFlowCallback()
+            codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
             flush();
 
@@ -412,7 +413,7 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenStorageSpy.storeAuthorizationCode.and.returnValue(of());
 
-            codeFlowClient.codeFlowCallback()
+            codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
             flush();
 
@@ -440,7 +441,7 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenStorageSpy.storeAuthorizationCode.and.returnValue(of());
 
-            codeFlowClient.codeFlowCallback()
+            codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
             flush();
 
@@ -476,7 +477,7 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenEndpointSpy.call.and.returnValue(of());
 
-            codeFlowClient.codeFlowCallback()
+            codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
             flush();
 
@@ -538,7 +539,7 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenEndpointSpy.call.and.returnValue(of(tokenResponse));
 
-            codeFlowClient.codeFlowCallback()
+            codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
             flush();
 
@@ -608,7 +609,7 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenEndpointSpy.call.and.returnValue(of(tokenResponse));
 
-            codeFlowClient.codeFlowCallback()
+            codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
             flush();
 
@@ -675,7 +676,7 @@ describe('OidcCodeFlowClientService', () => {
             const changeUrlSpy = spyOn(codeFlowClient as any, 'historyChangeUrl')
                 .and.returnValue(null);
 
-            codeFlowClient.codeFlowCallback()
+            codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
             flush();
 
