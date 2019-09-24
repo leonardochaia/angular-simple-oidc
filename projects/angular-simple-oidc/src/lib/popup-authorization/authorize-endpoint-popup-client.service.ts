@@ -59,7 +59,7 @@ export class AuthorizeEndpointPopupClientService implements OnDestroy {
                             filter(() => handle.closed),
                             tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Child Window has been closed`))),
                             tap(() => {
-                                throw new ChildWindowClosedError({ handle, metadata, redirectUri });
+                                throw new ChildWindowClosedError({ metadata, redirectUri });
                             }),
                             take(1)
                         );

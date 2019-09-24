@@ -16,8 +16,8 @@ export class EventsService {
         return this.errorSubject.asObservable();
     }
 
-    protected readonly eventSubject = new ReplaySubject<SimpleOidcEvent>();
-    protected readonly errorSubject = new ReplaySubject<SimpleOidcErrorEvent>();
+    protected readonly eventSubject = new ReplaySubject<SimpleOidcEvent>(5);
+    protected readonly errorSubject = new ReplaySubject<SimpleOidcErrorEvent>(5);
 
     public dispatch<TEvent extends SimpleOidcEvent>(ev: TEvent) {
         this.eventSubject.next(ev);

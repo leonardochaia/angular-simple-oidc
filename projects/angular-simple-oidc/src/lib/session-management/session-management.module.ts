@@ -46,9 +46,11 @@ export class SessionManagementModule implements OnDestroy {
     this.events.events$
       .pipe(
         filterInstanceOf(TokensReadyEvent),
-        switchMap(() => this.sessionCheck.startSessionCheck()),
+        switchMap(() =>
+          this.sessionCheck.startSessionCheck()
+            .pipe(takeUntil(sessionChanged$))
+        ),
         takeUntil(this.destroyedSubject),
-        takeUntil(sessionChanged$),
       )
       .subscribe();
 
