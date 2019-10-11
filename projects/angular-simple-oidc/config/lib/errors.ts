@@ -9,3 +9,13 @@ export class RequiredConfigurationMissingError<TConfig> extends SimpleOidcError 
         );
     }
 }
+
+export class NullConfigurationProvidedError<TConfig> extends SimpleOidcError {
+    constructor(context: { config: TConfig }) {
+        super(
+            `Null/empty configuration was provided`,
+            `config-empty-error`,
+            context
+        );
+    }
+}

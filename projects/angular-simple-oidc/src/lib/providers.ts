@@ -61,7 +61,7 @@ export function authConfigFactory(
 
     return () => config$.pipe(
         map(config => {
-            if (config.openIDProviderUrl) {
+            if (config && config.openIDProviderUrl) {
                 // do not modify the provided objects.
                 return {
                     ...config,

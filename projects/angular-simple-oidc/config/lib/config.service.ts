@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { RequiredConfigurationMissingError } from './errors';
+import { RequiredConfigurationMissingError, NullConfigurationProvidedError } from './errors';
 import { ReplaySubject } from 'rxjs';
 import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
@@ -20,15 +20,25 @@ export class ConfigService<T> {
   constructor(protected readonly events: EventsService) { }
 
   public configure(config: T, options: ConfigServiceOptions<T> = {}) {
+    try {
+      if (!config) {
+        throw new NullConfigurationProvidedError({ config });
+      }
 
-    const current = Object.assign({}, options.defaultConfig, config);
+      const current = Object.assign({}, options.defaultConfig, config);
 
-    if (options.requiredFields) {
-      this.validateConfiguration(current, options.requiredFields);
+      if (options.requiredFields) {
+        this.validateConfiguration(current, options.requiredFields);
+      }
+      this.configSubject.next(current);
+
+      this.events.dispatch(new SimpleOidcInfoEvent('Configuration obtained', current));
+    } catch (e) {
+      // Make sure we error on the subject too
+      // so that subscribers can react accordingly
+      this.configSubject.error(e);
+      throw e;
     }
-    this.configSubject.next(current);
-
-    this.events.dispatch(new SimpleOidcInfoEvent('Configuration obtained', current));
   }
 
   protected validateConfiguration(config: T, requiredFields: (keyof T)[]) {
