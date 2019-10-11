@@ -17,7 +17,7 @@ jobs:
         name: Build angular-simple-oidc
 
       - name: Test angular-simple-oidc
-        uses: ianwalter/puppeteer@v2.0.0
+        uses: ianwalter/puppeteer@master
         with:
           entrypoint: yarn
           args: test-lib-ci
