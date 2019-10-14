@@ -5,6 +5,8 @@ jobs:
     name: Install packages
     runs-on: ubuntu-18.04
     steps:
+      - run: sysctl kernel.unprivileged_userns_clone=1
+      - run: apt-get install libnss3
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
