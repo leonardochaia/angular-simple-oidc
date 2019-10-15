@@ -2,11 +2,8 @@
 // https://karma-runner.github.io/1.0/config/configuration-file.html
 const process = require('process');
 
-// If running in the Puppeteer Docker container, configure Puppeteer to use
-// the instance of Google Chrome that is already installed.
-if (process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD) {
-  process.env.CHROME_BIN = 'google-chrome-unstable'
-} else {
+
+if (!process.env.CHROME_BIN) {
   process.env.CHROME_BIN = require('puppeteer').executablePath();
 }
 
