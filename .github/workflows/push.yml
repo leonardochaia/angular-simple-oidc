@@ -4,6 +4,8 @@ jobs:
   installPackages:
     name: Install packages
     runs-on: ubuntu-latest
+    env: 
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
