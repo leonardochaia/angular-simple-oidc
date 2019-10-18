@@ -33,7 +33,10 @@ export class DynamicIframe {
     }
 
     public remove() {
-        this.handle.parentElement.removeChild(this.handle);
+        // iframe may not have been appended.
+        if (this.handle.parentElement) {
+            this.handle.parentElement.removeChild(this.handle);
+        }
         return this;
     }
 }

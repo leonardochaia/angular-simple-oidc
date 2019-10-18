@@ -80,4 +80,12 @@ describe('DynamicIframe', () => {
     dynamicIframe.remove();
     expect(document.body.contains(iframe)).toBeFalsy();
   });
+
+  it('should not throw when removing a non apended iframe', () => {
+    const dynamicIframe = service.create();
+
+    expect(() =>
+      dynamicIframe.remove()
+    ).not.toThrow();
+  });
 });
