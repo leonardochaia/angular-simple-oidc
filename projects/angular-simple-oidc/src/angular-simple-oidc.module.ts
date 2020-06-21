@@ -52,7 +52,7 @@ export class AngularSimpleOidcModule {
   /**
    * Should be called once on your Angular Root Application Module
    */
-  public static forRoot(config?: AuthConfig): ModuleWithProviders {
+  public static forRoot(config?: AuthConfig): ModuleWithProviders<AngularSimpleOidcModule> {
     return {
       ngModule: AngularSimpleOidcModule,
       providers: [

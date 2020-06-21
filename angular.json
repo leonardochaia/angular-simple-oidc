@@ -54,6 +54,10 @@
                   "type": "initial",
                   "maximumWarning": "2mb",
                   "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb"
                 }
               ]
             }
@@ -131,6 +135,11 @@
           "options": {
             "tsConfig": "projects/angular-simple-oidc/tsconfig.lib.json",
             "project": "projects/angular-simple-oidc/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/angular-simple-oidc/tsconfig.lib.prod.json"
+            }
           }
         },
         "test": {
@@ -192,7 +201,7 @@
             "main": "projects/samples/custom-config/src/main.ts",
             "polyfills": "projects/samples/custom-config/src/polyfills.ts",
             "tsConfig": "projects/samples/custom-config/tsconfig.app.json",
-            "aot": false,
+            "aot": true,
             "assets": [
               "projects/samples/custom-config/src/favicon.ico",
               "projects/samples/custom-config/src/assets"
@@ -215,7 +224,6 @@
               "sourceMap": false,
               "extractCss": true,
               "namedChunks": false,
-              "aot": true,
               "extractLicenses": true,
               "vendorChunk": false,
               "buildOptimizer": true,
@@ -224,6 +232,10 @@
                   "type": "initial",
                   "maximumWarning": "2mb",
                   "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb"
                 }
               ]
             }
