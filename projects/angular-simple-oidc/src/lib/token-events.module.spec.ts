@@ -10,11 +10,7 @@ import {
 import { of, Subject } from 'rxjs';
 import { TokensReadyEvent, AccessTokenExpiringEvent, AccessTokenExpiredEvent } from './auth.events';
 import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
-
-function spyOnGet<T>(obj: T, property: keyof T) {
-    Object.defineProperty(obj, property, { get: () => null });
-    return spyOnProperty(obj, property, 'get');
-}
+import { spyOnGet } from '../../test-utils';
 
 function getDatePlusSeconds(seconds: number) {
     const now = new Date();
@@ -27,8 +23,8 @@ describe('TokenEventsModule', () => {
     let eventServiceSpy: jasmine.SpyObj<EventsService>;
     let storageSpy: jasmine.SpyObj<TokenStorageService>;
     let helperSpy: jasmine.SpyObj<TokenHelperService>;
-    let eventsSpy: jasmine.Spy<InferableFunction>;
-    let currentStateSpy: jasmine.Spy<InferableFunction>;
+    let eventsSpy: jasmine.Spy<jasmine.Func>;
+    let currentStateSpy: jasmine.Spy<jasmine.Func>;
 
     function createEventsModule() {
         return new TokenEventsModule(authSpy, eventServiceSpy, storageSpy, helperSpy);

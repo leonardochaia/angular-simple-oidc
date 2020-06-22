@@ -1,10 +1,10 @@
 on: push
-name: Run tests on push
+name: Build and Run Tests
 jobs:
-  installPackages:
-    name: Install packages
+  buildAndRun:
+    name: Build and Run Tests
     runs-on: ubuntu-latest
-    env: 
+    env:
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
       CHROME_BIN: 'google-chrome-unstable'
     steps:
@@ -12,10 +12,10 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '10.x'
-          
+
       - run: yarn install
         name: Install Packages using Yarn
-        
+
       - run: yarn build angular-simple-oidc
         name: Build angular-simple-oidc
 
@@ -28,4 +28,5 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '10.x'
+      - run: yarn build angular-simple-oidc --prod
       - run: yarn build --prod

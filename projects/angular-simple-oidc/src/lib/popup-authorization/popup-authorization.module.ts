@@ -19,7 +19,7 @@ export class PopupAuthorizationModule {
   /**
    * Should be called once on your Angular Root Application Module
    */
-  public static forRoot(config?: PopupAuthorizationConfig): ModuleWithProviders {
+  public static forRoot(config?: PopupAuthorizationConfig): ModuleWithProviders<PopupAuthorizationModule> {
     return {
       ngModule: PopupAuthorizationModule,
       providers: [

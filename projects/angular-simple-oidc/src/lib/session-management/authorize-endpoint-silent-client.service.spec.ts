@@ -14,30 +14,27 @@ import { IframePostMessageTimeoutError } from './errors';
 import { ConfigService } from 'angular-simple-oidc/config';
 import { SESSION_MANAGEMENT_CONFIG_SERVICE } from './providers';
 import { SessionManagementConfig } from './models';
+import { spyOnGet } from '../../../test-utils';
 
-function spyOnGet<T>(obj: T, property: keyof T) {
-    Object.defineProperty(obj, property, { get: () => null });
-    return spyOnProperty(obj, property, 'get');
-}
 
 describe('Authorize Endpoint Silent Client ', () => {
     let authorizeClientSilent: AuthorizeEndpointSilentClientService;
     let windowSpy: jasmine.SpyObj<Window>;
     let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
-    let discoveryDocSpy: jasmine.Spy<InferableFunction>;
+    let discoveryDocSpy: jasmine.Spy<jasmine.Func>;
     let dynamicIframeServiceSpy: jasmine.SpyObj<DynamicIframeService>;
     let dynamicIframeSpy: jasmine.SpyObj<DynamicIframe>;
     let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
     let tokenUrlSpy: jasmine.SpyObj<TokenUrlService>;
-    let localStateSpy: jasmine.Spy<InferableFunction>;
+    let localStateSpy: jasmine.Spy<jasmine.Func>;
     let eventsSpy: jasmine.SpyObj<EventsService>;
     let oidcCodeFlowClientSpy: jasmine.SpyObj<OidcCodeFlowClient>;
 
     let configServiceSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
-    let authConfigSpy: jasmine.Spy<InferableFunction>;
+    let authConfigSpy: jasmine.Spy<jasmine.Func>;
 
     let sessionConfigServiceSpy: jasmine.SpyObj<ConfigService<SessionManagementConfig>>;
-    let sessionConfigSpy: jasmine.Spy<InferableFunction>;
+    let sessionConfigSpy: jasmine.Spy<jasmine.Func>;
 
     let postFromIframeToWindow: EventListener;
     const expectedOrigin = new URL('http://my-idp/identity').origin;
@@ -185,7 +182,7 @@ describe('Authorize Endpoint Silent Client ', () => {
 
         flush();
 
-        expect(oidcCodeFlowClientSpy.codeFlowCallback).toHaveBeenCalledWith(expectedUrl, iframeUrl, {});
+        expect(oidcCodeFlowClientSpy.codeFlowCallback).toHaveBeenCalledWith(expectedUrl, iframeUrl, {} as any );
     }));
 
     it('Validates the callback', fakeAsync(() => {
@@ -207,7 +204,7 @@ describe('Authorize Endpoint Silent Client ', () => {
 
         flush();
 
-        expect(oidcCodeFlowClientSpy.codeFlowCallback).toHaveBeenCalledWith(expectedUrl, iframeUrl, metadata);
+        expect(oidcCodeFlowClientSpy.codeFlowCallback).toHaveBeenCalledWith(expectedUrl, iframeUrl, metadata as any);
     }));
 
     it('Uses timeout if iframe never post back', fakeAsync(() => {

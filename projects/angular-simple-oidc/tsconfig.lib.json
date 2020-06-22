@@ -5,7 +5,10 @@
     "target": "es2015",
     "declaration": true,
     "inlineSources": true,
-    "types": [],
+    "types": [
+      "jasmine",
+      "node"
+    ],
     "lib": [
       "dom",
       "es2018"
@@ -13,7 +16,6 @@
     "emitDecoratorMetadata": true
   },
   "angularCompilerOptions": {
-    "annotateForClosureCompiler": true,
     "skipTemplateCodegen": true,
     "strictMetadataEmit": true,
     "fullTemplateTypeCheck": true,

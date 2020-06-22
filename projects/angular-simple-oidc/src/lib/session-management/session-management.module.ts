@@ -93,7 +93,7 @@ export class SessionManagementModule implements OnDestroy {
   /**
    * Should be called once on your Angular Root Application Module
    */
-  public static forRoot(config?: SessionManagementConfig): ModuleWithProviders {
+  public static forRoot(config?: SessionManagementConfig): ModuleWithProviders<SessionManagementModule> {
     return {
       ngModule: SessionManagementModule,
       providers: [

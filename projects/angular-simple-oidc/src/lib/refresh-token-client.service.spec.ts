@@ -17,11 +17,8 @@ import { RefreshTokenClient } from './refresh-token-client.service';
 import { TokensReadyEvent } from './auth.events';
 import { ConfigService } from 'angular-simple-oidc/config';
 import { AUTH_CONFIG_SERVICE } from './providers';
+import { spyOnGet } from '../../test-utils';
 
-function spyOnGet<T>(obj: T, property: keyof T) {
-    Object.defineProperty(obj, property, { get: () => null });
-    return spyOnProperty(obj, property, 'get');
-}
 
 describe('RefrshTokenClientService', () => {
     let refreshTokenClient: RefreshTokenClient;
@@ -33,7 +30,7 @@ describe('RefrshTokenClientService', () => {
     let tokenValidationSpy: jasmine.SpyObj<TokenValidationService>;
     let tokenEndpointSpy: jasmine.SpyObj<TokenEndpointClientService>;
     let eventsSpy: jasmine.SpyObj<EventsService>;
-    let stateSpy: jasmine.Spy<InferableFunction>;
+    let stateSpy: jasmine.Spy<jasmine.Func>;
 
     const config: Partial<AuthConfig> = {
         clientId: 'client.id',

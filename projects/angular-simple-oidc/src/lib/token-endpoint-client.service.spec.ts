@@ -13,17 +13,14 @@ import {
 } from 'angular-simple-oidc/core';
 import { of, throwError } from 'rxjs';
 import { TokenEndpointError, TokenEndpointUnexpectedError } from './errors';
+import { spyOnGet } from '../../test-utils';
 
-function spyOnGet<T>(obj: T, property: keyof T) {
-    Object.defineProperty(obj, property, { get: () => null });
-    return spyOnProperty(obj, property, 'get');
-}
 
 describe('TokenEndpointClientService', () => {
     let tokenEndpointClientService: TokenEndpointClientService;
     let httpSpy: jasmine.SpyObj<HttpClient>;
     let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
-    let discoveryDocSpy: jasmine.Spy<InferableFunction>;
+    let discoveryDocSpy: jasmine.Spy<jasmine.Func>;
     let tokenHelperSpy: jasmine.SpyObj<TokenHelperService>;
     let tokenValidationSpy: jasmine.SpyObj<TokenValidationService>;
 
