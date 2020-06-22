@@ -127,7 +127,7 @@ describe('TokenStorageService', () => {
 
             flush();
 
-            expect(storageSpy.setItem).not.toHaveBeenCalledWith(TokenStorageKeys.AccessTokenExpiration);
+            expect(storageSpy.setItem).not.toHaveBeenCalledWith(TokenStorageKeys.AccessTokenExpiration, jasmine.objectContaining(tokens));
         }));
 
         it('should not store refresh token if not present', fakeAsync(() => {
@@ -141,7 +141,7 @@ describe('TokenStorageService', () => {
 
             flush();
 
-            expect(storageSpy.setItem).not.toHaveBeenCalledWith(TokenStorageKeys.RefreshToken);
+            expect(storageSpy.setItem).not.toHaveBeenCalledWith(TokenStorageKeys.RefreshToken, jasmine.objectContaining(tokens));
         }));
     });
 

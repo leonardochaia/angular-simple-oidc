@@ -6,20 +6,16 @@ import { EndSessionClientService } from './end-session-client.service';
 import { WINDOW_REF } from './providers';
 import { TokenStorageService } from './token-storage.service';
 import { EventsService } from 'angular-simple-oidc/events';
-
-function spyOnGet<T>(obj: T, property: keyof T) {
-    Object.defineProperty(obj, property, { get: () => null });
-    return spyOnProperty(obj, property, 'get');
-}
+import { spyOnGet } from '../../test-utils';
 
 describe('EndSessionClientService', () => {
     let endSessionClient: EndSessionClientService;
     let windowSpy: jasmine.SpyObj<Window>;
     let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
     let tokenUrlSpy: jasmine.SpyObj<TokenUrlService>;
-    let discoveryDocSpy: jasmine.Spy<InferableFunction>;
+    let discoveryDocSpy: jasmine.Spy<jasmine.Func>;
     let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
-    let localStateSpy: jasmine.Spy<InferableFunction>;
+    let localStateSpy: jasmine.Spy<jasmine.Func>;
     let eventsSpy: jasmine.SpyObj<EventsService>;
 
     beforeEach(() => {

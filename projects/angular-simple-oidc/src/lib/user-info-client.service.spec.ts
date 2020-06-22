@@ -8,18 +8,14 @@ import { EventsService } from 'angular-simple-oidc/events';
 import { UserInfoClientService } from './user-info-client.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { UserInfoNotSupportedError } from './errors';
-
-function spyOnGet<T>(obj: T, property: keyof T) {
-    Object.defineProperty(obj, property, { get: () => null });
-    return spyOnProperty(obj, property, 'get');
-}
+import { spyOnGet } from '../../test-utils';
 
 describe('UserInfoClientService', () => {
     let userInfoClient: UserInfoClientService;
     let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
     let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
-    let discoveryDocSpy: jasmine.Spy<InferableFunction>;
-    let localStateSpy: jasmine.Spy<InferableFunction>;
+    let discoveryDocSpy: jasmine.Spy<jasmine.Func>;
+    let localStateSpy: jasmine.Spy<jasmine.Func>;
     let eventsSpy: jasmine.SpyObj<EventsService>;
     let httpSpy: jasmine.SpyObj<HttpClient>;
 

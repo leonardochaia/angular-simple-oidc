@@ -15,28 +15,25 @@ import { SessionChangedEvent } from './events';
 import { SESSION_MANAGEMENT_CONFIG_SERVICE } from './providers';
 import { ConfigService } from 'angular-simple-oidc/config';
 import { SessionManagementConfig } from './models';
+import { spyOnGet } from '../../../test-utils';
 
-function spyOnGet<T>(obj: T, property: keyof T) {
-    Object.defineProperty(obj, property, { get: () => null });
-    return spyOnProperty(obj, property, 'get');
-}
 
 describe('Session Check Service', () => {
     let sessionCheck: SessionCheckService;
     let windowSpy: jasmine.SpyObj<Window>;
     let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
-    let discoveryDocSpy: jasmine.Spy<InferableFunction>;
+    let discoveryDocSpy: jasmine.Spy<jasmine.Func>;
     let dynamicIframeServiceSpy: jasmine.SpyObj<DynamicIframeService>;
     let dynamicIframeSpy: jasmine.SpyObj<DynamicIframe>;
     let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
-    let localStateSpy: jasmine.Spy<InferableFunction>;
+    let localStateSpy: jasmine.Spy<jasmine.Func>;
     let eventsSpy: jasmine.SpyObj<EventsService>;
 
     let configServiceSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
-    let authConfigSpy: jasmine.Spy<InferableFunction>;
+    let authConfigSpy: jasmine.Spy<jasmine.Func>;
 
     let sesionManagementConfigServiceSpy: jasmine.SpyObj<ConfigService<SessionManagementConfig>>;
-    let sesionManagementConfigSpy: jasmine.Spy<InferableFunction>;
+    let sesionManagementConfigSpy: jasmine.Spy<jasmine.Func>;
 
 
     beforeEach(() => {

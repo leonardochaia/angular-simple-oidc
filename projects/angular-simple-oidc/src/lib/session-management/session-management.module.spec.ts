@@ -7,19 +7,16 @@ import { SessionChangedEvent, SessionTerminatedEvent } from './events';
 import { SessionManagementModule } from './session-management.module';
 import { AuthorizeEndpointSilentClientService } from './authorize-endpoint-silent-client.service';
 import { TokensReadyEvent } from '../auth.events';
+import { spyOnGet } from '../../../test-utils';
 
-function spyOnGet<T>(obj: T, property: keyof T) {
-    Object.defineProperty(obj, property, { get: () => null });
-    return spyOnProperty(obj, property, 'get');
-}
 
 describe('Session Management', () => {
     let sessionCheck: jasmine.SpyObj<SessionCheckService>;
     let eventsServiceSpy: jasmine.SpyObj<EventsService>;
     let authorizeSilentClientSpy: jasmine.SpyObj<AuthorizeEndpointSilentClientService>;
     let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
-    let eventsSpy: jasmine.Spy<InferableFunction>;
-    let localStateSpy: jasmine.Spy<InferableFunction>;
+    let eventsSpy: jasmine.Spy<jasmine.Func>;
+    let localStateSpy: jasmine.Spy<jasmine.Func>;
 
     function createModule() {
         return new SessionManagementModule(sessionCheck, eventsServiceSpy, authorizeSilentClientSpy, tokenStorageSpy);

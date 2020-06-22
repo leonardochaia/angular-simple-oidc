@@ -8,17 +8,13 @@ import { ObtainDiscoveryDocumentError, ObtainJWTKeysError } from './errors';
 import { EventsService } from 'angular-simple-oidc/events';
 import { ConfigService } from 'angular-simple-oidc/config';
 import { urlJoin } from '../utils/url-join';
+import { spyOnGet } from '../../../test-utils';
 
-
-function spyOnGet<T>(obj: T, property: keyof T) {
-    Object.defineProperty(obj, property, { get: () => null });
-    return spyOnProperty(obj, property, 'get');
-}
 
 describe('OidcDiscoveryDocClient', () => {
     let httpSpy: jasmine.SpyObj<HttpClient>;
     let configSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
-    let authConfigSpy: jasmine.Spy<InferableFunction>;
+    let authConfigSpy: jasmine.Spy<jasmine.Func>;
     let eventsSpy: jasmine.SpyObj<EventsService>;
 
     const config: Partial<AuthConfig> = {

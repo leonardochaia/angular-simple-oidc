@@ -11,26 +11,22 @@ import { AuthorizeEndpointPopupClientService } from './authorize-endpoint-popup-
 import { POPUP_AUTHORIZATION_CONFIG_SERVICE } from './providers';
 import { PopupAuthorizationConfig } from './models';
 import { ChildWindowClosedError } from './errors';
-
-function spyOnGet<T>(obj: T, property: keyof T) {
-    Object.defineProperty(obj, property, { get: () => null });
-    return spyOnProperty(obj, property, 'get');
-}
+import { spyOnGet } from '../../../test-utils';
 
 describe('Authorize Endpoint Popup Client ', () => {
     let popupClient: AuthorizeEndpointPopupClientService;
     let windowSpy: jasmine.SpyObj<Window>;
     let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
     let tokenUrlSpy: jasmine.SpyObj<TokenUrlService>;
-    let localStateSpy: jasmine.Spy<InferableFunction>;
+    let localStateSpy: jasmine.Spy<jasmine.Func>;
     let eventsSpy: jasmine.SpyObj<EventsService>;
     let oidcCodeFlowClientSpy: jasmine.SpyObj<OidcCodeFlowClient>;
 
     let configServiceSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
-    let authConfigSpy: jasmine.Spy<InferableFunction>;
+    let authConfigSpy: jasmine.Spy<jasmine.Func>;
 
     let popupConfigServiceSpy: jasmine.SpyObj<ConfigService<PopupAuthorizationConfig>>;
-    let popupConfigSpy: jasmine.Spy<InferableFunction>;
+    let popupConfigSpy: jasmine.Spy<jasmine.Func>;
 
     let postToWindow: EventListener;
     const expectedOrigin = new URL('http://my-idp/identity').origin;
@@ -161,7 +157,7 @@ describe('Authorize Endpoint Popup Client ', () => {
 
         flush();
 
-        expect(oidcCodeFlowClientSpy.codeFlowCallback).toHaveBeenCalledWith(expectedUrl, iframeUrl, {});
+        expect(oidcCodeFlowClientSpy.codeFlowCallback).toHaveBeenCalledWith(expectedUrl, iframeUrl, {} as any);
     }));
 
     it('Validates the callback', fakeAsync(() => {
@@ -181,7 +177,7 @@ describe('Authorize Endpoint Popup Client ', () => {
 
         flush();
 
-        expect(oidcCodeFlowClientSpy.codeFlowCallback).toHaveBeenCalledWith(expectedUrl, iframeUrl, metadata);
+        expect(oidcCodeFlowClientSpy.codeFlowCallback).toHaveBeenCalledWith(expectedUrl, iframeUrl, metadata as any);
     }));
 
     it('Reacts when window is closed', fakeAsync(() => {

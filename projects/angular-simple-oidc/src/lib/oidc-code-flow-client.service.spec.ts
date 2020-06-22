@@ -19,11 +19,7 @@ import { AuthConfig } from './config/models';
 import { TokensReadyEvent } from './auth.events';
 import { ConfigService } from 'angular-simple-oidc/config';
 import { urlJoin } from './utils/url-join';
-
-function spyOnGet<T>(obj: T, property: keyof T) {
-    Object.defineProperty(obj, property, { get: () => null });
-    return spyOnProperty(obj, property, 'get');
-}
+import { spyOnGet } from '../../test-utils';
 
 describe('OidcCodeFlowClientService', () => {
     let codeFlowClient: OidcCodeFlowClient;
@@ -31,14 +27,14 @@ describe('OidcCodeFlowClientService', () => {
     let authConfigSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
     let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
     let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
-    let discoveryDocSpy: jasmine.Spy<InferableFunction>;
+    let discoveryDocSpy: jasmine.Spy<jasmine.Func>;
     let tokenUrlSpy: jasmine.SpyObj<TokenUrlService>;
     let tokenValidationSpy: jasmine.SpyObj<TokenValidationService>;
     let tokenEndpointSpy: jasmine.SpyObj<TokenEndpointClientService>;
     let eventsSpy: jasmine.SpyObj<EventsService>;
-    let windowLocationSpy: jasmine.Spy<InferableFunction>;
-    let stateSpy: jasmine.Spy<InferableFunction>;
-    let jwtKeysSpy: jasmine.Spy<InferableFunction>;
+    let windowLocationSpy: jasmine.Spy<jasmine.Func>;
+    let stateSpy: jasmine.Spy<jasmine.Func>;
+    let jwtKeysSpy: jasmine.Spy<jasmine.Func>;
 
     const config: Partial<AuthConfig> = {
         clientId: 'client.id',
@@ -547,8 +543,8 @@ describe('OidcCodeFlowClientService', () => {
                 tokenResponse.idToken,
                 tokenResponse.decodedIdToken,
                 localState.nonce,
-                doc,
-                jwtKeys,
+                doc as any,
+                jwtKeys as any,
                 config.tokenValidation
             );
 
