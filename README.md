@@ -1,6 +1,6 @@
 # angular-simple-oidc
 
-An Angular (currently 8+, lower versions could be supported) library for the [Open Id Connect Protocol](https://openid.net/specs/openid-connect-core-1_0.html) implementing:
+An Angular library for the [Open Id Connect Protocol](https://openid.net/specs/openid-connect-core-1_0.html) implementing:
 
 * Discovery Document
 * Code Flow
@@ -8,6 +8,21 @@ An Angular (currently 8+, lower versions could be supported) library for the [Op
 * Automatic Token Refresh before token expiring
 * Session Checks
 * Code Flow in popup
+
+## Angular Versioning
+
+For Angular 8, use the `v8.x` latest release.
+
+For Angular 9, use the `v9.x` latest release.
+
+Using `master` branch is not recommended.
+
+## Disclaimer
+
+I am not a security expert. I've followed my best the RFCs, please I encourage you
+to review my work and report issues if you suspect something may be wrong.
+
+**Use at your own risk**.
 
 ## Motivation
 
@@ -33,6 +48,14 @@ Install from NPM
 ```shell
 yarn add angular-simple-oidc
 ```
+
+### Configuring your Identity Provider
+
+Authorization Code Flow with PKCE will be used, so your Identity Provider (idp)
+must support this. Your idp may require a client secret as well.
+
+The redirect URI, by default will be `http://yourapp.example.com/oidc-token-callback`.
+You can change the path by configuring the `tokenCallbackRoute`.
 
 ### Static Configuration
 
@@ -65,6 +88,9 @@ import {
       // clientSecret: 'myDummySecret',
       openIDProviderUrl: 'http://my.oidc.provider.com',
       scope: 'openid profile offline_access',
+
+      // Other relevant configs.
+      // tokenCallbackRoute: 'oidc-token-callback'
     }),
 
     // For automatic token refresh.

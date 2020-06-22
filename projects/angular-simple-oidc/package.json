@@ -1,6 +1,6 @@
 {
   "name": "angular-simple-oidc",
-  "version": "8.1.3",
+  "version": "9.0.0-alpha",
   "description": "Angular Library implementing Open Id Connect specification. Code Flow, Refresh Tokens, Session Management, Discovery Document.",
   "repository": {
     "type": "git",
@@ -27,10 +27,10 @@
     "url": "https://github.com/leonardochaia"
   },
   "peerDependencies": {
-    "@angular/common": "^8.1.2",
-    "@angular/core": "^8.1.2"
+    "@angular/common": "^9.1.11",
+    "@angular/core": "^9.1.11"
   },
   "dependencies": {
-    "jsrsasign": "^8.0.12"
+    "jsrsasign": "^8.0.18"
   }
 }
