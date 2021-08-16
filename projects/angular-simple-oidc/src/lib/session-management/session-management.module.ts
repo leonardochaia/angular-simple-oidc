@@ -20,6 +20,7 @@ import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
  * Implements Session Checks according to Session Management
  * https://openid.net/specs/openid-connect-session-1_0.html
  */
+// TODO: Add Angular decorator.
 @NgModule({
   imports: [],
   providers: [

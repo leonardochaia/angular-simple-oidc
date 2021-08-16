@@ -6,6 +6,7 @@ import { Subject } from 'rxjs';
 import { EventsService } from 'angular-simple-oidc/events';
 import { filterInstanceOf } from 'angular-simple-oidc/operators';
 
+// TODO: Add Angular decorator.
 @NgModule({
   imports: [],
   providers: [],

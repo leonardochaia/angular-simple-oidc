@@ -8,6 +8,7 @@ import { TokenHelperService } from 'angular-simple-oidc/core';
 import { filterInstanceOf } from 'angular-simple-oidc/operators';
 import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
 
+// TODO: Add Angular decorator.
 @NgModule({
   imports: [],
   providers: [],

@@ -31,6 +31,7 @@
     "@angular/core": "^9.1.11"
   },
   "dependencies": {
-    "jsrsasign": "^8.0.18"
+    "jsrsasign": "^8.0.18",
+    "tslib": "^2.0.0"
   }
 }
