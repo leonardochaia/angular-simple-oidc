@@ -1,37 +1,13 @@
-import { NgModule, OnDestroy } from '@angular/core';
-import { AuthService } from './auth.service';
-import { takeUntil, switchMap } from 'rxjs/operators';
-import { AccessTokenExpiringEvent } from './auth.events';
-import { Subject } from 'rxjs';
-import { EventsService } from 'angular-simple-oidc/events';
-import { filterInstanceOf } from 'angular-simple-oidc/operators';
+import { NgModule } from '@angular/core';
+import { ExpiringTokenRefresherDaemonService } from './daemons/expiring-token-refresher-daemon.service';
 
-// TODO: Add Angular decorator.
 @NgModule({
-  imports: [],
-  providers: [],
-  declarations: [],
+  providers: [ExpiringTokenRefresherDaemonService],
 })
-export class AutomaticRefreshModule implements OnDestroy {
-
-  protected readonly destroyedSubject = new Subject();
-
-  constructor(
-    protected readonly auth: AuthService,
-    protected readonly events: EventsService,
-  ) {
-
-    this.auth.events$
-      .pipe(
-        filterInstanceOf(AccessTokenExpiringEvent),
-        switchMap(() => this.auth.refreshAccessToken()),
-        takeUntil(this.destroyedSubject)
-      )
-      .subscribe();
+export class AutomaticRefreshModule {
+  constructor(protected readonly daemon: ExpiringTokenRefresherDaemonService) {
+    this.daemon.startDaemon();
   }
 
-  public ngOnDestroy() {
-    this.destroyedSubject.next();
-    this.destroyedSubject.complete();
-  }
+  // TODO: consider using forRoot pattern here
 }
