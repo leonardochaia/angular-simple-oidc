@@ -1,4 +1,4 @@
-import { TestBed, inject, async } from '@angular/core/testing';
+import { TestBed, inject, waitForAsync } from '@angular/core/testing';
 import { TokenHelperService } from './token-helper.service';
 import { TokenValidationService } from './token-validation.service';
 import { TokenCryptoService } from './token-crypto.service';
@@ -90,7 +90,7 @@ describe('TokenValidationService', () => {
 
   describe('The Issuer Identifier for the OpenID Provider MUST exactly match the value of the iss (issuer) Claim.', () => {
 
-    it('should not throw if issuers match', async(
+    it('should not throw if issuers match', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const issuer = decodedIdToken.iss;
@@ -99,7 +99,7 @@ describe('TokenValidationService', () => {
         })
     ));
 
-    it('should throw if issuers don\'t match', async(
+    it('should throw if issuers don\'t match', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const issuer = 'myissuerwichdoesnotmatch';
@@ -114,7 +114,7 @@ describe('TokenValidationService', () => {
   The ID Token MUST be rejected if the ID Token does not list the Client as a valid audience,
   or if it contains additional audiences not trusted by the Client.`, () => {
 
-      it('should not throw if idToken\'s aud matches client exactly', async(
+      it('should not throw if idToken\'s aud matches client exactly', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             expect(() => tokenValidation.validateIdTokenAud(decodedIdToken, clientId))
@@ -122,7 +122,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should throw if aud does not match client', async(
+      it('should throw if aud does not match client', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.aud = 'myaudience';
@@ -131,7 +131,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should not throw if idToken\'s aud includes clientId', async(
+      it('should not throw if idToken\'s aud includes clientId', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.aud = [clientId, 'test.client2'];
@@ -140,7 +140,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should throw if idToken\'s aud does not include clientId', async(
+      it('should throw if idToken\'s aud does not include clientId', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.aud = ['another.client.no.match'];
@@ -155,7 +155,7 @@ describe('TokenValidationService', () => {
   the algorithm specified in the alg Header Parameter of the JOSE Header.
   The Client MUST use the keys provided by the Issuer. The alg value SHOULD be RS256.`, () => {
 
-      it('fail without JWT keys', async(
+      it('fail without JWT keys', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
@@ -164,7 +164,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('fail with empty JWT keys', async(
+      it('fail with empty JWT keys', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
@@ -173,7 +173,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('fail if alg is not RSA', async(
+      it('fail if alg is not RSA', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
@@ -187,7 +187,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('fail if no kid claim and no JWT keys with kty=rsa', async(
+      it('fail if no kid claim and no JWT keys with kty=rsa', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
@@ -201,7 +201,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('fail if no kid claim and no JWT keys withuse=sig', async(
+      it('fail if no kid claim and no JWT keys withuse=sig', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
@@ -215,7 +215,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should use proper key when multiple kids', async(
+      it('should use proper key when multiple kids', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
@@ -239,7 +239,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should try other keys if no key with kid is found', async(
+      it('should try other keys if no key with kid is found', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
@@ -263,7 +263,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should try all keys until one succeeds', async(
+      it('should try all keys until one succeeds', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
@@ -290,7 +290,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should try all keys until one succeeds despite of kid', async(
+      it('should try all keys until one succeeds despite of kid', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
@@ -323,7 +323,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('fail if signature is invalid despite of kid', async(
+      it('fail if signature is invalid despite of kid', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
@@ -346,7 +346,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('fail if signature is invalid', async(
+      it('fail if signature is invalid', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
@@ -372,7 +372,7 @@ describe('TokenValidationService', () => {
   describe(`The current time MUST be before the time represented by the exp Claim
   (possibly allowing for some small leeway to account for clock skew)`, () => {
 
-      it('exp is required', async(
+      it('exp is required', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.exp = null;
@@ -381,7 +381,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('exp must be a number', async(
+      it('exp must be a number', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.exp = 'wacamole' as any;
@@ -390,7 +390,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('exp must be a valid number', async(
+      it('exp must be a valid number', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.exp = 0;
@@ -399,7 +399,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('exp must be a valid date', async(
+      it('exp must be a valid date', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             spyOn(TestBed.get(TokenHelperService), 'convertTokenClaimToDate').and.returnValue(null);
@@ -408,7 +408,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('exp is greater than now', async(
+      it('exp is greater than now', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.exp = Date.now() / 1000 + 10 * 1000;
@@ -418,7 +418,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('exp is greater than now with offset', async(
+      it('exp is greater than now with offset', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const offset = 1;
@@ -428,7 +428,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should throw if token is expired', async(
+      it('should throw if token is expired', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const time = Date.now() / 1000 - 10 * 1000;
@@ -444,7 +444,7 @@ describe('TokenValidationService', () => {
     limiting the amount of time that nonces need to be stored to prevent attacks.
     The acceptable range is Client specific.`, () => {
 
-      it('can be disabled through config', async(
+      it('can be disabled through config', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const config: TokenValidationConfig = { disableIdTokenIATValidation: true };
@@ -455,7 +455,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('iat must be a number', async(
+      it('iat must be a number', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.iat = 'wacamole' as any;
@@ -464,7 +464,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('iat must be a valid number', async(
+      it('iat must be a valid number', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.iat = 0;
@@ -473,7 +473,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('iat must be a valid date', async(
+      it('iat must be a valid date', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             spyOn(TestBed.get(TokenHelperService), 'convertTokenClaimToDate').and.returnValue(null);
@@ -482,7 +482,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should throw if date diff with iat is greater than offset', async(
+      it('should throw if date diff with iat is greater than offset', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.iat = Date.now() / 1000 - 900;
@@ -491,7 +491,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should allow configuring offset through config', async(
+      it('should allow configuring offset through config', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.iat = Date.now() / 1000 - 900;
@@ -505,7 +505,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should not throw if iat is inside offset', async(
+      it('should not throw if iat is inside offset', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             decodedIdToken.iat = Date.now() / 1000;
@@ -521,7 +521,7 @@ describe('TokenValidationService', () => {
   that was sent in the Authentication Request. The Client SHOULD check the nonce value for replay attacks.
     The precise method for detecting replay attacks is Client specific.`, () => {
 
-      it('doesn\'t throw when nonces match', async(
+      it('doesn\'t throw when nonces match', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const local = decodedIdToken.nonce;
@@ -530,7 +530,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('throws when nonces don\'t match', async(
+      it('throws when nonces don\'t match', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const local = 'notthenonce';
@@ -547,7 +547,7 @@ describe('TokenValidationService', () => {
     The value of at_hash in the ID Token MUST match the value produced in the previous step if at_hash
     is present in the ID Token`, () => {
 
-      it('should not throw if at_hash matches hash of access_token', async(
+      it('should not throw if at_hash matches hash of access_token', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const accessToken = 'myAccessToken';
@@ -560,7 +560,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should throw if at_hash does not match hash of access_token', async(
+      it('should throw if at_hash does not match hash of access_token', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const accessToken = 'myAccessToken';
@@ -573,7 +573,7 @@ describe('TokenValidationService', () => {
           })
       ));
 
-      it('should not throw if at_hash is not present', async(
+      it('should not throw if at_hash is not present', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const accessToken = 'myAccessToken';
@@ -586,7 +586,7 @@ describe('TokenValidationService', () => {
 
   describe('Token required fields', () => {
 
-    it('should validate required fields', async(
+    it('should validate required fields', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const requiredClaims = ['iss', 'sub', 'aud', 'exp', 'iat'];
@@ -599,7 +599,7 @@ describe('TokenValidationService', () => {
         })
     ));
 
-    it('should return true when all fields present', async(
+    it('should return true when all fields present', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           expect(() => tokenValidation.validateIdTokenRequiredFields(decodedIdToken))
@@ -619,7 +619,7 @@ describe('TokenValidationService', () => {
       'validateIdTokenExpiration'
     ];
 
-    it('should run all validation functions', async(
+    it('should run all validation functions', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
 
@@ -642,7 +642,7 @@ describe('TokenValidationService', () => {
   });
 
   describe('Get numeric claim from token', () => {
-    it('claim is required', async(
+    it('claim is required', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const token = {} as any as DecodedIdentityToken;
@@ -651,7 +651,7 @@ describe('TokenValidationService', () => {
         })
     ));
 
-    it('claim must be a number', async(
+    it('claim must be a number', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const token = {
@@ -664,7 +664,7 @@ describe('TokenValidationService', () => {
   });
 
   describe('Validate Identity Token JWT format', () => {
-    it('must be valid', async(
+    it('must be valid', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const token = null;
@@ -673,7 +673,7 @@ describe('TokenValidationService', () => {
         })
     ));
 
-    it('must be valid string', async(
+    it('must be valid string', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const token = '';
@@ -682,7 +682,7 @@ describe('TokenValidationService', () => {
         })
     ));
 
-    it('must contain three slices separated by dots', async(
+    it('must contain three slices separated by dots', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const token = 'token';
@@ -691,7 +691,7 @@ describe('TokenValidationService', () => {
         })
     ));
 
-    it('must contain three slices separated by dots', async(
+    it('must contain three slices separated by dots', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const token = 'header.payload';
@@ -700,7 +700,7 @@ describe('TokenValidationService', () => {
         })
     ));
 
-    it('returns true when valid JWT format', async(
+    it('returns true when valid JWT format', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const token = 'header.payload.signature';
@@ -711,7 +711,7 @@ describe('TokenValidationService', () => {
   });
 
   describe('Validate authorization callback', () => {
-    it('doesn\'t throw when states matches', async(
+    it('doesn\'t throw when states matches', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const state = 'a';
@@ -722,7 +722,7 @@ describe('TokenValidationService', () => {
         })
     ));
 
-    it('throws when states do not match', async(
+    it('throws when states do not match', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const state = 'a';
@@ -735,7 +735,7 @@ describe('TokenValidationService', () => {
   });
 
   describe('validateAuthorizeCallbackFormat', () => {
-    it('throws when an error is returned', async(
+    it('throws when an error is returned', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const state = 'state';
@@ -748,7 +748,7 @@ describe('TokenValidationService', () => {
         })
     ));
 
-    it('throws when code is not present', async(
+    it('throws when code is not present', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const state = 'state';
@@ -761,7 +761,7 @@ describe('TokenValidationService', () => {
         })
     ));
 
-    it('throws when state is not present', async(
+    it('throws when state is not present', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const state = null;
@@ -774,7 +774,7 @@ describe('TokenValidationService', () => {
         })
     ));
 
-    it('doesn\'t throw when is ok', async(
+    it('doesn\'t throw when is ok', waitForAsync(
       inject([TokenValidationService],
         (tokenValidation: TokenValidationService) => {
           const state = 'state';
