@@ -10,7 +10,8 @@
     "e2e": "ng e2e",
     "build-lib": "ng build angular-simple-oidc --watch",
     "test-lib": "ng test angular-simple-oidc --watch --code-coverage",
-    "test-lib-ci": "ng test angular-simple-oidc --watch=false --browsers ChromeHeadlessNoSandbox --source-map=false --code-coverage"
+    "test-lib-ci": "ng test angular-simple-oidc --watch=false --browsers ChromeHeadlessNoSandbox --source-map=false --code-coverage",
+    "prepare": "husky install"
   },
   "private": true,
   "dependencies": {
@@ -21,7 +22,7 @@
     "@angular/platform-browser": "~12.2.9",
     "@angular/platform-browser-dynamic": "~12.2.9",
     "@angular/router": "~12.2.9",
-    "jsrsasign": "^8.0.19",
+    "jsrsasign": "^10.4.1",
     "rxjs": "~6.5.5",
     "tslib": "^2.0.0",
     "zone.js": "~0.11.4"
@@ -31,13 +32,13 @@
     "@angular/cli": "~12.2.9",
     "@angular/compiler-cli": "~12.2.9",
     "@angular/language-service": "~12.2.9",
-    "@commitlint/cli": "^9.0.1",
-    "@commitlint/config-conventional": "^9.0.1",
-    "@types/jasmine": "~3.6.0",
-    "@types/jasminewd2": "~2.0.8",
+    "@commitlint/cli": "^13.2.0",
+    "@commitlint/config-conventional": "^13.2.0",
+    "@types/jasmine": "~3.9.1",
+    "@types/jasminewd2": "~2.0.10",
     "@types/node": "^12.11.1",
     "codelyzer": "^6.0.0",
-    "husky": "^4.2.5",
+    "husky": "^7.0.0",
     "jasmine-core": "~3.6.0",
     "jasmine-spec-reporter": "~5.0.0",
     "karma": "~6.3.4",
