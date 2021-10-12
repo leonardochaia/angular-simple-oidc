@@ -20,32 +20,53 @@ import { spyOnGet } from '../../../test-utils';
 
 describe('Session Check Service', () => {
     let sessionCheck: SessionCheckService;
-    let windowSpy: jasmine.SpyObj<Window>;
-    let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
+    let windowSpy: CustomMockObject<Window>;
+    let discoveryDocClientSpy: CustomMockObject<OidcDiscoveryDocClient>;
     let discoveryDocSpy: jasmine.Spy<jasmine.Func>;
-    let dynamicIframeServiceSpy: jasmine.SpyObj<DynamicIframeService>;
-    let dynamicIframeSpy: jasmine.SpyObj<DynamicIframe>;
-    let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
+    let dynamicIframeServiceSpy: CustomMockObject<DynamicIframeService>;
+    let dynamicIframeSpy: CustomMockObject<DynamicIframe>;
+    let tokenStorageSpy: CustomMockObject<TokenStorageService>;
     let localStateSpy: jasmine.Spy<jasmine.Func>;
-    let eventsSpy: jasmine.SpyObj<EventsService>;
+    let eventsSpy: CustomMockObject<EventsService>;
 
-    let configServiceSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
+    let configServiceSpy: CustomMockObject<ConfigService<AuthConfig>>;
     let authConfigSpy: jasmine.Spy<jasmine.Func>;
 
-    let sesionManagementConfigServiceSpy: jasmine.SpyObj<ConfigService<SessionManagementConfig>>;
+    let sesionManagementConfigServiceSpy: CustomMockObject<ConfigService<SessionManagementConfig>>;
     let sesionManagementConfigSpy: jasmine.Spy<jasmine.Func>;
 
 
     beforeEach(() => {
-        windowSpy = jasmine.createSpyObj('window', ['addEventListener', 'removeEventListener']);
-        discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', ['current$']);
-        dynamicIframeServiceSpy = jasmine.createSpyObj('DynamicIframeService', ['create']);
-        tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', ['removeAll']);
-        eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
-        configServiceSpy = jasmine.createSpyObj('AuthConfigService', ['config']);
-        dynamicIframeSpy = jasmine.createSpyObj('DynamicIframe', ['setSource', 'appendTo',
-            'appendToBody', 'hide', 'postMessage', 'remove']);
-        sesionManagementConfigServiceSpy = jasmine.createSpyObj('sesionManagementConfigService', ['current']);
+        windowSpy = {
+            'addEventListener': jest.fn(),
+            'removeEventListener': jest.fn()
+        };
+        discoveryDocClientSpy = {
+            'current$': jest.fn()
+        };
+        dynamicIframeServiceSpy = {
+            'create': jest.fn()
+        };
+        tokenStorageSpy = {
+            'removeAll': jest.fn()
+        };
+        eventsSpy = {
+            'dispatch': jest.fn()
+        };
+        configServiceSpy = {
+            'config': jest.fn()
+        };
+        dynamicIframeSpy = {
+            'setSource': jest.fn(),
+            'appendTo': jest.fn(),
+            'appendToBody': jest.fn(),
+            'hide': jest.fn(),
+            'postMessage': jest.fn(),
+            'remove': jest.fn()
+        };
+        sesionManagementConfigServiceSpy = {
+            'current': jest.fn()
+        };
 
         TestBed.configureTestingModule({
             providers: [
@@ -86,43 +107,47 @@ describe('Session Check Service', () => {
         });
 
         discoveryDocSpy = spyOnGet(TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient, 'current$');
-        discoveryDocSpy.and.returnValue(of({
+        discoveryDocSpy.mockReturnValue(of({
             check_session_iframe: 'http://check-session'
         } as Partial<DiscoveryDocument>));
 
         localStateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
-        localStateSpy.and.returnValue(of({
+        localStateSpy.mockReturnValue(of({
             identityToken: 'id-token',
             sessionState: 'session-state'
         } as Partial<LocalState>));
 
         authConfigSpy = spyOnGet(TestBed.get(AUTH_CONFIG_SERVICE) as ConfigService<AuthConfig>, 'current$');
-        authConfigSpy.and.returnValue(of({
+        authConfigSpy.mockReturnValue(of({
             clientId: 'client-id',
             openIDProviderUrl: 'http://my-idp/identity'
         } as Partial<AuthConfig>));
 
         sesionManagementConfigSpy = spyOnGet(
             TestBed.get(SESSION_MANAGEMENT_CONFIG_SERVICE) as ConfigService<SessionManagementConfig>, 'current$');
-        sesionManagementConfigSpy.and.returnValue(of({
+        sesionManagementConfigSpy.mockReturnValue(of({
             opIframePollInterval: 1 * 1000
         } as Partial<SessionManagementConfig>));
 
-        tokenStorageSpy.removeAll.and.returnValue(of({} as any));
+        tokenStorageSpy.removeAll.mockReturnValue(of({} as any));
 
         sessionCheck = TestBed.get(SessionCheckService);
 
-        dynamicIframeServiceSpy.create.and.returnValue(dynamicIframeSpy);
-        dynamicIframeSpy.setSource.and.returnValue(dynamicIframeSpy);
-        dynamicIframeSpy.appendTo.and.returnValue(dynamicIframeSpy);
-        dynamicIframeSpy.appendToBody.and.returnValue(dynamicIframeSpy);
-        dynamicIframeSpy.hide.and.returnValue(dynamicIframeSpy);
+        dynamicIframeServiceSpy.create.mockReturnValue(dynamicIframeSpy);
+        dynamicIframeSpy.setSource.mockReturnValue(dynamicIframeSpy);
+        dynamicIframeSpy.appendTo.mockReturnValue(dynamicIframeSpy);
+        dynamicIframeSpy.appendToBody.mockReturnValue(dynamicIframeSpy);
+        dynamicIframeSpy.hide.mockReturnValue(dynamicIframeSpy);
 
-        const docSpyObj = jasmine.createSpyObj<Document>('document', ['createElement']);
+        const docSpyObj = {
+            'createElement': jest.fn()
+        };
         const docSpy = spyOnGet(TestBed.get(WINDOW_REF) as Window, 'document');
-        docSpy.and.returnValue(docSpyObj);
+        docSpy.mockReturnValue(docSpyObj);
         // tslint:disable-next-line: deprecation
-        docSpyObj.createElement.and.returnValue(jasmine.createSpyObj<HTMLIFrameElement>('Iframe', ['contentWindow']));
+        docSpyObj.createElement.mockReturnValue({
+            'contentWindow': jest.fn()
+        });
     });
 
     it('should create', () => {
@@ -131,7 +156,7 @@ describe('Session Check Service', () => {
 
     describe('Check session support', () => {
         it('throws if discovery document does not support iframe URL', fakeAsync(() => {
-            discoveryDocSpy.and.returnValue(of({
+            discoveryDocSpy.mockReturnValue(of({
                 check_session_iframe: null
             } as Partial<DiscoveryDocument>));
 
@@ -144,7 +169,7 @@ describe('Session Check Service', () => {
         }));
 
         it('throws if ther\'s no session state locally', fakeAsync(() => {
-            localStateSpy.and.returnValue(of({
+            localStateSpy.mockReturnValue(of({
                 identityToken: 'id-token',
                 sessionState: null
             } as Partial<LocalState>));
@@ -163,7 +188,7 @@ describe('Session Check Service', () => {
         it('creates and hides the iframe', fakeAsync(() => {
 
             let postFromIframeToWindow: EventListener;
-            windowSpy.addEventListener.and.callFake((name: string, handler: EventListenerOrEventListenerObject, options: any) => {
+            windowSpy.addEventListener.mockImplementation((name: string, handler: EventListenerOrEventListenerObject, options: any) => {
                 postFromIframeToWindow = handler as EventListener;
             });
 
@@ -192,7 +217,7 @@ describe('Session Check Service', () => {
         it('polls OP iframe with correct message and origin', fakeAsync(() => {
 
             let postFromIframeToWindow: EventListener;
-            windowSpy.addEventListener.and.callFake((name: string, handler: EventListenerOrEventListenerObject, options: any) => {
+            windowSpy.addEventListener.mockImplementation((name: string, handler: EventListenerOrEventListenerObject, options: any) => {
                 postFromIframeToWindow = handler as EventListener;
             });
 
@@ -215,7 +240,7 @@ describe('Session Check Service', () => {
         it('polls OP iframe and dispatches session changed', fakeAsync(() => {
 
             let postFromIframeToWindow: EventListener;
-            windowSpy.addEventListener.and.callFake((name: string, handler: EventListenerOrEventListenerObject, options: any) => {
+            windowSpy.addEventListener.mockImplementation((name: string, handler: EventListenerOrEventListenerObject, options: any) => {
                 postFromIframeToWindow = handler as EventListener;
             });
 
@@ -238,7 +263,7 @@ describe('Session Check Service', () => {
         it('polls OP iframe and ignores unchanged', fakeAsync(() => {
 
             let postFromIframeToWindow: EventListener;
-            windowSpy.addEventListener.and.callFake((name: string, handler: EventListenerOrEventListenerObject, options: any) => {
+            windowSpy.addEventListener.mockImplementation((name: string, handler: EventListenerOrEventListenerObject, options: any) => {
                 postFromIframeToWindow = handler as EventListener;
             });
 
@@ -262,7 +287,7 @@ describe('Session Check Service', () => {
         it('polls OP iframe and throws when error', fakeAsync(() => {
 
             let postFromIframeToWindow: EventListener;
-            windowSpy.addEventListener.and.callFake((name: string, handler: EventListenerOrEventListenerObject, options: any) => {
+            windowSpy.addEventListener.mockImplementation((name: string, handler: EventListenerOrEventListenerObject, options: any) => {
                 postFromIframeToWindow = handler as EventListener;
             });
 

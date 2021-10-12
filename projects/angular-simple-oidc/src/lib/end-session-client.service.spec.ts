@@ -1,29 +1,40 @@
 import { TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
 import { DiscoveryDocument, LocalState, TokenUrlService } from 'angular-simple-oidc/core';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { EndSessionClientService } from './end-session-client.service';
 import { WINDOW_REF } from './providers';
 import { TokenStorageService } from './token-storage.service';
 import { EventsService } from 'angular-simple-oidc/events';
+import { CustomMockObject } from 'setup-jest';
 import { spyOnGet } from '../../test-utils';
 
 describe('EndSessionClientService', () => {
     let endSessionClient: EndSessionClientService;
-    let windowSpy: jasmine.SpyObj<Window>;
-    let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
-    let tokenUrlSpy: jasmine.SpyObj<TokenUrlService>;
-    let discoveryDocSpy: jasmine.Spy<jasmine.Func>;
-    let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
-    let localStateSpy: jasmine.Spy<jasmine.Func>;
-    let eventsSpy: jasmine.SpyObj<EventsService>;
+    let windowSpy: Partial<Window>;
+    let discoveryDocClientSpy: CustomMockObject<OidcDiscoveryDocClient>;
+    let tokenUrlSpy: CustomMockObject<TokenUrlService>;
+    let discoveryDocSpy: jest.SpyInstance<Observable<Partial<DiscoveryDocument>>>;
+    let tokenStorageSpy: CustomMockObject<TokenStorageService>;
+    let localStateSpy: jest.SpyInstance;
+    let eventsSpy: CustomMockObject<EventsService>;
 
     beforeEach(() => {
-        windowSpy = jasmine.createSpyObj('window', ['location']);
-        discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', ['current$']);
-        tokenUrlSpy = jasmine.createSpyObj('TokenUrlService', ['createEndSessionUrl']);
-        tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', ['removeAll']);
-        eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
+        windowSpy = {
+            'location': jest.fn() as any
+        };
+        discoveryDocClientSpy = {
+            'current$': jest.fn()
+        };
+        tokenUrlSpy = {
+            'createEndSessionUrl': jest.fn()
+        };
+        tokenStorageSpy = {
+            'removeAll': jest.fn()
+        };
+        eventsSpy = {
+            'dispatch': jest.fn()
+        };
 
         TestBed.configureTestingModule({
             providers: [
@@ -51,19 +62,19 @@ describe('EndSessionClientService', () => {
             ],
         });
 
-        discoveryDocSpy = spyOnGet(TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient, 'current$');
-        discoveryDocSpy.and.returnValue(of({
+        discoveryDocSpy = spyOnGet(TestBed.inject(OidcDiscoveryDocClient), 'current$');
+        discoveryDocSpy.mockReturnValue(of({
             end_session_endpoint: 'http://end-session'
         } as Partial<DiscoveryDocument>));
 
-        localStateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
-        localStateSpy.and.returnValue(of({
+        localStateSpy = spyOnGet(TestBed.inject(TokenStorageService), 'currentState$');
+        localStateSpy.mockReturnValue(of({
             identityToken: 'id-token'
         } as Partial<LocalState>));
 
-        tokenStorageSpy.removeAll.and.returnValue(of({} as any));
+        tokenStorageSpy.removeAll.mockReturnValue(of({} as any));
 
-        endSessionClient = TestBed.get(EndSessionClientService);
+        endSessionClient = TestBed.inject(EndSessionClientService);
     });
 
     it('should create', () => {
@@ -74,7 +85,7 @@ describe('EndSessionClientService', () => {
         it('uses token URL for creating end session URL', fakeAsync(() => {
             const postLogoutUri = 'post-logout-uri';
 
-            tokenUrlSpy.createEndSessionUrl.and.returnValue({
+            tokenUrlSpy.createEndSessionUrl.mockReturnValue({
                 state: 'state',
                 url: 'http://end-it'
             });
@@ -89,7 +100,7 @@ describe('EndSessionClientService', () => {
         it('clears storage before redirecting', fakeAsync(() => {
             const postLogoutUri = 'post-logout-uri';
 
-            tokenUrlSpy.createEndSessionUrl.and.returnValue({
+            tokenUrlSpy.createEndSessionUrl.mockReturnValue({
                 state: 'state',
                 url: 'http://end-it'
             });
@@ -105,7 +116,7 @@ describe('EndSessionClientService', () => {
             const postLogoutUri = 'post-logout-uri';
 
             const expected = 'http://end-it';
-            tokenUrlSpy.createEndSessionUrl.and.returnValue({
+            tokenUrlSpy.createEndSessionUrl.mockReturnValue({
                 state: 'state',
                 url: expected
             });

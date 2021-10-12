@@ -29,14 +29,17 @@ import { RequiredParemetersMissingError } from './errors';
 // https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
 
 describe('TokenValidationService', () => {
-  let tokenCryptoSpy: jasmine.SpyObj<TokenCryptoService>;
+  let tokenCryptoSpy: Partial<Record<keyof TokenCryptoService, jest.Mock>>;
 
   let decodedIdToken: DecodedIdentityToken;
   let dummyKeys: JWTKeys;
   let clientId: string;
 
   beforeEach(() => {
-    tokenCryptoSpy = jasmine.createSpyObj('TokenCryptoService', ['sha256b64First128Bits', 'verifySignature']);
+    tokenCryptoSpy = {
+      'sha256b64First128Bits': jest.fn(),
+      'verifySignature': jest.fn(),
+    };
 
     decodedIdToken = {
       iss: 'http://auth.example.com',
@@ -177,8 +180,7 @@ describe('TokenValidationService', () => {
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
-            spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken')
-              .and.returnValue({
+            jest.spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken').mockReturnValue({
                 alg: 'notRSA'
               });
 
@@ -191,8 +193,7 @@ describe('TokenValidationService', () => {
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
-            spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken')
-              .and.returnValue({
+            jest.spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken').mockReturnValue({
                 alg: 'RS256'
               });
             dummyKeys.keys[0].kty = 'notRSA';
@@ -205,8 +206,7 @@ describe('TokenValidationService', () => {
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
-            spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken')
-              .and.returnValue({
+            jest.spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken').mockReturnValue({
                 alg: 'RS256'
               });
             dummyKeys.keys[0].use = 'notsig';
@@ -226,12 +226,11 @@ describe('TokenValidationService', () => {
               kid: 'k1'
             });
 
-            spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken')
-              .and.returnValue({
+            jest.spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken').mockReturnValue({
                 alg: 'RS256',
                 kid: 'k1'
               });
-            tokenCryptoSpy.verifySignature.and.returnValue(true);
+            tokenCryptoSpy.verifySignature.mockReturnValue(true);
 
             expect(() => tokenValidation.validateIdTokenSignature(idToken, dummyKeys))
               .not.toThrow();
@@ -250,12 +249,11 @@ describe('TokenValidationService', () => {
               kid: 'k1'
             });
 
-            spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken')
-              .and.returnValue({
+            jest.spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken').mockReturnValue({
                 alg: 'RS256',
                 kid: 'invalid-kid'
               });
-            tokenCryptoSpy.verifySignature.and.returnValue(true);
+            tokenCryptoSpy.verifySignature.mockReturnValue(true);
 
             expect(() => tokenValidation.validateIdTokenSignature(idToken, dummyKeys))
               .not.toThrow();
@@ -275,11 +273,10 @@ describe('TokenValidationService', () => {
               kid: keyThatWorks
             });
 
-            spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken')
-              .and.returnValue({
+            jest.spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken').mockReturnValue({
                 alg: 'RS256',
               });
-            tokenCryptoSpy.verifySignature.and.callFake((key) => {
+            tokenCryptoSpy.verifySignature.mockImplementation((key) => {
               return key.kid === keyThatWorks;
             });
 
@@ -305,13 +302,12 @@ describe('TokenValidationService', () => {
               kid: keyThatWorks
             });
 
-            spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken')
-              .and.returnValue({
+            jest.spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken').mockReturnValue({
                 alg: 'RS256',
                 kid: 'k0123'
               });
 
-            tokenCryptoSpy.verifySignature.and.callFake((key) => {
+            tokenCryptoSpy.verifySignature.mockImplementation((key) => {
               return key.kid === keyThatWorks;
             });
 
@@ -334,12 +330,11 @@ describe('TokenValidationService', () => {
               kid: 'k1'
             });
 
-            spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken')
-              .and.returnValue({
+            jest.spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken').mockReturnValue({
                 alg: 'RS256',
                 kid: 'k1'
               });
-            tokenCryptoSpy.verifySignature.and.returnValue(false);
+            tokenCryptoSpy.verifySignature.mockReturnValue(false);
 
             expect(() => tokenValidation.validateIdTokenSignature(idToken, dummyKeys))
               .toThrow(new InvalidSignatureError(null));
@@ -350,17 +345,16 @@ describe('TokenValidationService', () => {
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
             const idToken = 'idtoken';
-            spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken')
-              .and.returnValue({
+            jest.spyOn(TestBed.get(TokenHelperService), 'getHeaderFromToken').mockReturnValue({
                 alg: 'RS256'
               });
             {
-              tokenCryptoSpy.verifySignature.and.returnValue(false);
+              tokenCryptoSpy.verifySignature.mockReturnValue(false);
               expect(() => tokenValidation.validateIdTokenSignature(idToken, dummyKeys))
                 .toThrow(new InvalidSignatureError(null));
             }
             {
-              tokenCryptoSpy.verifySignature.and.returnValue(true);
+              tokenCryptoSpy.verifySignature.mockReturnValue(true);
               expect(() => tokenValidation.validateIdTokenSignature(idToken, dummyKeys))
                 .not.toThrow();
             }
@@ -402,7 +396,7 @@ describe('TokenValidationService', () => {
       it('exp must be a valid date', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
-            spyOn(TestBed.get(TokenHelperService), 'convertTokenClaimToDate').and.returnValue(null);
+            jest.spyOn(TestBed.get(TokenHelperService), 'convertTokenClaimToDate').mockReturnValue(null);
             expect(() => tokenValidation.validateIdTokenExpiration(decodedIdToken))
               .toThrow(new DateClaimInvalidError('exp', null));
           })
@@ -476,7 +470,7 @@ describe('TokenValidationService', () => {
       it('iat must be a valid date', waitForAsync(
         inject([TokenValidationService],
           (tokenValidation: TokenValidationService) => {
-            spyOn(TestBed.get(TokenHelperService), 'convertTokenClaimToDate').and.returnValue(null);
+            jest.spyOn(TestBed.get(TokenHelperService), 'convertTokenClaimToDate').mockReturnValue(null);
             expect(() => tokenValidation.validateIdTokenIssuedAt(decodedIdToken))
               .toThrow(new DateClaimInvalidError('iat', null));
           })
@@ -553,7 +547,7 @@ describe('TokenValidationService', () => {
             const accessToken = 'myAccessToken';
             const atHash = 'hash';
 
-            tokenCryptoSpy.sha256b64First128Bits.and.returnValue(atHash);
+            tokenCryptoSpy.sha256b64First128Bits.mockReturnValue(atHash);
 
             expect(() => tokenValidation.validateAccessToken(accessToken, atHash))
               .not.toThrow();
@@ -566,7 +560,7 @@ describe('TokenValidationService', () => {
             const accessToken = 'myAccessToken';
             const atHash = 'fakehash';
 
-            tokenCryptoSpy.sha256b64First128Bits.and.returnValue('correcthash');
+            tokenCryptoSpy.sha256b64First128Bits.mockReturnValue('correcthash');
 
             expect(() => tokenValidation.validateAccessToken(accessToken, atHash))
               .toThrow(new AccessTokenHashValidationFailedError(null));
@@ -624,8 +618,7 @@ describe('TokenValidationService', () => {
         (tokenValidation: TokenValidationService) => {
 
           for (const validationFn of validatorFns) {
-            spyOn(tokenValidation, validationFn)
-              .and.returnValue();
+            jest.spyOn(tokenValidation, validationFn).mockReturnValue();
           }
           const idToken = 'idToken';
 

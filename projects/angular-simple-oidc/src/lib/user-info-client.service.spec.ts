@@ -12,18 +12,26 @@ import { spyOnGet } from '../../test-utils';
 
 describe('UserInfoClientService', () => {
     let userInfoClient: UserInfoClientService;
-    let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
-    let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
+    let discoveryDocClientSpy: CustomMockObject<OidcDiscoveryDocClient>;
+    let tokenStorageSpy: CustomMockObject<TokenStorageService>;
     let discoveryDocSpy: jasmine.Spy<jasmine.Func>;
     let localStateSpy: jasmine.Spy<jasmine.Func>;
-    let eventsSpy: jasmine.SpyObj<EventsService>;
-    let httpSpy: jasmine.SpyObj<HttpClient>;
+    let eventsSpy: CustomMockObject<EventsService>;
+    let httpSpy: CustomMockObject<HttpClient>;
 
     beforeEach(() => {
-        discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', ['current$']);
-        tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', ['removeAll']);
-        eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
-        httpSpy = jasmine.createSpyObj('HttpClient', ['get']);
+        discoveryDocClientSpy = {
+            'current$': jest.fn()
+        };
+        tokenStorageSpy = {
+            'removeAll': jest.fn()
+        };
+        eventsSpy = {
+            'dispatch': jest.fn()
+        };
+        httpSpy = {
+            'get': jest.fn()
+        };
 
         TestBed.configureTestingModule({
             providers: [
@@ -48,12 +56,12 @@ describe('UserInfoClientService', () => {
         });
 
         discoveryDocSpy = spyOnGet(TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient, 'current$');
-        discoveryDocSpy.and.returnValue(of({
+        discoveryDocSpy.mockReturnValue(of({
             userinfo_endpoint: 'http://user-info'
         } as Partial<DiscoveryDocument>));
 
         localStateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
-        localStateSpy.and.returnValue(of({
+        localStateSpy.mockReturnValue(of({
             accessToken: 'access-token'
         } as Partial<LocalState>));
 
@@ -65,7 +73,7 @@ describe('UserInfoClientService', () => {
     });
 
     it('should fail if no user_info_endpoint on discovery document', fakeAsync(() => {
-        discoveryDocSpy.and.returnValue(of({
+        discoveryDocSpy.mockReturnValue(of({
             user_info_endpoint: null
         }));
 

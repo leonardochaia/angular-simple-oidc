@@ -23,15 +23,15 @@ import { spyOnGet } from '../../test-utils';
 
 describe('OidcCodeFlowClientService', () => {
     let codeFlowClient: OidcCodeFlowClient;
-    let windowSpy: jasmine.SpyObj<Window>;
-    let authConfigSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
-    let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
-    let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
+    let windowSpy: CustomMockObject<Window>;
+    let authConfigSpy: CustomMockObject<ConfigService<AuthConfig>>;
+    let discoveryDocClientSpy: CustomMockObject<OidcDiscoveryDocClient>;
+    let tokenStorageSpy: CustomMockObject<TokenStorageService>;
     let discoveryDocSpy: jasmine.Spy<jasmine.Func>;
-    let tokenUrlSpy: jasmine.SpyObj<TokenUrlService>;
-    let tokenValidationSpy: jasmine.SpyObj<TokenValidationService>;
-    let tokenEndpointSpy: jasmine.SpyObj<TokenEndpointClientService>;
-    let eventsSpy: jasmine.SpyObj<EventsService>;
+    let tokenUrlSpy: CustomMockObject<TokenUrlService>;
+    let tokenValidationSpy: CustomMockObject<TokenValidationService>;
+    let tokenEndpointSpy: CustomMockObject<TokenEndpointClientService>;
+    let eventsSpy: CustomMockObject<EventsService>;
     let windowLocationSpy: jasmine.Spy<jasmine.Func>;
     let stateSpy: jasmine.Spy<jasmine.Func>;
     let jwtKeysSpy: jasmine.Spy<jasmine.Func>;
@@ -51,27 +51,41 @@ describe('OidcCodeFlowClientService', () => {
     };
 
     beforeEach(() => {
-        windowSpy = jasmine.createSpyObj('window', ['location', 'history']);
-        authConfigSpy = jasmine.createSpyObj('AuthConfigService', ['current$']);
-        discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', ['current$']);
-        tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', [
-            'storePreAuthorizationState',
-            'storeAuthorizationCode',
-            'clearPreAuthorizationState',
-            'storeTokens',
-            'storeOriginalIdToken']);
-        tokenUrlSpy = jasmine.createSpyObj('TokenUrlService', [
-            'createAuthorizeUrl',
-            'parseAuthorizeCallbackParamsFromUrl',
-            'createAuthorizationCodeRequestPayload']);
-        tokenValidationSpy = jasmine.createSpyObj('TokenValidationService', [
-            'validateIdTokenFormat',
-            'validateIdToken',
-            'validateAccessToken',
-            'validateAuthorizeCallbackFormat',
-            'validateAuthorizeCallbackState']);
-        tokenEndpointSpy = jasmine.createSpyObj('TokenEndpointClientService', ['call']);
-        eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
+        windowSpy = {
+            'location': jest.fn(),
+            'history': jest.fn()
+        };
+        authConfigSpy = {
+            'current$': jest.fn()
+        };
+        discoveryDocClientSpy = {
+            'current$': jest.fn()
+        };
+        tokenStorageSpy = {
+            'storePreAuthorizationState': jest.fn(),
+            'storeAuthorizationCode': jest.fn(),
+            'clearPreAuthorizationState': jest.fn(),
+            'storeTokens': jest.fn(),
+            'storeOriginalIdToken': jest.fn()
+        };
+        tokenUrlSpy = {
+            'createAuthorizeUrl': jest.fn(),
+            'parseAuthorizeCallbackParamsFromUrl': jest.fn(),
+            'createAuthorizationCodeRequestPayload': jest.fn()
+        };
+        tokenValidationSpy = {
+            'validateIdTokenFormat': jest.fn(),
+            'validateIdToken': jest.fn(),
+            'validateAccessToken': jest.fn(),
+            'validateAuthorizeCallbackFormat': jest.fn(),
+            'validateAuthorizeCallbackState': jest.fn()
+        };
+        tokenEndpointSpy = {
+            'call': jest.fn()
+        };
+        eventsSpy = {
+            'dispatch': jest.fn()
+        };
 
         TestBed.configureTestingModule({
             providers: [
@@ -112,19 +126,19 @@ describe('OidcCodeFlowClientService', () => {
         });
 
         discoveryDocSpy = spyOnGet(TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient, 'current$');
-        discoveryDocSpy.and.returnValue(of());
+        discoveryDocSpy.mockReturnValue(of());
 
         jwtKeysSpy = spyOnGet(TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient, 'jwtKeys$');
-        jwtKeysSpy.and.returnValue(of({}));
+        jwtKeysSpy.mockReturnValue(of({}));
 
         codeFlowClient = TestBed.get(OidcCodeFlowClient);
 
         const configSpy = spyOnGet(TestBed.get(AUTH_CONFIG_SERVICE) as ConfigService<AuthConfig>, 'current$');
-        configSpy.and.returnValue(of(config));
+        configSpy.mockReturnValue(of(config));
 
         windowLocationSpy = spyOnGet(TestBed.get(WINDOW_REF) as Window, 'location');
-        windowLocationSpy.and.returnValue({ href: config.baseUrl });
-        spyOnGet(TestBed.get(WINDOW_REF) as Window, 'history').and.returnValue({ pushState: () => { } });
+        windowLocationSpy.mockReturnValue({ href: config.baseUrl });
+        spyOnGet(TestBed.get(WINDOW_REF) as Window, 'history').mockReturnValue({ pushState: () => { } });
 
         stateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
     });
@@ -142,7 +156,7 @@ describe('OidcCodeFlowClientService', () => {
                 authorization_endpoint: 'http://idp/authorize'
             };
 
-            discoveryDocSpy.and.returnValue(of(doc));
+            discoveryDocSpy.mockReturnValue(of(doc));
 
             const urlResult = {
                 codeChallenge: 'challenge',
@@ -152,7 +166,7 @@ describe('OidcCodeFlowClientService', () => {
                 url: 'url'
             };
 
-            tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
+            tokenUrlSpy.createAuthorizeUrl.mockReturnValue(urlResult);
 
             const redirectUri = 'redirect';
             const idTokenHint = 'id-token-hint';
@@ -182,9 +196,9 @@ describe('OidcCodeFlowClientService', () => {
                 authorization_endpoint: 'http://idp/authorize'
             };
 
-            discoveryDocSpy.and.returnValue(of(doc));
+            discoveryDocSpy.mockReturnValue(of(doc));
 
-            tokenStorageSpy.storePreAuthorizationState.and.returnValue(of());
+            tokenStorageSpy.storePreAuthorizationState.mockReturnValue(of());
 
             const urlResult = {
                 codeChallenge: 'challenge',
@@ -194,7 +208,7 @@ describe('OidcCodeFlowClientService', () => {
                 url: 'url'
             };
 
-            tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
+            tokenUrlSpy.createAuthorizeUrl.mockReturnValue(urlResult);
 
             codeFlowClient.startCodeFlow()
                 .subscribe();
@@ -215,9 +229,9 @@ describe('OidcCodeFlowClientService', () => {
                 authorization_endpoint: 'http://idp/authorize'
             };
 
-            discoveryDocSpy.and.returnValue(of(doc));
+            discoveryDocSpy.mockReturnValue(of(doc));
 
-            tokenStorageSpy.storePreAuthorizationState.and.returnValue(of({} as any));
+            tokenStorageSpy.storePreAuthorizationState.mockReturnValue(of({} as any));
 
             const urlResult = {
                 codeChallenge: 'challenge',
@@ -227,10 +241,9 @@ describe('OidcCodeFlowClientService', () => {
                 url: 'url'
             };
 
-            tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
+            tokenUrlSpy.createAuthorizeUrl.mockReturnValue(urlResult);
 
-            const changeUrlSpy = spyOn(codeFlowClient as any, 'redirectToUrl')
-                .and.returnValue(null);
+            const changeUrlSpy = jest.spyOn(codeFlowClient as any, 'redirectToUrl').mockReturnValue(null);
 
             codeFlowClient.startCodeFlow()
                 .subscribe();
@@ -246,9 +259,9 @@ describe('OidcCodeFlowClientService', () => {
                 authorization_endpoint: 'http://idp/authorize'
             };
 
-            discoveryDocSpy.and.returnValue(of(doc));
+            discoveryDocSpy.mockReturnValue(of(doc));
 
-            tokenStorageSpy.storePreAuthorizationState.and.returnValue(of({} as any));
+            tokenStorageSpy.storePreAuthorizationState.mockReturnValue(of({} as any));
 
             const urlResult = {
                 codeChallenge: 'challenge',
@@ -258,7 +271,7 @@ describe('OidcCodeFlowClientService', () => {
                 url: 'url'
             };
 
-            tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
+            tokenUrlSpy.createAuthorizeUrl.mockReturnValue(urlResult);
 
             const returnUrl = 'http://return-url';
 
@@ -282,9 +295,9 @@ describe('OidcCodeFlowClientService', () => {
                 authorization_endpoint: 'http://idp/authorize'
             };
 
-            discoveryDocSpy.and.returnValue(of(doc));
+            discoveryDocSpy.mockReturnValue(of(doc));
 
-            tokenStorageSpy.storePreAuthorizationState.and.returnValue(of({} as any));
+            tokenStorageSpy.storePreAuthorizationState.mockReturnValue(of({} as any));
 
             const urlResult = {
                 codeChallenge: 'challenge',
@@ -294,9 +307,9 @@ describe('OidcCodeFlowClientService', () => {
                 url: 'url'
             };
 
-            tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
+            tokenUrlSpy.createAuthorizeUrl.mockReturnValue(urlResult);
             const currentLocation = 'http://current-location';
-            windowLocationSpy.and.returnValue({ href: currentLocation });
+            windowLocationSpy.mockReturnValue({ href: currentLocation });
 
             codeFlowClient.startCodeFlow()
                 .subscribe();
@@ -320,16 +333,15 @@ describe('OidcCodeFlowClientService', () => {
             const sessionState = 'session-state';
             const error = null;
 
-            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of());
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
+            tokenStorageSpy.storeAuthorizationCode.mockReturnValue(of());
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.mockReturnValue({
                     code,
                     state,
                     sessionState,
                     error
                 });
 
-            stateSpy.and.returnValue(of({}));
+            stateSpy.mockReturnValue(of({}));
 
             codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
@@ -344,7 +356,7 @@ describe('OidcCodeFlowClientService', () => {
             tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
                 .and.throwError('error');
 
-            stateSpy.and.returnValue(of({
+            stateSpy.mockReturnValue(of({
                 state: null
             }));
 
@@ -365,16 +377,15 @@ describe('OidcCodeFlowClientService', () => {
             const sessionState = 'session-state';
             const error = null;
 
-            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of());
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
+            tokenStorageSpy.storeAuthorizationCode.mockReturnValue(of());
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.mockReturnValue({
                     code,
                     state,
                     sessionState,
                     error
                 });
 
-            stateSpy.and.returnValue(of({}));
+            stateSpy.mockReturnValue(of({}));
 
             codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
@@ -392,8 +403,7 @@ describe('OidcCodeFlowClientService', () => {
             const sessionState = 'session-state';
             const error = null;
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.mockReturnValue({
                     code,
                     state,
                     sessionState,
@@ -404,9 +414,9 @@ describe('OidcCodeFlowClientService', () => {
                 state: undefined
             };
 
-            stateSpy.and.returnValue(of(localState));
+            stateSpy.mockReturnValue(of(localState));
 
-            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of());
+            tokenStorageSpy.storeAuthorizationCode.mockReturnValue(of());
 
             codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
@@ -422,8 +432,7 @@ describe('OidcCodeFlowClientService', () => {
             const sessionState = 'session-state';
             const error = null;
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.mockReturnValue({
                     code,
                     state,
                     sessionState,
@@ -432,9 +441,9 @@ describe('OidcCodeFlowClientService', () => {
 
             const localState = {};
 
-            stateSpy.and.returnValue(of(localState));
+            stateSpy.mockReturnValue(of(localState));
 
-            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of());
+            tokenStorageSpy.storeAuthorizationCode.mockReturnValue(of());
 
             codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
@@ -453,8 +462,7 @@ describe('OidcCodeFlowClientService', () => {
             const sessionState = 'session-state';
             const error = null;
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.mockReturnValue({
                     code,
                     state,
                     sessionState,
@@ -466,11 +474,11 @@ describe('OidcCodeFlowClientService', () => {
                 codeVerifier: 'verifier'
             };
 
-            stateSpy.and.returnValue(of(localState));
+            stateSpy.mockReturnValue(of(localState));
 
-            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of(localState as any));
+            tokenStorageSpy.storeAuthorizationCode.mockReturnValue(of(localState as any));
 
-            tokenEndpointSpy.call.and.returnValue(of());
+            tokenEndpointSpy.call.mockReturnValue(of());
 
             codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
@@ -493,8 +501,7 @@ describe('OidcCodeFlowClientService', () => {
             const sessionState = 'session-state';
             const error = null;
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.mockReturnValue({
                     code,
                     state,
                     sessionState,
@@ -503,24 +510,24 @@ describe('OidcCodeFlowClientService', () => {
 
             const doc: Partial<DiscoveryDocument> = {};
 
-            discoveryDocSpy.and.returnValue(of(doc));
+            discoveryDocSpy.mockReturnValue(of(doc));
 
             const jwtKeys: Partial<JWTKeys> = {};
 
-            jwtKeysSpy.and.returnValue(of(jwtKeys));
+            jwtKeysSpy.mockReturnValue(of(jwtKeys));
 
             const localState: Partial<LocalState> = {};
 
-            stateSpy.and.returnValue(of(localState));
+            stateSpy.mockReturnValue(of(localState));
 
             const freshState: Partial<LocalState> = {
                 authorizationCode: code,
                 codeVerifier: 'verifier'
             };
 
-            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of(freshState as any));
+            tokenStorageSpy.storeAuthorizationCode.mockReturnValue(of(freshState as any));
 
-            tokenStorageSpy.clearPreAuthorizationState.and.returnValue(of());
+            tokenStorageSpy.clearPreAuthorizationState.mockReturnValue(of());
 
             const tokenResponse: TokenRequestResult = {
                 accessToken: 'access-token',
@@ -532,7 +539,7 @@ describe('OidcCodeFlowClientService', () => {
                 refreshToken: 'refresh-token'
             };
 
-            tokenEndpointSpy.call.and.returnValue(of(tokenResponse));
+            tokenEndpointSpy.call.mockReturnValue(of(tokenResponse));
 
             codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
@@ -561,8 +568,7 @@ describe('OidcCodeFlowClientService', () => {
             const sessionState = 'session-state';
             const error = null;
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.mockReturnValue({
                     code,
                     state,
                     sessionState,
@@ -571,26 +577,26 @@ describe('OidcCodeFlowClientService', () => {
 
             const doc: Partial<DiscoveryDocument> = {};
 
-            discoveryDocSpy.and.returnValue(of(doc));
+            discoveryDocSpy.mockReturnValue(of(doc));
 
             const jwtKeys: Partial<JWTKeys> = {};
 
-            jwtKeysSpy.and.returnValue(of(jwtKeys));
+            jwtKeysSpy.mockReturnValue(of(jwtKeys));
 
             const localState: Partial<LocalState> = {};
 
-            stateSpy.and.returnValue(of(localState));
+            stateSpy.mockReturnValue(of(localState));
 
             const freshState: Partial<LocalState> = {
                 authorizationCode: code,
                 codeVerifier: 'verifier'
             };
 
-            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of(freshState as any));
+            tokenStorageSpy.storeAuthorizationCode.mockReturnValue(of(freshState as any));
 
-            tokenStorageSpy.clearPreAuthorizationState.and.returnValue(of({} as any));
-            tokenStorageSpy.storeTokens.and.returnValue(of({} as any));
-            tokenStorageSpy.storeOriginalIdToken.and.returnValue(of({} as any));
+            tokenStorageSpy.clearPreAuthorizationState.mockReturnValue(of({} as any));
+            tokenStorageSpy.storeTokens.mockReturnValue(of({} as any));
+            tokenStorageSpy.storeOriginalIdToken.mockReturnValue(of({} as any));
 
             const tokenResponse: TokenRequestResult = {
                 accessToken: 'access-token',
@@ -602,7 +608,7 @@ describe('OidcCodeFlowClientService', () => {
                 refreshToken: 'refresh-token'
             };
 
-            tokenEndpointSpy.call.and.returnValue(of(tokenResponse));
+            tokenEndpointSpy.call.mockReturnValue(of(tokenResponse));
 
             codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();
@@ -623,8 +629,7 @@ describe('OidcCodeFlowClientService', () => {
             const sessionState = 'session-state';
             const error = null;
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.mockReturnValue({
                     code,
                     state,
                     sessionState,
@@ -633,28 +638,28 @@ describe('OidcCodeFlowClientService', () => {
 
             const doc: Partial<DiscoveryDocument> = {};
 
-            discoveryDocSpy.and.returnValue(of(doc));
+            discoveryDocSpy.mockReturnValue(of(doc));
 
             const jwtKeys: Partial<JWTKeys> = {};
 
-            jwtKeysSpy.and.returnValue(of(jwtKeys));
+            jwtKeysSpy.mockReturnValue(of(jwtKeys));
 
             const localState: Partial<LocalState> = {
                 preRedirectUrl: 'http://pre-redirect-uri'
             };
 
-            stateSpy.and.returnValue(of(localState));
+            stateSpy.mockReturnValue(of(localState));
 
             const freshState: Partial<LocalState> = {
                 authorizationCode: code,
                 codeVerifier: 'verifier'
             };
 
-            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of(freshState as any));
+            tokenStorageSpy.storeAuthorizationCode.mockReturnValue(of(freshState as any));
 
-            tokenStorageSpy.clearPreAuthorizationState.and.returnValue(of({} as any));
-            tokenStorageSpy.storeTokens.and.returnValue(of({} as any));
-            tokenStorageSpy.storeOriginalIdToken.and.returnValue(of({} as any));
+            tokenStorageSpy.clearPreAuthorizationState.mockReturnValue(of({} as any));
+            tokenStorageSpy.storeTokens.mockReturnValue(of({} as any));
+            tokenStorageSpy.storeOriginalIdToken.mockReturnValue(of({} as any));
 
             const tokenResponse: TokenRequestResult = {
                 accessToken: 'access-token',
@@ -666,10 +671,9 @@ describe('OidcCodeFlowClientService', () => {
                 refreshToken: 'refresh-token'
             };
 
-            tokenEndpointSpy.call.and.returnValue(of(tokenResponse));
+            tokenEndpointSpy.call.mockReturnValue(of(tokenResponse));
 
-            const changeUrlSpy = spyOn(codeFlowClient as any, 'historyChangeUrl')
-                .and.returnValue(null);
+            const changeUrlSpy = jest.spyOn(codeFlowClient as any, 'historyChangeUrl').mockReturnValue(null);
 
             codeFlowClient.currentWindowCodeFlowCallback()
                 .subscribe();

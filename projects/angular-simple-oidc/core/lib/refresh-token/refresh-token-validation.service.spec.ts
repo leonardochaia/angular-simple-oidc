@@ -189,8 +189,7 @@ describe('RefreshTokenValidationService', () => {
         it('should run all validation functions', () => {
 
             for (const validationFn of validatorFns) {
-                spyOn(refreshTokenValidation, validationFn)
-                    .and.returnValue();
+                jest.spyOn(refreshTokenValidation, validationFn).mockReturnValue();
             }
 
             const newToken: DecodedIdentityToken = {

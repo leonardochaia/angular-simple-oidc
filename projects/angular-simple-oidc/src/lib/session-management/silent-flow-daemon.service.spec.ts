@@ -8,9 +8,9 @@ import { spyOnGet } from '../../../test-utils';
 import { SilentFlowDaemonService } from './silent-flow-daemon.service';
 
 describe(SilentFlowDaemonService.name, () => {
-    let eventsServiceSpy: jasmine.SpyObj<EventsService>;
-    let authorizeSilentClientSpy: jasmine.SpyObj<AuthorizeEndpointSilentClientService>;
-    let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
+    let eventsServiceSpy: CustomMockObject<EventsService>;
+    let authorizeSilentClientSpy: CustomMockObject<AuthorizeEndpointSilentClientService>;
+    let tokenStorageSpy: CustomMockObject<TokenStorageService>;
     let eventsSpy: jasmine.Spy<jasmine.Func>;
     let localStateSpy: jasmine.Spy<jasmine.Func>;
 
@@ -19,17 +19,23 @@ describe(SilentFlowDaemonService.name, () => {
     }
 
     beforeEach(() => {
-        tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', ['removeAll']);
-        eventsServiceSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
-        authorizeSilentClientSpy = jasmine.createSpyObj('AuthorizeEndpointSilentClientService', ['startCodeFlowInIframe']);
+        tokenStorageSpy = {
+            'removeAll': jest.fn()
+        };
+        eventsServiceSpy = {
+            'dispatch': jest.fn()
+        };
+        authorizeSilentClientSpy = {
+            'startCodeFlowInIframe': jest.fn()
+        };
 
         eventsSpy = spyOnGet(eventsServiceSpy, 'events$');
-        eventsSpy.and.returnValue(of());
+        eventsSpy.mockReturnValue(of());
 
         localStateSpy = spyOnGet(tokenStorageSpy, 'currentState$');
-        localStateSpy.and.returnValue(of());
+        localStateSpy.mockReturnValue(of());
 
-        authorizeSilentClientSpy.startCodeFlowInIframe.and.returnValue(of());
+        authorizeSilentClientSpy.startCodeFlowInIframe.mockReturnValue(of());
     });
 
     it('should create', () => {
@@ -37,8 +43,8 @@ describe(SilentFlowDaemonService.name, () => {
     });
 
     it('should start silent code flow when session changes', () => {
-        eventsSpy.and.returnValue(of(new SessionChangedEvent()));
-        localStateSpy.and.returnValue(of({}));
+        eventsSpy.mockReturnValue(of(new SessionChangedEvent()));
+        localStateSpy.mockReturnValue(of({}));
 
         const daemon = buildSilentFlowDaemonService();
         daemon.startDaemon();
@@ -47,18 +53,18 @@ describe(SilentFlowDaemonService.name, () => {
     });
 
     it('should terminate session if silent code flow fails', () => {
-        eventsSpy.and.returnValue(of(new SessionChangedEvent()));
-        localStateSpy.and.returnValue(of({}));
+        eventsSpy.mockReturnValue(of(new SessionChangedEvent()));
+        localStateSpy.mockReturnValue(of({}));
 
         const expectedError = new SimpleOidcError('Failed', 'failed', {});
-        authorizeSilentClientSpy.startCodeFlowInIframe.and.returnValue(throwError(expectedError));
+        authorizeSilentClientSpy.startCodeFlowInIframe.mockReturnValue(throwError(expectedError));
 
         expect(() => buildSilentFlowDaemonService().startDaemon()).not.toThrow();
         expect(eventsServiceSpy.dispatch).toHaveBeenCalledWith(new SessionTerminatedEvent({ error: {} }));
     });
 
     it('should terminate session if new token does not belong to user', () => {
-        eventsSpy.and.returnValue(of(new SessionChangedEvent()));
+        eventsSpy.mockReturnValue(of(new SessionChangedEvent()));
 
         const previousToken = {
             sub: 'foo',
@@ -68,11 +74,11 @@ describe(SilentFlowDaemonService.name, () => {
             sub: 'bar',
         };
 
-        localStateSpy.and.returnValue(of({
+        localStateSpy.mockReturnValue(of({
             decodedIdentityToken: previousToken
         } as Partial<LocalState>));
 
-        authorizeSilentClientSpy.startCodeFlowInIframe.and.returnValue(of({
+        authorizeSilentClientSpy.startCodeFlowInIframe.mockReturnValue(of({
             decodedIdToken: newToken
         } as Partial<TokenRequestResult>));
 
@@ -81,7 +87,7 @@ describe(SilentFlowDaemonService.name, () => {
     });
 
     it('should do nothing if a new valid token is obtained', () => {
-        eventsSpy.and.returnValue(of(new SessionChangedEvent()));
+        eventsSpy.mockReturnValue(of(new SessionChangedEvent()));
 
         const previousToken = {
             sub: 'foo',
@@ -91,11 +97,11 @@ describe(SilentFlowDaemonService.name, () => {
             sub: 'foo',
         };
 
-        localStateSpy.and.returnValue(of({
+        localStateSpy.mockReturnValue(of({
             decodedIdentityToken: previousToken
         } as Partial<LocalState>));
 
-        authorizeSilentClientSpy.startCodeFlowInIframe.and.returnValue(of({
+        authorizeSilentClientSpy.startCodeFlowInIframe.mockReturnValue(of({
             decodedIdToken: newToken
         } as Partial<TokenRequestResult>));
 

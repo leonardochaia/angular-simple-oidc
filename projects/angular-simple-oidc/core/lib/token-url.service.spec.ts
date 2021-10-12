@@ -4,11 +4,15 @@ import { TokenCryptoService } from './token-crypto.service';
 import { RequiredParemetersMissingError } from './errors';
 
 describe('TokenUrlService', () => {
-  let tokenCryptoSpy: jasmine.SpyObj<TokenCryptoService>;
+  let tokenCryptoSpy: Partial<Record<keyof TokenCryptoService, jest.Mock>>;
   let tokenUrl: TokenUrlService;
 
   beforeEach(() => {
-    tokenCryptoSpy = jasmine.createSpyObj('TokenCryptoService', ['generateState', 'generateNonce', 'generateCodesForCodeVerification']);
+    tokenCryptoSpy = {
+      'generateState': jest.fn(),
+      'generateNonce': jest.fn(),
+      'generateCodesForCodeVerification': jest.fn()
+    };
 
     TestBed.configureTestingModule({
       providers: [
@@ -52,8 +56,8 @@ describe('TokenUrlService', () => {
 
     it('uses tokenCrypto to obtain state', () => {
       const expected = 'S123';
-      tokenCryptoSpy.generateState.and.returnValue(expected);
-      tokenCryptoSpy.generateCodesForCodeVerification.and.returnValue({
+      tokenCryptoSpy.generateState.mockReturnValue(expected);
+      tokenCryptoSpy.generateCodesForCodeVerification.mockReturnValue({
         codeVerifier: 'verifier',
         codeChallenge: 'challenge',
         method: 'S256'
@@ -70,8 +74,8 @@ describe('TokenUrlService', () => {
 
     it('uses tokenCrypto to obtain nonce', () => {
       const expected = 'N123';
-      tokenCryptoSpy.generateNonce.and.returnValue(expected);
-      tokenCryptoSpy.generateCodesForCodeVerification.and.returnValue({
+      tokenCryptoSpy.generateNonce.mockReturnValue(expected);
+      tokenCryptoSpy.generateCodesForCodeVerification.mockReturnValue({
         codeVerifier: 'verifier',
         codeChallenge: 'challenge',
         method: 'S256'
@@ -88,17 +92,17 @@ describe('TokenUrlService', () => {
 
     it('generates URL using parameters', () => {
       const nonce = 'N123';
-      tokenCryptoSpy.generateNonce.and.returnValue(nonce);
+      tokenCryptoSpy.generateNonce.mockReturnValue(nonce);
 
       const state = 'S123';
-      tokenCryptoSpy.generateState.and.returnValue(state);
+      tokenCryptoSpy.generateState.mockReturnValue(state);
 
       const verif = {
         codeVerifier: 'verifier',
         codeChallenge: 'challenge',
         method: 'S256'
       };
-      tokenCryptoSpy.generateCodesForCodeVerification.and.returnValue(verif);
+      tokenCryptoSpy.generateCodesForCodeVerification.mockReturnValue(verif);
 
       const urlParams = {
         clientId: 'myclient',
@@ -124,17 +128,17 @@ describe('TokenUrlService', () => {
 
     it('generates URL using optional parameters', () => {
       const nonce = 'N123';
-      tokenCryptoSpy.generateNonce.and.returnValue(nonce);
+      tokenCryptoSpy.generateNonce.mockReturnValue(nonce);
 
       const state = 'S123';
-      tokenCryptoSpy.generateState.and.returnValue(state);
+      tokenCryptoSpy.generateState.mockReturnValue(state);
 
       const verif = {
         codeVerifier: 'verifier',
         codeChallenge: 'challenge',
         method: 'S256'
       };
-      tokenCryptoSpy.generateCodesForCodeVerification.and.returnValue(verif);
+      tokenCryptoSpy.generateCodesForCodeVerification.mockReturnValue(verif);
 
       const urlParams = {
         clientId: 'myclient',
@@ -368,7 +372,7 @@ describe('TokenUrlService', () => {
 
     it('uses tokenCrypto to obtain state', () => {
       const expected = 'S123';
-      tokenCryptoSpy.generateState.and.returnValue(expected);
+      tokenCryptoSpy.generateState.mockReturnValue(expected);
 
       const idTokenHint = 'id-token';
       const postLogoutRedirectUri = 'http://post-logout';
@@ -383,7 +387,7 @@ describe('TokenUrlService', () => {
 
     it('generates url with params', () => {
       const expected = 'S123';
-      tokenCryptoSpy.generateState.and.returnValue(expected);
+      tokenCryptoSpy.generateState.mockReturnValue(expected);
 
       const idTokenHint = 'id-token';
       const postLogoutRedirectUri = 'http://post-logout';
@@ -399,7 +403,7 @@ describe('TokenUrlService', () => {
 
     it('generates url without params', () => {
       const state = 'S123';
-      tokenCryptoSpy.generateState.and.returnValue(state);
+      tokenCryptoSpy.generateState.mockReturnValue(state);
 
       const output = tokenUrl.createEndSessionUrl('http://example.com');
 

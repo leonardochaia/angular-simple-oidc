@@ -12,9 +12,9 @@ import { fakeAsync, tick } from '@angular/core/testing';
 
 
 describe(TokenFromStorageInitializerDaemonService.name, () => {
-    let eventServiceSpy: jasmine.SpyObj<EventsService>;
-    let storageSpy: jasmine.SpyObj<TokenStorageService>;
-    let helperSpy: jasmine.SpyObj<TokenHelperService>;
+    let eventServiceSpy: CustomMockObject<EventsService>;
+    let storageSpy: CustomMockObject<TokenStorageService>;
+    let helperSpy: CustomMockObject<TokenHelperService>;
     let currentStateSpy: jasmine.Spy<jasmine.Func>;
 
     function buildTokenFromStorageInitializerDaemon() {
@@ -22,9 +22,15 @@ describe(TokenFromStorageInitializerDaemonService.name, () => {
     }
 
     beforeEach(() => {
-        eventServiceSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
-        storageSpy = jasmine.createSpyObj('TokenStorageService', ['currentState$']);
-        helperSpy = jasmine.createSpyObj('TokenHelperService', ['isTokenExpired']);
+        eventServiceSpy = {
+            'dispatch': jest.fn()
+        };
+        storageSpy = {
+            'currentState$': jest.fn()
+        };
+        helperSpy = {
+            'isTokenExpired': jest.fn()
+        };
 
         currentStateSpy = spyOnGet(storageSpy, 'currentState$');
     });
@@ -36,7 +42,7 @@ describe(TokenFromStorageInitializerDaemonService.name, () => {
 
     describe('Token Initialization', () => {
         it('should request tokens from the store on construction', () => {
-            currentStateSpy.and.returnValue(of());
+            currentStateSpy.mockReturnValue(of());
 
             const daemon = buildTokenFromStorageInitializerDaemon();
             daemon.startDaemon();
@@ -50,8 +56,8 @@ describe(TokenFromStorageInitializerDaemonService.name, () => {
                 accessToken: 'access-token',
                 accessTokenExpiration: 123
             };
-            currentStateSpy.and.returnValue(of(state));
-            helperSpy.isTokenExpired.and.returnValue(false);
+            currentStateSpy.mockReturnValue(of(state));
+            helperSpy.isTokenExpired.mockReturnValue(false);
 
             const tokenReadyEvent = new TokensReadyEvent({
                 accessToken: state.accessToken,
@@ -73,9 +79,9 @@ describe(TokenFromStorageInitializerDaemonService.name, () => {
                 accessToken: 'access-token',
                 accessTokenExpiration: 123
             };
-            currentStateSpy.and.returnValue(of(state));
+            currentStateSpy.mockReturnValue(of(state));
 
-            helperSpy.isTokenExpired.and.returnValue(true);
+            helperSpy.isTokenExpired.mockReturnValue(true);
 
             const infoEvent = new SimpleOidcInfoEvent('Found token in storage but it\'s expired');
 

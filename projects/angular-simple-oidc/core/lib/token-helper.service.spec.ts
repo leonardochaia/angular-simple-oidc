@@ -129,7 +129,7 @@ describe('TokenHelperService', () => {
             const expected = JSON.parse(jsonString);
             const result = tokenHelperService.getPayloadFromToken(token);
 
-            expect(result).toEqual(jasmine.objectContaining(expected));
+            expect(result).toEqual(expect.objectContaining(expected));
         });
     });
 

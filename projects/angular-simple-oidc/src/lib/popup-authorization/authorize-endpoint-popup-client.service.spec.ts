@@ -15,34 +15,53 @@ import { spyOnGet } from '../../../test-utils';
 
 describe('Authorize Endpoint Popup Client ', () => {
     let popupClient: AuthorizeEndpointPopupClientService;
-    let windowSpy: jasmine.SpyObj<Window>;
-    let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
-    let tokenUrlSpy: jasmine.SpyObj<TokenUrlService>;
+    let windowSpy: CustomMockObject<Window>;
+    let tokenStorageSpy: CustomMockObject<TokenStorageService>;
+    let tokenUrlSpy: CustomMockObject<TokenUrlService>;
     let localStateSpy: jasmine.Spy<jasmine.Func>;
-    let eventsSpy: jasmine.SpyObj<EventsService>;
-    let oidcCodeFlowClientSpy: jasmine.SpyObj<OidcCodeFlowClient>;
+    let eventsSpy: CustomMockObject<EventsService>;
+    let oidcCodeFlowClientSpy: CustomMockObject<OidcCodeFlowClient>;
 
-    let configServiceSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
+    let configServiceSpy: CustomMockObject<ConfigService<AuthConfig>>;
     let authConfigSpy: jasmine.Spy<jasmine.Func>;
 
-    let popupConfigServiceSpy: jasmine.SpyObj<ConfigService<PopupAuthorizationConfig>>;
+    let popupConfigServiceSpy: CustomMockObject<ConfigService<PopupAuthorizationConfig>>;
     let popupConfigSpy: jasmine.Spy<jasmine.Func>;
 
     let postToWindow: EventListener;
     const expectedOrigin = new URL('http://my-idp/identity').origin;
 
     const iframeUrl = 'http://base-url/iframe/path.html';
-    let childWindowSpy: jasmine.SpyObj<Window>;
+    let childWindowSpy: CustomMockObject<Window>;
 
     beforeEach(() => {
-        windowSpy = jasmine.createSpyObj('window', ['addEventListener', 'removeEventListener', 'open']);
-        tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', ['storeAuthorizationCode']);
-        tokenUrlSpy = jasmine.createSpyObj('TokenUrlService', ['createAuthorizationCodeRequestPayload']);
-        eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
-        configServiceSpy = jasmine.createSpyObj('AuthConfigService', ['current$']);
-        popupConfigServiceSpy = jasmine.createSpyObj('SessionConfigService', ['current$']);
-        oidcCodeFlowClientSpy = jasmine.createSpyObj('OidcCodeFlowClient', ['codeFlowCallback', 'generateCodeFlowMetadata']);
-        childWindowSpy = jasmine.createSpyObj('ChildwindowSpy', ['close']);
+        windowSpy = {
+            'addEventListener': jest.fn(),
+            'removeEventListener': jest.fn(),
+            'open': jest.fn()
+        };
+        tokenStorageSpy = {
+            'storeAuthorizationCode': jest.fn()
+        };
+        tokenUrlSpy = {
+            'createAuthorizationCodeRequestPayload': jest.fn()
+        };
+        eventsSpy = {
+            'dispatch': jest.fn()
+        };
+        configServiceSpy = {
+            'current$': jest.fn()
+        };
+        popupConfigServiceSpy = {
+            'current$': jest.fn()
+        };
+        oidcCodeFlowClientSpy = {
+            'codeFlowCallback': jest.fn(),
+            'generateCodeFlowMetadata': jest.fn()
+        };
+        childWindowSpy = {
+            'close': jest.fn()
+        };
         TestBed.configureTestingModule({
             providers: [
                 {
@@ -82,13 +101,13 @@ describe('Authorize Endpoint Popup Client ', () => {
         });
 
         localStateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
-        localStateSpy.and.returnValue(of({
+        localStateSpy.mockReturnValue(of({
             identityToken: 'id-token',
             sessionState: 'session-state'
         } as Partial<LocalState>));
 
         authConfigSpy = spyOnGet(TestBed.get(AUTH_CONFIG_SERVICE) as ConfigService<AuthConfig>, 'current$');
-        authConfigSpy.and.returnValue(of({
+        authConfigSpy.mockReturnValue(of({
             clientId: 'client-id',
             openIDProviderUrl: 'http://my-idp/identity',
             baseUrl: 'http://base-url/',
@@ -97,30 +116,33 @@ describe('Authorize Endpoint Popup Client ', () => {
         popupConfigSpy = spyOnGet(
             TestBed.get(POPUP_AUTHORIZATION_CONFIG_SERVICE) as ConfigService<PopupAuthorizationConfig>,
             'current$');
-        popupConfigSpy.and.returnValue(of({
+        popupConfigSpy.mockReturnValue(of({
             childWindowPath: 'iframe/path.html'
         } as Partial<PopupAuthorizationConfig>));
 
-        const docSpyObj = jasmine.createSpyObj<Document>('document', ['createElement']);
+        const docSpyObj = {
+            'createElement': jest.fn()
+        };
         const docSpy = spyOnGet(TestBed.get(WINDOW_REF) as Window, 'document');
-        docSpy.and.returnValue(docSpyObj);
+        docSpy.mockReturnValue(docSpyObj);
         // tslint:disable-next-line: deprecation
-        docSpyObj.createElement.and.returnValue(jasmine.createSpyObj<HTMLIFrameElement>('Iframe', ['contentWindow']));
+        docSpyObj.createElement.mockReturnValue({
+            'contentWindow': jest.fn()
+        });
 
-        windowSpy.addEventListener.and.callFake((name: string, handler: EventListenerOrEventListenerObject) => {
+        windowSpy.addEventListener.mockImplementation((name: string, handler: EventListenerOrEventListenerObject) => {
             postToWindow = handler as EventListener;
         });
-        windowSpy.open.and.returnValue(childWindowSpy as any);
+        windowSpy.open.mockReturnValue(childWindowSpy as any);
 
-        spyOnGet(TestBed.get(WINDOW_REF), 'screen')
-            .and.returnValue({
+        spyOnGet(TestBed.get(WINDOW_REF), 'screen').mockReturnValue({
                 width: 123,
                 height: 123
             });
 
-        tokenStorageSpy.storeAuthorizationCode.and.returnValue(of({} as any));
-        oidcCodeFlowClientSpy.codeFlowCallback.and.returnValue(of({} as any));
-        oidcCodeFlowClientSpy.generateCodeFlowMetadata.and.returnValue(of({} as any));
+        tokenStorageSpy.storeAuthorizationCode.mockReturnValue(of({} as any));
+        oidcCodeFlowClientSpy.codeFlowCallback.mockReturnValue(of({} as any));
+        oidcCodeFlowClientSpy.generateCodeFlowMetadata.mockReturnValue(of({} as any));
         popupClient = TestBed.get(AuthorizeEndpointPopupClientService);
     });
 
@@ -165,7 +187,7 @@ describe('Authorize Endpoint Popup Client ', () => {
         const state = 'state';
         const expectedUrl = `${iframeUrl}?code=auth-code`;
         const metadata = { state };
-        oidcCodeFlowClientSpy.generateCodeFlowMetadata.and.returnValue(of(metadata as any));
+        oidcCodeFlowClientSpy.generateCodeFlowMetadata.mockReturnValue(of(metadata as any));
 
         popupClient.startCodeFlowInPopup()
             .subscribe();
@@ -185,7 +207,7 @@ describe('Authorize Endpoint Popup Client ', () => {
         const state = 'state';
         const expectedUrl = `${iframeUrl}?code=auth-code`;
         const metadata = { state };
-        oidcCodeFlowClientSpy.generateCodeFlowMetadata.and.returnValue(of(metadata as any));
+        oidcCodeFlowClientSpy.generateCodeFlowMetadata.mockReturnValue(of(metadata as any));
 
         popupClient.startCodeFlowInPopup()
             .subscribe();

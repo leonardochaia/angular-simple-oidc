@@ -12,10 +12,10 @@ import { spyOnGet } from '../../../test-utils';
 
 
 describe('OidcDiscoveryDocClient', () => {
-    let httpSpy: jasmine.SpyObj<HttpClient>;
-    let configSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
+    let httpSpy: CustomMockObject<HttpClient>;
+    let configSpy: CustomMockObject<ConfigService<AuthConfig>>;
     let authConfigSpy: jasmine.Spy<jasmine.Func>;
-    let eventsSpy: jasmine.SpyObj<EventsService>;
+    let eventsSpy: CustomMockObject<EventsService>;
 
     const config: Partial<AuthConfig> = {
         openIDProviderUrl: 'http://example.com',
@@ -23,7 +23,7 @@ describe('OidcDiscoveryDocClient', () => {
     };
 
     function createDiscoveryClient(doc: DiscoveryDocument = {} as any) {
-        httpSpy.get.and.returnValue(of(doc));
+        httpSpy.get.mockReturnValue(of(doc));
 
         // we need to re-create it since observables gets created on constructor
         return new OidcDiscoveryDocClient(
@@ -34,13 +34,21 @@ describe('OidcDiscoveryDocClient', () => {
     }
 
     beforeEach(() => {
-        httpSpy = jasmine.createSpyObj('HttpClient', ['post', 'get']);
-        configSpy = jasmine.createSpyObj('AuthConfigService', ['configuration']);
-        eventsSpy = jasmine.createSpyObj('EventsSpy', ['dispatch', 'dispatchError']);
+        httpSpy = {
+            'post': jest.fn(),
+            'get': jest.fn()
+        };
+        configSpy = {
+            'configuration': jest.fn()
+        };
+        eventsSpy = {
+            'dispatch': jest.fn(),
+            'dispatchError': jest.fn()
+        };
 
         authConfigSpy = spyOnGet(configSpy, 'current$');
 
-        authConfigSpy.and.returnValue(of(config));
+        authConfigSpy.mockReturnValue(of(config));
     });
 
     it('should create', () => {
@@ -65,7 +73,7 @@ describe('OidcDiscoveryDocClient', () => {
         it('wraps errors with proper class', fakeAsync(() => {
             const discoveryClient = createDiscoveryClient();
 
-            httpSpy.get.and.returnValue(throwError(new HttpErrorResponse({
+            httpSpy.get.mockReturnValue(throwError(new HttpErrorResponse({
                 headers: new HttpHeaders(),
                 error: 'whatever',
                 status: 404,
@@ -93,7 +101,7 @@ describe('OidcDiscoveryDocClient', () => {
             const discoveryClient = createDiscoveryClient(doc);
 
             const expected = {} as JWTKeys;
-            httpSpy.get.and.returnValue(of(expected));
+            httpSpy.get.mockReturnValue(of(expected));
 
             let output: JWTKeys;
             discoveryClient.jwtKeys$
@@ -111,7 +119,7 @@ describe('OidcDiscoveryDocClient', () => {
             } as DiscoveryDocument;
             const discoveryClient = createDiscoveryClient(doc);
 
-            httpSpy.get.and.returnValue(throwError(new HttpErrorResponse({
+            httpSpy.get.mockReturnValue(throwError(new HttpErrorResponse({
                 headers: new HttpHeaders(),
                 error: 'whatever',
                 status: 404,
@@ -157,7 +165,7 @@ describe('OidcDiscoveryDocClient', () => {
 
             const discoveryClient = createDiscoveryClient();
             const expected = {} as JWTKeys;
-            httpSpy.get.and.returnValue(of(expected));
+            httpSpy.get.mockReturnValue(of(expected));
 
             let output1: JWTKeys;
             discoveryClient.jwtKeys$

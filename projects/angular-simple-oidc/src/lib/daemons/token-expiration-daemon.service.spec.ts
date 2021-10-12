@@ -3,10 +3,9 @@ import { AuthService } from '../auth.service';
 import {
     TokenRequestResult
 } from 'angular-simple-oidc/core';
-import { of, Subject } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 import { TokensReadyEvent, AccessTokenExpiringEvent, AccessTokenExpiredEvent } from '../auth.events';
 import { EventsService, SimpleOidcInfoEvent } from 'angular-simple-oidc/events';
-import { spyOnGet } from '../../../test-utils';
 import { TokenExpirationDaemonService } from './token-expiration-daemon.service';
 
 function getDatePlusSeconds(seconds: number) {
@@ -16,19 +15,22 @@ function getDatePlusSeconds(seconds: number) {
 }
 
 describe(TokenExpirationDaemonService.name, () => {
-    let authSpy: jasmine.SpyObj<AuthService>;
-    let eventServiceSpy: jasmine.SpyObj<EventsService>;
-    let eventsSpy: jasmine.Spy<jasmine.Func>;
+    let authSpy: jest.Mocked<AuthService>;
+    let eventServiceSpy: jest.Mocked<EventsService>;
+    let eventsSpy: jest.Mock;
 
     function buildTokenExpirationDaemonService() {
         return new TokenExpirationDaemonService(authSpy, eventServiceSpy);
     }
 
     beforeEach(() => {
-        authSpy = jasmine.createSpyObj('AuthService', ['events$']);
-        eventServiceSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
-
-        eventsSpy = spyOnGet(authSpy, 'events$');
+        eventsSpy = jest.fn();
+        authSpy = {
+            'events$': eventsSpy
+        } as any;
+        eventServiceSpy = {
+            'dispatch': jest.fn() as any
+        } as any
     });
 
     it('should create', () => {
@@ -43,7 +45,7 @@ describe(TokenExpirationDaemonService.name, () => {
                 accessTokenExpiresAt: getDatePlusSeconds(120).getTime()
             };
 
-            eventsSpy.and.returnValue(of(
+            eventsSpy.mockReturnValue(of(
                 new TokensReadyEvent(tokens)
             ));
 
@@ -72,7 +74,7 @@ describe(TokenExpirationDaemonService.name, () => {
         it('should not configure dispatchers if no access token', fakeAsync(() => {
             const tokens: TokenRequestResult = {};
 
-            eventsSpy.and.returnValue(of(
+            eventsSpy.mockReturnValue(of(
                 new TokensReadyEvent(tokens)
             ));
 
@@ -88,7 +90,7 @@ describe(TokenExpirationDaemonService.name, () => {
 
         it('should unsubscribe when destroyed', fakeAsync(() => {
             const eventsSubject = new Subject<TokensReadyEvent>();
-            eventsSpy.and.returnValue(eventsSubject.asObservable());
+            eventsSpy.mockReturnValue(eventsSubject.asObservable());
 
             const daemon = buildTokenExpirationDaemonService();
             daemon.startDaemon();

@@ -5,10 +5,14 @@ import { TokenStorageKeys, LocalState, TokenRequestResult } from 'angular-simple
 
 describe('TokenStorageService', () => {
     let tokenStorage: TokenStorageService;
-    let storageSpy: jasmine.SpyObj<Storage>;
+    let storageSpy: CustomMockObject<Storage>;
 
     beforeEach(() => {
-        storageSpy = jasmine.createSpyObj('Storage', ['setItem', 'getItem', 'removeItem']);
+        storageSpy = {
+            'setItem': jest.fn(),
+            'getItem': jest.fn(),
+            'removeItem': jest.fn()
+        };
 
         TestBed.configureTestingModule({
             providers: [
@@ -127,7 +131,7 @@ describe('TokenStorageService', () => {
 
             flush();
 
-            expect(storageSpy.setItem).not.toHaveBeenCalledWith(TokenStorageKeys.AccessTokenExpiration, jasmine.objectContaining(tokens));
+            expect(storageSpy.setItem).not.toHaveBeenCalledWith(TokenStorageKeys.AccessTokenExpiration, expect.objectContaining(tokens));
         }));
 
         it('should not store refresh token if not present', fakeAsync(() => {
@@ -141,7 +145,7 @@ describe('TokenStorageService', () => {
 
             flush();
 
-            expect(storageSpy.setItem).not.toHaveBeenCalledWith(TokenStorageKeys.RefreshToken, jasmine.objectContaining(tokens));
+            expect(storageSpy.setItem).not.toHaveBeenCalledWith(TokenStorageKeys.RefreshToken, expect.objectContaining(tokens));
         }));
     });
 
@@ -150,7 +154,7 @@ describe('TokenStorageService', () => {
         it('returns latest state', fakeAsync(() => {
 
             const expected = '{}';
-            storageSpy.getItem.and.returnValue(expected);
+            storageSpy.getItem.mockReturnValue(expected);
 
             tokenStorage.clearPreAuthorizationState()
                 .subscribe();

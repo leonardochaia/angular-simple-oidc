@@ -18,17 +18,26 @@ import { spyOnGet } from '../../test-utils';
 
 describe('TokenEndpointClientService', () => {
     let tokenEndpointClientService: TokenEndpointClientService;
-    let httpSpy: jasmine.SpyObj<HttpClient>;
-    let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
+    let httpSpy: CustomMockObject<HttpClient>;
+    let discoveryDocClientSpy: CustomMockObject<OidcDiscoveryDocClient>;
     let discoveryDocSpy: jasmine.Spy<jasmine.Func>;
-    let tokenHelperSpy: jasmine.SpyObj<TokenHelperService>;
-    let tokenValidationSpy: jasmine.SpyObj<TokenValidationService>;
+    let tokenHelperSpy: CustomMockObject<TokenHelperService>;
+    let tokenValidationSpy: CustomMockObject<TokenValidationService>;
 
     beforeEach(() => {
-        httpSpy = jasmine.createSpyObj('HttpClient', ['post']);
-        discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', ['current$']);
-        tokenHelperSpy = jasmine.createSpyObj('TokenHelperService', ['getExpirationFromExpiresIn', 'getPayloadFromToken']);
-        tokenValidationSpy = jasmine.createSpyObj('TokenValidationService', ['validateIdTokenFormat']);
+        httpSpy = {
+            'post': jest.fn()
+        };
+        discoveryDocClientSpy = {
+            'current$': jest.fn()
+        };
+        tokenHelperSpy = {
+            'getExpirationFromExpiresIn': jest.fn(),
+            'getPayloadFromToken': jest.fn()
+        };
+        tokenValidationSpy = {
+            'validateIdTokenFormat': jest.fn()
+        };
 
         TestBed.configureTestingModule({
             providers: [
@@ -68,11 +77,11 @@ describe('TokenEndpointClientService', () => {
                 const headers = new HttpHeaders()
                     .set('Content-Type', 'application/x-www-form-urlencoded');
 
-                discoveryDocSpy.and.returnValue(of({
+                discoveryDocSpy.mockReturnValue(of({
                     token_endpoint: tokenEndpoint
                 } as Partial<DiscoveryDocument>));
 
-                httpSpy.post.and.returnValue(throwError('something'));
+                httpSpy.post.mockReturnValue(throwError('something'));
 
                 tokenEndpointClientService.call(payload)
                     .subscribe(() => { }, () => { });
@@ -90,11 +99,11 @@ describe('TokenEndpointClientService', () => {
                 const payload = 'payload';
                 const error = 'some-error';
 
-                discoveryDocSpy.and.returnValue(of({
+                discoveryDocSpy.mockReturnValue(of({
                     token_endpoint: tokenEndpoint
                 } as Partial<DiscoveryDocument>));
 
-                httpSpy.post.and.returnValue(throwError({
+                httpSpy.post.mockReturnValue(throwError({
                     error: { error },
                     status: 400
                 } as HttpErrorResponse));
@@ -113,11 +122,11 @@ describe('TokenEndpointClientService', () => {
                 const tokenEndpoint = 'http://token-endpoint';
                 const payload = 'payload';
 
-                discoveryDocSpy.and.returnValue(of({
+                discoveryDocSpy.mockReturnValue(of({
                     token_endpoint: tokenEndpoint
                 } as Partial<DiscoveryDocument>));
 
-                httpSpy.post.and.returnValue(throwError({
+                httpSpy.post.mockReturnValue(throwError({
                     status: 500
                 } as HttpErrorResponse));
 
@@ -135,12 +144,12 @@ describe('TokenEndpointClientService', () => {
                 const tokenEndpoint = 'http://token-endpoint';
                 const payload = 'payload';
 
-                discoveryDocSpy.and.returnValue(of({
+                discoveryDocSpy.mockReturnValue(of({
                     token_endpoint: tokenEndpoint
                 } as Partial<DiscoveryDocument>));
 
                 const expected = new SimpleOidcError('bad', 'b', {});
-                httpSpy.post.and.returnValue(throwError(expected));
+                httpSpy.post.mockReturnValue(throwError(expected));
 
                 expect(() => {
                     tokenEndpointClientService.call(payload)
@@ -158,14 +167,13 @@ describe('TokenEndpointClientService', () => {
                 const expiresIn = 123;
                 const expiresAt = new Date(0);
 
-                discoveryDocSpy.and.returnValue(of({
+                discoveryDocSpy.mockReturnValue(of({
                     token_endpoint: tokenEndpoint
                 } as Partial<DiscoveryDocument>));
 
-                tokenHelperSpy.getExpirationFromExpiresIn
-                    .and.returnValue(expiresAt);
+                tokenHelperSpy.getExpirationFromExpiresIn.mockReturnValue(expiresAt);
 
-                httpSpy.post.and.returnValue(of({
+                httpSpy.post.mockReturnValue(of({
                     expires_in: expiresIn,
                 }));
 
@@ -189,11 +197,11 @@ describe('TokenEndpointClientService', () => {
                 const payload = 'payload';
                 const expiresIn = null;
 
-                discoveryDocSpy.and.returnValue(of({
+                discoveryDocSpy.mockReturnValue(of({
                     token_endpoint: tokenEndpoint
                 } as Partial<DiscoveryDocument>));
 
-                httpSpy.post.and.returnValue(of({
+                httpSpy.post.mockReturnValue(of({
                     expires_in: expiresIn,
                 }));
 
@@ -218,19 +226,17 @@ describe('TokenEndpointClientService', () => {
                 const idToken = 'idToken';
                 const decodedIdToken: DecodedIdentityToken = {} as any;
 
-                discoveryDocSpy.and.returnValue(of({
+                discoveryDocSpy.mockReturnValue(of({
                     token_endpoint: tokenEndpoint
                 } as Partial<DiscoveryDocument>));
 
-                httpSpy.post.and.returnValue(of({
+                httpSpy.post.mockReturnValue(of({
                     id_token: idToken
                 }));
 
-                tokenValidationSpy.validateIdTokenFormat
-                    .and.returnValue();
+                tokenValidationSpy.validateIdTokenFormat.mockReturnValue();
 
-                tokenHelperSpy.getPayloadFromToken
-                    .and.returnValue(decodedIdToken);
+                tokenHelperSpy.getPayloadFromToken.mockReturnValue(decodedIdToken);
 
                 let result: TokenRequestResult;
                 tokenEndpointClientService.call(payload)
@@ -250,16 +256,15 @@ describe('TokenEndpointClientService', () => {
                 const idToken = 'idToken';
                 const error = new IdentityTokenMalformedError(null);
 
-                discoveryDocSpy.and.returnValue(of({
+                discoveryDocSpy.mockReturnValue(of({
                     token_endpoint: tokenEndpoint
                 } as Partial<DiscoveryDocument>));
 
-                httpSpy.post.and.returnValue(of({
+                httpSpy.post.mockReturnValue(of({
                     id_token: idToken
                 }));
 
-                tokenValidationSpy.validateIdTokenFormat
-                    .and.callFake(() => {
+                tokenValidationSpy.validateIdTokenFormat.mockImplementation(() => {
                         throw error;
                     });
                 expect(() => {

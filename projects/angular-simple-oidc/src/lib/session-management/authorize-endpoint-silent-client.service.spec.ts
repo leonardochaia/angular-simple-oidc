@@ -19,21 +19,21 @@ import { spyOnGet } from '../../../test-utils';
 
 describe('Authorize Endpoint Silent Client ', () => {
     let authorizeClientSilent: AuthorizeEndpointSilentClientService;
-    let windowSpy: jasmine.SpyObj<Window>;
-    let discoveryDocClientSpy: jasmine.SpyObj<OidcDiscoveryDocClient>;
+    let windowSpy: CustomMockObject<Window>;
+    let discoveryDocClientSpy: CustomMockObject<OidcDiscoveryDocClient>;
     let discoveryDocSpy: jasmine.Spy<jasmine.Func>;
-    let dynamicIframeServiceSpy: jasmine.SpyObj<DynamicIframeService>;
-    let dynamicIframeSpy: jasmine.SpyObj<DynamicIframe>;
-    let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
-    let tokenUrlSpy: jasmine.SpyObj<TokenUrlService>;
+    let dynamicIframeServiceSpy: CustomMockObject<DynamicIframeService>;
+    let dynamicIframeSpy: CustomMockObject<DynamicIframe>;
+    let tokenStorageSpy: CustomMockObject<TokenStorageService>;
+    let tokenUrlSpy: CustomMockObject<TokenUrlService>;
     let localStateSpy: jasmine.Spy<jasmine.Func>;
-    let eventsSpy: jasmine.SpyObj<EventsService>;
-    let oidcCodeFlowClientSpy: jasmine.SpyObj<OidcCodeFlowClient>;
+    let eventsSpy: CustomMockObject<EventsService>;
+    let oidcCodeFlowClientSpy: CustomMockObject<OidcCodeFlowClient>;
 
-    let configServiceSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
+    let configServiceSpy: CustomMockObject<ConfigService<AuthConfig>>;
     let authConfigSpy: jasmine.Spy<jasmine.Func>;
 
-    let sessionConfigServiceSpy: jasmine.SpyObj<ConfigService<SessionManagementConfig>>;
+    let sessionConfigServiceSpy: CustomMockObject<ConfigService<SessionManagementConfig>>;
     let sessionConfigSpy: jasmine.Spy<jasmine.Func>;
 
     let postFromIframeToWindow: EventListener;
@@ -42,18 +42,43 @@ describe('Authorize Endpoint Silent Client ', () => {
     const iframeUrl = 'http://base-url/iframe/path.html';
 
     beforeEach(() => {
-        windowSpy = jasmine.createSpyObj('window', ['addEventListener', 'removeEventListener']);
-        discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', ['current$']);
-        dynamicIframeServiceSpy = jasmine.createSpyObj('DynamicIframeService', ['create']);
-        tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', ['storeAuthorizationCode']);
-        tokenUrlSpy = jasmine.createSpyObj('TokenUrlService', ['createAuthorizationCodeRequestPayload']);
-        eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
-        configServiceSpy = jasmine.createSpyObj('AuthConfigService', ['current$']);
-        sessionConfigServiceSpy = jasmine.createSpyObj('SessionConfigService', ['current$']);
-        oidcCodeFlowClientSpy = jasmine.createSpyObj('OidcCodeFlowClient', ['generateCodeFlowMetadata',
-            'codeFlowCallback']);
-        dynamicIframeSpy = jasmine.createSpyObj('DynamicIframe', ['setSource', 'appendTo',
-            'appendToBody', 'hide', 'postMessage', 'remove']);
+        windowSpy = {
+            'addEventListener': jest.fn(),
+            'removeEventListener': jest.fn()
+        };
+        discoveryDocClientSpy = {
+            'current$': jest.fn()
+        };
+        dynamicIframeServiceSpy = {
+            'create': jest.fn()
+        };
+        tokenStorageSpy = {
+            'storeAuthorizationCode': jest.fn()
+        };
+        tokenUrlSpy = {
+            'createAuthorizationCodeRequestPayload': jest.fn()
+        };
+        eventsSpy = {
+            'dispatch': jest.fn()
+        };
+        configServiceSpy = {
+            'current$': jest.fn()
+        };
+        sessionConfigServiceSpy = {
+            'current$': jest.fn()
+        };
+        oidcCodeFlowClientSpy = {
+            'generateCodeFlowMetadata': jest.fn(),
+            'codeFlowCallback': jest.fn()
+        };
+        dynamicIframeSpy = {
+            'setSource': jest.fn(),
+            'appendTo': jest.fn(),
+            'appendToBody': jest.fn(),
+            'hide': jest.fn(),
+            'postMessage': jest.fn(),
+            'remove': jest.fn()
+        };
 
         TestBed.configureTestingModule({
             providers: [
@@ -102,18 +127,18 @@ describe('Authorize Endpoint Silent Client ', () => {
         });
 
         discoveryDocSpy = spyOnGet(TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient, 'current$');
-        discoveryDocSpy.and.returnValue(of({
+        discoveryDocSpy.mockReturnValue(of({
             check_session_iframe: 'http://check-session'
         } as Partial<DiscoveryDocument>));
 
         localStateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
-        localStateSpy.and.returnValue(of({
+        localStateSpy.mockReturnValue(of({
             identityToken: 'id-token',
             sessionState: 'session-state'
         } as Partial<LocalState>));
 
         authConfigSpy = spyOnGet(TestBed.get(AUTH_CONFIG_SERVICE) as ConfigService<AuthConfig>, 'current$');
-        authConfigSpy.and.returnValue(of({
+        authConfigSpy.mockReturnValue(of({
             clientId: 'client-id',
             openIDProviderUrl: 'http://my-idp/identity',
             baseUrl: 'http://base-url/',
@@ -122,31 +147,35 @@ describe('Authorize Endpoint Silent Client ', () => {
         sessionConfigSpy = spyOnGet(
             TestBed.get(SESSION_MANAGEMENT_CONFIG_SERVICE) as ConfigService<SessionManagementConfig>,
             'current$');
-        sessionConfigSpy.and.returnValue(of({
+        sessionConfigSpy.mockReturnValue(of({
             iframePath: 'iframe/path.html'
         } as Partial<SessionManagementConfig>));
 
         authorizeClientSilent = TestBed.get(AuthorizeEndpointSilentClientService);
 
-        dynamicIframeServiceSpy.create.and.returnValue(dynamicIframeSpy);
-        dynamicIframeSpy.setSource.and.returnValue(dynamicIframeSpy);
-        dynamicIframeSpy.appendTo.and.returnValue(dynamicIframeSpy);
-        dynamicIframeSpy.appendToBody.and.returnValue(dynamicIframeSpy);
-        dynamicIframeSpy.hide.and.returnValue(dynamicIframeSpy);
+        dynamicIframeServiceSpy.create.mockReturnValue(dynamicIframeSpy);
+        dynamicIframeSpy.setSource.mockReturnValue(dynamicIframeSpy);
+        dynamicIframeSpy.appendTo.mockReturnValue(dynamicIframeSpy);
+        dynamicIframeSpy.appendToBody.mockReturnValue(dynamicIframeSpy);
+        dynamicIframeSpy.hide.mockReturnValue(dynamicIframeSpy);
 
-        const docSpyObj = jasmine.createSpyObj<Document>('document', ['createElement']);
+        const docSpyObj = {
+            'createElement': jest.fn()
+        };
         const docSpy = spyOnGet(TestBed.get(WINDOW_REF) as Window, 'document');
-        docSpy.and.returnValue(docSpyObj);
+        docSpy.mockReturnValue(docSpyObj);
         // tslint:disable-next-line: deprecation
-        docSpyObj.createElement.and.returnValue(jasmine.createSpyObj<HTMLIFrameElement>('Iframe', ['contentWindow']));
+        docSpyObj.createElement.mockReturnValue({
+            'contentWindow': jest.fn()
+        });
 
-        windowSpy.addEventListener.and.callFake((name: string, handler: EventListenerOrEventListenerObject, options: any) => {
+        windowSpy.addEventListener.mockImplementation((name: string, handler: EventListenerOrEventListenerObject, options: any) => {
             postFromIframeToWindow = handler as EventListener;
         });
 
-        tokenStorageSpy.storeAuthorizationCode.and.returnValue(of({} as any));
-        oidcCodeFlowClientSpy.codeFlowCallback.and.returnValue(of({} as any));
-        oidcCodeFlowClientSpy.generateCodeFlowMetadata.and.returnValue(of({} as any));
+        tokenStorageSpy.storeAuthorizationCode.mockReturnValue(of({} as any));
+        oidcCodeFlowClientSpy.codeFlowCallback.mockReturnValue(of({} as any));
+        oidcCodeFlowClientSpy.generateCodeFlowMetadata.mockReturnValue(of({} as any));
     });
 
     it('should create', () => {
@@ -192,7 +221,7 @@ describe('Authorize Endpoint Silent Client ', () => {
         const metadata = {
             state
         };
-        oidcCodeFlowClientSpy.generateCodeFlowMetadata.and.returnValue(of(metadata as any));
+        oidcCodeFlowClientSpy.generateCodeFlowMetadata.mockReturnValue(of(metadata as any));
 
         authorizeClientSilent.startCodeFlowInIframe()
             .subscribe();
@@ -210,7 +239,7 @@ describe('Authorize Endpoint Silent Client ', () => {
     it('Uses timeout if iframe never post back', fakeAsync(() => {
 
         const state = 'state';
-        oidcCodeFlowClientSpy.generateCodeFlowMetadata.and.returnValue(of({ state } as any));
+        oidcCodeFlowClientSpy.generateCodeFlowMetadata.mockReturnValue(of({ state } as any));
 
         expect(() => {
             authorizeClientSilent.startCodeFlowInIframe()

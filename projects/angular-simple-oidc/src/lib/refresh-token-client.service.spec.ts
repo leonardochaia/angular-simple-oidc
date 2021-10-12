@@ -22,14 +22,14 @@ import { spyOnGet } from '../../test-utils';
 
 describe('RefrshTokenClientService', () => {
     let refreshTokenClient: RefreshTokenClient;
-    let refreshTokenValidationSpy: jasmine.SpyObj<RefreshTokenValidationService>;
-    let authConfigSpy: jasmine.SpyObj<ConfigService<AuthConfig>>;
-    let tokenStorageSpy: jasmine.SpyObj<TokenStorageService>;
-    let tokenHelperSpy: jasmine.SpyObj<TokenHelperService>;
-    let tokenUrlSpy: jasmine.SpyObj<TokenUrlService>;
-    let tokenValidationSpy: jasmine.SpyObj<TokenValidationService>;
-    let tokenEndpointSpy: jasmine.SpyObj<TokenEndpointClientService>;
-    let eventsSpy: jasmine.SpyObj<EventsService>;
+    let refreshTokenValidationSpy: CustomMockObject<RefreshTokenValidationService>;
+    let authConfigSpy: CustomMockObject<ConfigService<AuthConfig>>;
+    let tokenStorageSpy: CustomMockObject<TokenStorageService>;
+    let tokenHelperSpy: CustomMockObject<TokenHelperService>;
+    let tokenUrlSpy: CustomMockObject<TokenUrlService>;
+    let tokenValidationSpy: CustomMockObject<TokenValidationService>;
+    let tokenEndpointSpy: CustomMockObject<TokenEndpointClientService>;
+    let eventsSpy: CustomMockObject<EventsService>;
     let stateSpy: jasmine.Spy<jasmine.Func>;
 
     const config: Partial<AuthConfig> = {
@@ -47,14 +47,31 @@ describe('RefrshTokenClientService', () => {
     };
 
     beforeEach(() => {
-        refreshTokenValidationSpy = jasmine.createSpyObj('RefreshTokenValidationService', ['validateIdToken']);
-        tokenHelperSpy = jasmine.createSpyObj('TokenHelperSpy', ['getPayloadFromToken']);
-        authConfigSpy = jasmine.createSpyObj('AuthConfigService', ['configuration']);
-        tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', ['storeTokens', 'currentState$']);
-        tokenUrlSpy = jasmine.createSpyObj('TokenUrlService', ['createRefreshTokenRequestPayload']);
-        tokenValidationSpy = jasmine.createSpyObj('TokenValidationService', ['validateAccessToken']);
-        tokenEndpointSpy = jasmine.createSpyObj('TokenEndpointClientService', ['call']);
-        eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
+        refreshTokenValidationSpy = {
+            'validateIdToken': jest.fn()
+        };
+        tokenHelperSpy = {
+            'getPayloadFromToken': jest.fn()
+        };
+        authConfigSpy = {
+            'configuration': jest.fn()
+        };
+        tokenStorageSpy = {
+            'storeTokens': jest.fn(),
+            'currentState$': jest.fn()
+        };
+        tokenUrlSpy = {
+            'createRefreshTokenRequestPayload': jest.fn()
+        };
+        tokenValidationSpy = {
+            'validateAccessToken': jest.fn()
+        };
+        tokenEndpointSpy = {
+            'call': jest.fn()
+        };
+        eventsSpy = {
+            'dispatch': jest.fn()
+        };
 
         TestBed.configureTestingModule({
             providers: [
@@ -95,7 +112,7 @@ describe('RefrshTokenClientService', () => {
         });
 
         const configSpy = spyOnGet(TestBed.get(AUTH_CONFIG_SERVICE) as ConfigService<AuthConfig>, 'current$');
-        configSpy.and.returnValue(of(config));
+        configSpy.mockReturnValue(of(config));
 
         stateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
 
@@ -113,9 +130,9 @@ describe('RefrshTokenClientService', () => {
                 refreshToken: 'refresh-token'
             };
 
-            stateSpy.and.returnValue(of(localState));
+            stateSpy.mockReturnValue(of(localState));
 
-            tokenEndpointSpy.call.and.returnValue(of());
+            tokenEndpointSpy.call.mockReturnValue(of());
 
             refreshTokenClient.requestTokenWithRefreshCode()
                 .subscribe();
@@ -135,7 +152,7 @@ describe('RefrshTokenClientService', () => {
                 originalIdentityToken: 'original-id-token'
             };
 
-            stateSpy.and.returnValue(of(localState));
+            stateSpy.mockReturnValue(of(localState));
 
             const tokenResponse: TokenRequestResult = {
                 accessToken: 'access-token',
@@ -147,13 +164,13 @@ describe('RefrshTokenClientService', () => {
                 refreshToken: 'refresh-token'
             };
 
-            tokenEndpointSpy.call.and.returnValue(of(tokenResponse));
+            tokenEndpointSpy.call.mockReturnValue(of(tokenResponse));
 
             const originalToken: DecodedIdentityToken = {} as any;
 
-            tokenHelperSpy.getPayloadFromToken.and.returnValue(originalToken);
+            tokenHelperSpy.getPayloadFromToken.mockReturnValue(originalToken);
 
-            tokenStorageSpy.storeTokens.and.returnValue(of());
+            tokenStorageSpy.storeTokens.mockReturnValue(of());
 
             refreshTokenClient.requestTokenWithRefreshCode()
                 .subscribe();
@@ -170,7 +187,7 @@ describe('RefrshTokenClientService', () => {
                 originalIdentityToken: 'original-id-token'
             };
 
-            stateSpy.and.returnValue(of(localState));
+            stateSpy.mockReturnValue(of(localState));
 
             const tokenResponse: TokenRequestResult = {
                 accessToken: 'access-token',
@@ -182,13 +199,13 @@ describe('RefrshTokenClientService', () => {
                 refreshToken: 'refresh-token'
             };
 
-            tokenEndpointSpy.call.and.returnValue(of(tokenResponse));
+            tokenEndpointSpy.call.mockReturnValue(of(tokenResponse));
 
             const originalToken: DecodedIdentityToken = {} as any;
 
-            tokenHelperSpy.getPayloadFromToken.and.returnValue(originalToken);
+            tokenHelperSpy.getPayloadFromToken.mockReturnValue(originalToken);
 
-            tokenStorageSpy.storeTokens.and.returnValue(of(localState as any));
+            tokenStorageSpy.storeTokens.mockReturnValue(of(localState as any));
 
             refreshTokenClient.requestTokenWithRefreshCode()
                 .subscribe();

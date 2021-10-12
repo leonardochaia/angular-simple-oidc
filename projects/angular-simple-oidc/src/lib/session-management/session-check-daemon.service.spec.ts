@@ -6,8 +6,8 @@ import { spyOnGet } from '../../../test-utils';
 import { SessionCheckDaemonService } from './session-check-daemon.service';
 
 describe(SessionCheckDaemonService.name, () => {
-    let sessionCheck: jasmine.SpyObj<SessionCheckService>;
-    let eventsServiceSpy: jasmine.SpyObj<EventsService>;
+    let sessionCheck: CustomMockObject<SessionCheckService>;
+    let eventsServiceSpy: CustomMockObject<EventsService>;
     let eventsSpy: jasmine.Spy<jasmine.Func>;
 
     function buildSessionCheckDaemonService() {
@@ -15,13 +15,17 @@ describe(SessionCheckDaemonService.name, () => {
     }
 
     beforeEach(() => {
-        sessionCheck = jasmine.createSpyObj('SessionCheckService', ['startSessionCheck']);
-        eventsServiceSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
+        sessionCheck = {
+            'startSessionCheck': jest.fn()
+        };
+        eventsServiceSpy = {
+            'dispatch': jest.fn()
+        };
 
         eventsSpy = spyOnGet(eventsServiceSpy, 'events$');
-        eventsSpy.and.returnValue(of());
+        eventsSpy.mockReturnValue(of());
 
-        sessionCheck.startSessionCheck.and.returnValue(of());
+        sessionCheck.startSessionCheck.mockReturnValue(of());
     });
 
     it('should create', () => {
@@ -29,7 +33,7 @@ describe(SessionCheckDaemonService.name, () => {
     });
 
     it('should start session check after tokens are obtained', () => {
-        eventsSpy.and.returnValue(of(new TokensReadyEvent({} as any)));
+        eventsSpy.mockReturnValue(of(new TokensReadyEvent({} as any)));
 
         const daemon = buildSessionCheckDaemonService();
         daemon.startDaemon();
