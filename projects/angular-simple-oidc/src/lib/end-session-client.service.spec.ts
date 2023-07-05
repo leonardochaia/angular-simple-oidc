@@ -1,6 +1,10 @@
 import { TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { OidcDiscoveryDocClient } from './discovery-document/oidc-discovery-doc-client.service';
-import { DiscoveryDocument, LocalState, TokenUrlService } from 'angular-simple-oidc/core';
+import {
+    DiscoveryDocument,
+    LocalState,
+    TokenUrlService
+} from 'angular-simple-oidc/core';
 import { of } from 'rxjs';
 import { EndSessionClientService } from './end-session-client.service';
 import { WINDOW_REF } from './providers';
@@ -20,9 +24,15 @@ describe('EndSessionClientService', () => {
 
     beforeEach(() => {
         windowSpy = jasmine.createSpyObj('window', ['location']);
-        discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', ['current$']);
-        tokenUrlSpy = jasmine.createSpyObj('TokenUrlService', ['createEndSessionUrl']);
-        tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', ['removeAll']);
+        discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', [
+            'current$'
+        ]);
+        tokenUrlSpy = jasmine.createSpyObj('TokenUrlService', [
+            'createEndSessionUrl'
+        ]);
+        tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', [
+            'removeAll'
+        ]);
         eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
 
         TestBed.configureTestingModule({
@@ -33,7 +43,7 @@ describe('EndSessionClientService', () => {
                 },
                 {
                     provide: OidcDiscoveryDocClient,
-                    useValue: discoveryDocClientSpy,
+                    useValue: discoveryDocClientSpy
                 },
                 {
                     provide: TokenUrlService,
@@ -48,18 +58,28 @@ describe('EndSessionClientService', () => {
                     useValue: eventsSpy
                 },
                 EndSessionClientService
-            ],
+            ]
         });
 
-        discoveryDocSpy = spyOnGet(TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient, 'current$');
-        discoveryDocSpy.and.returnValue(of({
-            end_session_endpoint: 'http://end-session'
-        } as Partial<DiscoveryDocument>));
+        discoveryDocSpy = spyOnGet(
+            TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient,
+            'current$'
+        );
+        discoveryDocSpy.and.returnValue(
+            of({
+                end_session_endpoint: 'http://end-session'
+            } as Partial<DiscoveryDocument>)
+        );
 
-        localStateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
-        localStateSpy.and.returnValue(of({
-            identityToken: 'id-token'
-        } as Partial<LocalState>));
+        localStateSpy = spyOnGet(
+            TestBed.get(TokenStorageService) as TokenStorageService,
+            'currentState$'
+        );
+        localStateSpy.and.returnValue(
+            of({
+                identityToken: 'id-token'
+            } as Partial<LocalState>)
+        );
 
         tokenStorageSpy.removeAll.and.returnValue(of({} as any));
 
@@ -79,7 +99,8 @@ describe('EndSessionClientService', () => {
                 url: 'http://end-it'
             });
 
-            endSessionClient.logoutWithRedirect(postLogoutUri)
+            endSessionClient
+                .logoutWithRedirect({ postLogoutRedirectUri: postLogoutUri })
                 .subscribe();
             flush();
 
@@ -94,7 +115,8 @@ describe('EndSessionClientService', () => {
                 url: 'http://end-it'
             });
 
-            endSessionClient.logoutWithRedirect(postLogoutUri)
+            endSessionClient
+                .logoutWithRedirect({ postLogoutRedirectUri: postLogoutUri })
                 .subscribe();
             flush();
 
@@ -110,13 +132,36 @@ describe('EndSessionClientService', () => {
                 url: expected
             });
 
-            endSessionClient.logoutWithRedirect(postLogoutUri)
+            endSessionClient
+                .logoutWithRedirect({ postLogoutRedirectUri: postLogoutUri })
                 .subscribe();
             flush();
 
             expect(windowSpy.location.href).toEqual(expected);
         }));
 
-    });
+        it('calls the provided window handler', fakeAsync(() => {
+            const postLogoutUri = 'post-logout-uri';
+            const observer = { callback: (url: string) => {} };
 
+            spyOn(observer, 'callback');
+
+            const expected = 'http://end-it';
+            tokenUrlSpy.createEndSessionUrl.and.returnValue({
+                state: 'state',
+                url: expected
+            });
+
+            endSessionClient
+                .logoutWithRedirect({
+                    postLogoutRedirectUri: postLogoutUri,
+                    openWindowHandler: observer.callback
+                })
+                .subscribe();
+            flush();
+
+            expect(observer.callback).toHaveBeenCalled();
+            expect(observer.callback).toHaveBeenCalledWith(expected);
+        }));
+    });
 });
