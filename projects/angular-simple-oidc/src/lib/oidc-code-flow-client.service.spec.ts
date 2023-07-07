@@ -47,30 +47,37 @@ describe('OidcCodeFlowClientService', () => {
             disableIdTokenIATValidation: false,
             idTokenIATOffsetAllowed: 3000
         },
-        baseUrl: 'http://base-url/',
+        baseUrl: 'http://base-url/'
     };
 
     beforeEach(() => {
         windowSpy = jasmine.createSpyObj('window', ['location', 'history']);
         authConfigSpy = jasmine.createSpyObj('AuthConfigService', ['current$']);
-        discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', ['current$']);
+        discoveryDocClientSpy = jasmine.createSpyObj('OidcDiscoveryDocClient', [
+            'current$'
+        ]);
         tokenStorageSpy = jasmine.createSpyObj('TokenStorageService', [
             'storePreAuthorizationState',
             'storeAuthorizationCode',
             'clearPreAuthorizationState',
             'storeTokens',
-            'storeOriginalIdToken']);
+            'storeOriginalIdToken'
+        ]);
         tokenUrlSpy = jasmine.createSpyObj('TokenUrlService', [
             'createAuthorizeUrl',
             'parseAuthorizeCallbackParamsFromUrl',
-            'createAuthorizationCodeRequestPayload']);
+            'createAuthorizationCodeRequestPayload'
+        ]);
         tokenValidationSpy = jasmine.createSpyObj('TokenValidationService', [
             'validateIdTokenFormat',
             'validateIdToken',
             'validateAccessToken',
             'validateAuthorizeCallbackFormat',
-            'validateAuthorizeCallbackState']);
-        tokenEndpointSpy = jasmine.createSpyObj('TokenEndpointClientService', ['call']);
+            'validateAuthorizeCallbackState'
+        ]);
+        tokenEndpointSpy = jasmine.createSpyObj('TokenEndpointClientService', [
+            'call'
+        ]);
         eventsSpy = jasmine.createSpyObj('EventsService', ['dispatch']);
 
         TestBed.configureTestingModule({
@@ -85,15 +92,15 @@ describe('OidcCodeFlowClientService', () => {
                 },
                 {
                     provide: OidcDiscoveryDocClient,
-                    useValue: discoveryDocClientSpy,
+                    useValue: discoveryDocClientSpy
                 },
                 {
                     provide: TokenStorageService,
-                    useValue: tokenStorageSpy,
+                    useValue: tokenStorageSpy
                 },
                 {
                     provide: TokenValidationService,
-                    useValue: tokenValidationSpy,
+                    useValue: tokenValidationSpy
                 },
                 {
                     provide: TokenUrlService,
@@ -108,36 +115,50 @@ describe('OidcCodeFlowClientService', () => {
                     useValue: eventsSpy
                 },
                 OidcCodeFlowClient
-            ],
+            ]
         });
 
-        discoveryDocSpy = spyOnGet(TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient, 'current$');
+        discoveryDocSpy = spyOnGet(
+            TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient,
+            'current$'
+        );
         discoveryDocSpy.and.returnValue(of());
 
-        jwtKeysSpy = spyOnGet(TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient, 'jwtKeys$');
+        jwtKeysSpy = spyOnGet(
+            TestBed.get(OidcDiscoveryDocClient) as OidcDiscoveryDocClient,
+            'jwtKeys$'
+        );
         jwtKeysSpy.and.returnValue(of({}));
 
         codeFlowClient = TestBed.get(OidcCodeFlowClient);
 
-        const configSpy = spyOnGet(TestBed.get(AUTH_CONFIG_SERVICE) as ConfigService<AuthConfig>, 'current$');
+        const configSpy = spyOnGet(
+            TestBed.get(AUTH_CONFIG_SERVICE) as ConfigService<AuthConfig>,
+            'current$'
+        );
         configSpy.and.returnValue(of(config));
 
-        windowLocationSpy = spyOnGet(TestBed.get(WINDOW_REF) as Window, 'location');
+        windowLocationSpy = spyOnGet(
+            TestBed.get(WINDOW_REF) as Window,
+            'location'
+        );
         windowLocationSpy.and.returnValue({ href: config.baseUrl });
-        spyOnGet(TestBed.get(WINDOW_REF) as Window, 'history').and.returnValue({ pushState: () => { } });
+        spyOnGet(TestBed.get(WINDOW_REF) as Window, 'history').and.returnValue({
+            pushState: () => {}
+        });
 
-        stateSpy = spyOnGet(TestBed.get(TokenStorageService) as TokenStorageService, 'currentState$');
+        stateSpy = spyOnGet(
+            TestBed.get(TokenStorageService) as TokenStorageService,
+            'currentState$'
+        );
     });
 
     it('should create', () => {
         expect(codeFlowClient).toBeTruthy();
     });
 
-
     describe('generateCodeFlowMetadata', () => {
-
         it('Should use Discovery Document for obtaining authorize URL', fakeAsync(() => {
-
             const doc: Partial<DiscoveryDocument> = {
                 authorization_endpoint: 'http://idp/authorize'
             };
@@ -158,26 +179,27 @@ describe('OidcCodeFlowClientService', () => {
             const idTokenHint = 'id-token-hint';
             const prompt = 'prompt';
 
-            codeFlowClient.generateCodeFlowMetadata({ redirectUri, idTokenHint, prompt })
+            codeFlowClient
+                .generateCodeFlowMetadata({ redirectUri, idTokenHint, prompt })
                 .subscribe();
             flush();
 
-            expect(tokenUrlSpy.createAuthorizeUrl)
-                .toHaveBeenCalledWith(doc.authorization_endpoint, {
+            expect(tokenUrlSpy.createAuthorizeUrl).toHaveBeenCalledWith(
+                doc.authorization_endpoint,
+                {
                     clientId: config.clientId,
                     responseType: 'code',
                     scope: config.scope,
                     redirectUri: redirectUri,
                     idTokenHint: idTokenHint,
-                    prompt: prompt,
-                });
+                    prompt: prompt
+                }
+            );
         }));
     });
 
     describe('Start Code Flow', () => {
-
         it('Should store pre authorization request using storage service', fakeAsync(() => {
-
             const doc: Partial<DiscoveryDocument> = {
                 authorization_endpoint: 'http://idp/authorize'
             };
@@ -196,28 +218,29 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
 
-            codeFlowClient.startCodeFlow()
-                .subscribe();
+            codeFlowClient.startCodeFlow().subscribe();
             flush();
 
-            expect(tokenStorageSpy.storePreAuthorizationState)
-                .toHaveBeenCalledWith({
-                    nonce: urlResult.nonce,
-                    state: urlResult.state,
-                    codeVerifier: urlResult.codeVerifier,
-                    preRedirectUrl: config.baseUrl
-                });
+            expect(
+                tokenStorageSpy.storePreAuthorizationState
+            ).toHaveBeenCalledWith({
+                nonce: urlResult.nonce,
+                state: urlResult.state,
+                codeVerifier: urlResult.codeVerifier,
+                preRedirectUrl: config.baseUrl
+            });
         }));
 
         it('Should change the URL after storing pre-auth state', fakeAsync(() => {
-
             const doc: Partial<DiscoveryDocument> = {
                 authorization_endpoint: 'http://idp/authorize'
             };
 
             discoveryDocSpy.and.returnValue(of(doc));
 
-            tokenStorageSpy.storePreAuthorizationState.and.returnValue(of({} as any));
+            tokenStorageSpy.storePreAuthorizationState.and.returnValue(
+                of({} as any)
+            );
 
             const urlResult = {
                 codeChallenge: 'challenge',
@@ -229,26 +252,30 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
 
-            const changeUrlSpy = spyOn(codeFlowClient as any, 'redirectToUrl')
-                .and.returnValue(null);
+            const changeUrlSpy = spyOn(
+                codeFlowClient as any,
+                'redirectToUrl'
+            ).and.returnValue(null);
 
-            codeFlowClient.startCodeFlow()
-                .subscribe();
+            codeFlowClient.startCodeFlow().subscribe();
             flush();
 
-            expect(tokenStorageSpy.storePreAuthorizationState).toHaveBeenCalled();
+            expect(
+                tokenStorageSpy.storePreAuthorizationState
+            ).toHaveBeenCalled();
             expect(changeUrlSpy).toHaveBeenCalledWith(urlResult.url);
         }));
 
         it('Should store provided return URL in storage', fakeAsync(() => {
-
             const doc: Partial<DiscoveryDocument> = {
                 authorization_endpoint: 'http://idp/authorize'
             };
 
             discoveryDocSpy.and.returnValue(of(doc));
 
-            tokenStorageSpy.storePreAuthorizationState.and.returnValue(of({} as any));
+            tokenStorageSpy.storePreAuthorizationState.and.returnValue(
+                of({} as any)
+            );
 
             const urlResult = {
                 codeChallenge: 'challenge',
@@ -262,13 +289,16 @@ describe('OidcCodeFlowClientService', () => {
 
             const returnUrl = 'http://return-url';
 
-            codeFlowClient.startCodeFlow({
-                returnUrlAfterCallback: returnUrl
-            })
+            codeFlowClient
+                .startCodeFlow({
+                    returnUrlAfterCallback: returnUrl
+                })
                 .subscribe();
             flush();
 
-            expect(tokenStorageSpy.storePreAuthorizationState).toHaveBeenCalledWith({
+            expect(
+                tokenStorageSpy.storePreAuthorizationState
+            ).toHaveBeenCalledWith({
                 nonce: urlResult.nonce,
                 state: urlResult.state,
                 codeVerifier: urlResult.codeVerifier,
@@ -277,14 +307,15 @@ describe('OidcCodeFlowClientService', () => {
         }));
 
         it('Should default to current url for return url', fakeAsync(() => {
-
             const doc: Partial<DiscoveryDocument> = {
                 authorization_endpoint: 'http://idp/authorize'
             };
 
             discoveryDocSpy.and.returnValue(of(doc));
 
-            tokenStorageSpy.storePreAuthorizationState.and.returnValue(of({} as any));
+            tokenStorageSpy.storePreAuthorizationState.and.returnValue(
+                of({} as any)
+            );
 
             const urlResult = {
                 codeChallenge: 'challenge',
@@ -298,107 +329,135 @@ describe('OidcCodeFlowClientService', () => {
             const currentLocation = 'http://current-location';
             windowLocationSpy.and.returnValue({ href: currentLocation });
 
-            codeFlowClient.startCodeFlow()
-                .subscribe();
+            codeFlowClient.startCodeFlow().subscribe();
             flush();
 
-            expect(tokenStorageSpy.storePreAuthorizationState).toHaveBeenCalledWith({
+            expect(
+                tokenStorageSpy.storePreAuthorizationState
+            ).toHaveBeenCalledWith({
                 nonce: urlResult.nonce,
                 state: urlResult.state,
                 codeVerifier: urlResult.codeVerifier,
                 preRedirectUrl: currentLocation
             });
         }));
+
+        it('Should call the provided window handler', fakeAsync(() => {
+            const observer = { callback: (url: string) => {} };
+            const doc: Partial<DiscoveryDocument> = {
+                authorization_endpoint: 'http://idp/authorize'
+            };
+
+            spyOn(observer, 'callback');
+
+            discoveryDocSpy.and.returnValue(of(doc));
+
+            tokenStorageSpy.storePreAuthorizationState.and.returnValue(
+                of({} as any)
+            );
+
+            const urlResult = {
+                codeChallenge: 'challenge',
+                codeVerifier: 'verifier',
+                nonce: 'nonce',
+                state: 'state',
+                url: 'url'
+            };
+
+            tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
+
+            codeFlowClient
+                .startCodeFlow({ openWindowHandler: observer.callback })
+                .subscribe();
+            flush();
+
+            expect(observer.callback).toHaveBeenCalled();
+            expect(observer.callback).toHaveBeenCalledWith(urlResult.url);
+        }));
     });
 
     describe('Code Flow Callback', () => {
-
         it('should parse params from URL using helper', fakeAsync(() => {
-
             const state = 'state';
             const code = 'code';
             const sessionState = 'session-state';
             const error = null;
 
             tokenStorageSpy.storeAuthorizationCode.and.returnValue(of());
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
-                    code,
-                    state,
-                    sessionState,
-                    error
-                });
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.and.returnValue({
+                code,
+                state,
+                sessionState,
+                error
+            });
 
             stateSpy.and.returnValue(of({}));
 
-            codeFlowClient.currentWindowCodeFlowCallback()
-                .subscribe();
+            codeFlowClient.currentWindowCodeFlowCallback().subscribe();
             flush();
 
-            expect(tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl).toHaveBeenCalledWith(config.baseUrl);
-
+            expect(
+                tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
+            ).toHaveBeenCalledWith(config.baseUrl);
         }));
 
         it('should throw if url is invalid', fakeAsync(() => {
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.and.throwError(
+                'error'
+            );
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.throwError('error');
-
-            stateSpy.and.returnValue(of({
-                state: null
-            }));
+            stateSpy.and.returnValue(
+                of({
+                    state: null
+                })
+            );
 
             expect(() => {
-                codeFlowClient.currentWindowCodeFlowCallback()
-                    .subscribe();
+                codeFlowClient.currentWindowCodeFlowCallback().subscribe();
                 flush();
             }).toThrowError(AuthorizationCallbackFormatError);
 
-            expect(tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl).toHaveBeenCalledWith(config.baseUrl);
-
+            expect(
+                tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
+            ).toHaveBeenCalledWith(config.baseUrl);
         }));
 
         it('should validate URL parameters using validation service', fakeAsync(() => {
-
             const state = 'state';
             const code = 'code';
             const sessionState = 'session-state';
             const error = null;
 
             tokenStorageSpy.storeAuthorizationCode.and.returnValue(of());
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
-                    code,
-                    state,
-                    sessionState,
-                    error
-                });
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.and.returnValue({
+                code,
+                state,
+                sessionState,
+                error
+            });
 
             stateSpy.and.returnValue(of({}));
 
-            codeFlowClient.currentWindowCodeFlowCallback()
-                .subscribe();
+            codeFlowClient.currentWindowCodeFlowCallback().subscribe();
             flush();
 
-            expect(tokenValidationSpy.validateAuthorizeCallbackFormat)
-                .toHaveBeenCalledWith(code, state, error, config.baseUrl);
-
+            expect(
+                tokenValidationSpy.validateAuthorizeCallbackFormat
+            ).toHaveBeenCalledWith(code, state, error, config.baseUrl);
         }));
 
         it('should validate local state using validation service', fakeAsync(() => {
-
             const state = 'state';
             const code = 'code';
             const sessionState = 'session-state';
             const error = null;
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
-                    code,
-                    state,
-                    sessionState,
-                    error
-                });
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.and.returnValue({
+                code,
+                state,
+                sessionState,
+                error
+            });
 
             const localState = {
                 state: undefined
@@ -408,27 +467,26 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenStorageSpy.storeAuthorizationCode.and.returnValue(of());
 
-            codeFlowClient.currentWindowCodeFlowCallback()
-                .subscribe();
+            codeFlowClient.currentWindowCodeFlowCallback().subscribe();
             flush();
 
-            expect(tokenValidationSpy.validateAuthorizeCallbackState).toHaveBeenCalledWith(localState.state, state);
+            expect(
+                tokenValidationSpy.validateAuthorizeCallbackState
+            ).toHaveBeenCalledWith(localState.state, state);
         }));
 
         it('should store code using storage service', fakeAsync(() => {
-
             const state = 'state';
             const code = 'code';
             const sessionState = 'session-state';
             const error = null;
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
-                    code,
-                    state,
-                    sessionState,
-                    error
-                });
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.and.returnValue({
+                code,
+                state,
+                sessionState,
+                error
+            });
 
             const localState = {};
 
@@ -436,30 +494,29 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenStorageSpy.storeAuthorizationCode.and.returnValue(of());
 
-            codeFlowClient.currentWindowCodeFlowCallback()
-                .subscribe();
+            codeFlowClient.currentWindowCodeFlowCallback().subscribe();
             flush();
 
-            expect(tokenStorageSpy.storeAuthorizationCode).toHaveBeenCalledWith(code, sessionState);
+            expect(tokenStorageSpy.storeAuthorizationCode).toHaveBeenCalledWith(
+                code,
+                sessionState
+            );
         }));
-
     });
 
     describe('Request Token using Authorization Code', () => {
         it('should use token url to generate token endpoint url', fakeAsync(() => {
-
             const state = 'state';
             const code = 'code';
             const sessionState = 'session-state';
             const error = null;
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
-                    code,
-                    state,
-                    sessionState,
-                    error
-                });
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.and.returnValue({
+                code,
+                state,
+                sessionState,
+                error
+            });
 
             const localState: Partial<LocalState> = {
                 authorizationCode: code,
@@ -468,15 +525,18 @@ describe('OidcCodeFlowClientService', () => {
 
             stateSpy.and.returnValue(of(localState));
 
-            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of(localState as any));
+            tokenStorageSpy.storeAuthorizationCode.and.returnValue(
+                of(localState as any)
+            );
 
             tokenEndpointSpy.call.and.returnValue(of());
 
-            codeFlowClient.currentWindowCodeFlowCallback()
-                .subscribe();
+            codeFlowClient.currentWindowCodeFlowCallback().subscribe();
             flush();
 
-            expect(tokenUrlSpy.createAuthorizationCodeRequestPayload).toHaveBeenCalledWith({
+            expect(
+                tokenUrlSpy.createAuthorizationCodeRequestPayload
+            ).toHaveBeenCalledWith({
                 clientId: config.clientId,
                 clientSecret: config.clientSecret,
                 scope: config.scope,
@@ -487,19 +547,17 @@ describe('OidcCodeFlowClientService', () => {
         }));
 
         it('should validate tokens using validation service', fakeAsync(() => {
-
             const state = 'state';
             const code = 'code';
             const sessionState = 'session-state';
             const error = null;
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
-                    code,
-                    state,
-                    sessionState,
-                    error
-                });
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.and.returnValue({
+                code,
+                state,
+                sessionState,
+                error
+            });
 
             const doc: Partial<DiscoveryDocument> = {};
 
@@ -518,7 +576,9 @@ describe('OidcCodeFlowClientService', () => {
                 codeVerifier: 'verifier'
             };
 
-            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of(freshState as any));
+            tokenStorageSpy.storeAuthorizationCode.and.returnValue(
+                of(freshState as any)
+            );
 
             tokenStorageSpy.clearPreAuthorizationState.and.returnValue(of());
 
@@ -534,8 +594,7 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenEndpointSpy.call.and.returnValue(of(tokenResponse));
 
-            codeFlowClient.currentWindowCodeFlowCallback()
-                .subscribe();
+            codeFlowClient.currentWindowCodeFlowCallback().subscribe();
             flush();
 
             expect(tokenValidationSpy.validateIdToken).toHaveBeenCalledWith(
@@ -555,19 +614,17 @@ describe('OidcCodeFlowClientService', () => {
         }));
 
         it('should clear pre auth state and store new state', fakeAsync(() => {
-
             const state = 'state';
             const code = 'code';
             const sessionState = 'session-state';
             const error = null;
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
-                    code,
-                    state,
-                    sessionState,
-                    error
-                });
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.and.returnValue({
+                code,
+                state,
+                sessionState,
+                error
+            });
 
             const doc: Partial<DiscoveryDocument> = {};
 
@@ -586,9 +643,13 @@ describe('OidcCodeFlowClientService', () => {
                 codeVerifier: 'verifier'
             };
 
-            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of(freshState as any));
+            tokenStorageSpy.storeAuthorizationCode.and.returnValue(
+                of(freshState as any)
+            );
 
-            tokenStorageSpy.clearPreAuthorizationState.and.returnValue(of({} as any));
+            tokenStorageSpy.clearPreAuthorizationState.and.returnValue(
+                of({} as any)
+            );
             tokenStorageSpy.storeTokens.and.returnValue(of({} as any));
             tokenStorageSpy.storeOriginalIdToken.and.returnValue(of({} as any));
 
@@ -604,32 +665,37 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenEndpointSpy.call.and.returnValue(of(tokenResponse));
 
-            codeFlowClient.currentWindowCodeFlowCallback()
-                .subscribe();
+            codeFlowClient.currentWindowCodeFlowCallback().subscribe();
             flush();
 
-            expect(tokenStorageSpy.clearPreAuthorizationState).toHaveBeenCalled();
+            expect(
+                tokenStorageSpy.clearPreAuthorizationState
+            ).toHaveBeenCalled();
 
-            expect(tokenStorageSpy.storeTokens).toHaveBeenCalledWith(tokenResponse);
-            expect(tokenStorageSpy.storeOriginalIdToken).toHaveBeenCalledWith(tokenResponse.idToken);
+            expect(tokenStorageSpy.storeTokens).toHaveBeenCalledWith(
+                tokenResponse
+            );
+            expect(tokenStorageSpy.storeOriginalIdToken).toHaveBeenCalledWith(
+                tokenResponse.idToken
+            );
 
-            expect(eventsSpy.dispatch).toHaveBeenCalledWith(new TokensReadyEvent(tokenResponse));
+            expect(eventsSpy.dispatch).toHaveBeenCalledWith(
+                new TokensReadyEvent(tokenResponse)
+            );
         }));
 
         it('should redirect to original state using router', fakeAsync(() => {
-
             const state = 'state';
             const code = 'code';
             const sessionState = 'session-state';
             const error = null;
 
-            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl
-                .and.returnValue({
-                    code,
-                    state,
-                    sessionState,
-                    error
-                });
+            tokenUrlSpy.parseAuthorizeCallbackParamsFromUrl.and.returnValue({
+                code,
+                state,
+                sessionState,
+                error
+            });
 
             const doc: Partial<DiscoveryDocument> = {};
 
@@ -650,9 +716,13 @@ describe('OidcCodeFlowClientService', () => {
                 codeVerifier: 'verifier'
             };
 
-            tokenStorageSpy.storeAuthorizationCode.and.returnValue(of(freshState as any));
+            tokenStorageSpy.storeAuthorizationCode.and.returnValue(
+                of(freshState as any)
+            );
 
-            tokenStorageSpy.clearPreAuthorizationState.and.returnValue(of({} as any));
+            tokenStorageSpy.clearPreAuthorizationState.and.returnValue(
+                of({} as any)
+            );
             tokenStorageSpy.storeTokens.and.returnValue(of({} as any));
             tokenStorageSpy.storeOriginalIdToken.and.returnValue(of({} as any));
 
@@ -668,16 +738,17 @@ describe('OidcCodeFlowClientService', () => {
 
             tokenEndpointSpy.call.and.returnValue(of(tokenResponse));
 
-            const changeUrlSpy = spyOn(codeFlowClient as any, 'historyChangeUrl')
-                .and.returnValue(null);
+            const changeUrlSpy = spyOn(
+                codeFlowClient as any,
+                'historyChangeUrl'
+            ).and.returnValue(null);
 
-            codeFlowClient.currentWindowCodeFlowCallback()
-                .subscribe();
+            codeFlowClient.currentWindowCodeFlowCallback().subscribe();
             flush();
 
-            expect(changeUrlSpy).toHaveBeenCalledWith(localState.preRedirectUrl);
+            expect(changeUrlSpy).toHaveBeenCalledWith(
+                localState.preRedirectUrl
+            );
         }));
-
     });
-
 });
