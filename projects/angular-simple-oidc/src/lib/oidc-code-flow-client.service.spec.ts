@@ -47,8 +47,7 @@ describe('OidcCodeFlowClientService', () => {
             disableIdTokenIATValidation: false,
             idTokenIATOffsetAllowed: 3000
         },
-        baseUrl: 'http://base-url/',
-        acrValues: 'idp:some-idp'
+        baseUrl: 'http://base-url/'
     };
 
     beforeEach(() => {
@@ -150,8 +149,7 @@ describe('OidcCodeFlowClientService', () => {
                 codeVerifier: 'verifier',
                 nonce: 'nonce',
                 state: 'state',
-                url: 'url',
-                acrValues: 'idp:some-idp'
+                url: 'url'
             };
 
             tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
@@ -171,8 +169,7 @@ describe('OidcCodeFlowClientService', () => {
                     scope: config.scope,
                     redirectUri: redirectUri,
                     idTokenHint: idTokenHint,
-                    prompt: prompt,
-                    acrValues: 'idp:some-idp'
+                    prompt: prompt
                 });
         }));
     });

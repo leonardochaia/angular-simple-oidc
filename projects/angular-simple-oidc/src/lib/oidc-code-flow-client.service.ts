@@ -82,14 +82,22 @@ export class OidcCodeFlowClient {
         return this.discoveryDocumentClient.current$
             .pipe(
                 withLatestFrom(this.config.current$),
-                map(([discoveryDocument, config]) => this.tokenUrl.createAuthorizeUrl(
-                    discoveryDocument.authorization_endpoint, {
-                    clientId: config.clientId,
-                    scope: config.scope,
-                    responseType: 'code',
-                    acrValues: config.acrValues ?? '',
-                    ...params,
-                })),
+                map(([discoveryDocument, config]) => {
+                  const authorizationMetaData: CreateAuthorizeUrlParams = {
+                      clientId: config.clientId,
+                      scope: config.scope,
+                      responseType: 'code',
+                      ...params,
+                  }
+
+                  if(config.acrValues) {
+                    authorizationMetaData.acrValues = config.acrValues
+                  }
+
+                  return this.tokenUrl.createAuthorizeUrl(
+                      discoveryDocument.authorization_endpoint, authorizationMetaData)
+                  }
+                ),
                 take(1),
             );
     }
