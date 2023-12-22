@@ -1,9 +1,6 @@
 import { TokenValidationConfig } from 'angular-simple-oidc/core';
 
-export const AUTH_CONFIG_REQUIRED_FIELDS: (keyof AuthConfig)[] = [
-    'clientId',
-    'openIDProviderUrl'
-];
+export const AUTH_CONFIG_REQUIRED_FIELDS: (keyof AuthConfig)[] = ['clientId', 'openIDProviderUrl'];
 
 export interface AuthConfig {
     /** The URL to the OpenID Provider (OP).

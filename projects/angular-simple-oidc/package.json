@@ -1,37 +1,37 @@
 {
-    "name": "angular-simple-oidc",
-    "version": "12.0.1-alpha",
-    "description": "Angular Library implementing Open Id Connect specification. Code Flow, Refresh Tokens, Session Management, Discovery Document.",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/leonardochaia/angular-simple-oidc.git"
-    },
-    "bugs": {
-        "url": "https://github.com/leonardochaia/angular-simple-oidc"
-    },
-    "homepage": "https://github.com/leonardochaia/angular-simple-oidc",
-    "license": "MIT",
-    "keywords": [
-        "angular",
-        "oidc",
-        "openid",
-        "openid connect",
-        "open id connect",
-        "authentication",
-        "oauth",
-        "oauth2",
-        "angular library"
-    ],
-    "author": {
-        "name": "Leonardo Chaia",
-        "url": "https://github.com/leonardochaia"
-    },
-    "peerDependencies": {
-        "@angular/common": "^12",
-        "@angular/core": "^12"
-    },
-    "dependencies": {
-        "jsrsasign": "^10.4.1",
-        "tslib": "^2.0.0"
-    }
+  "name": "angular-simple-oidc",
+  "version": "12.0.1-alpha",
+  "description": "Angular Library implementing Open Id Connect specification. Code Flow, Refresh Tokens, Session Management, Discovery Document.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leonardochaia/angular-simple-oidc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leonardochaia/angular-simple-oidc"
+  },
+  "homepage": "https://github.com/leonardochaia/angular-simple-oidc",
+  "license": "MIT",
+  "keywords": [
+    "angular",
+    "oidc",
+    "openid",
+    "openid connect",
+    "open id connect",
+    "authentication",
+    "oauth",
+    "oauth2",
+    "angular library"
+  ],
+  "author": {
+    "name": "Leonardo Chaia",
+    "url": "https://github.com/leonardochaia"
+  },
+  "peerDependencies": {
+    "@angular/common": "^12",
+    "@angular/core": "^12"
+  },
+  "dependencies": {
+    "jsrsasign": "^10.4.1",
+    "tslib": "^2.0.0"
+  }
 }
