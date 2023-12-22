@@ -47,7 +47,7 @@ describe('OidcCodeFlowClientService', () => {
             disableIdTokenIATValidation: false,
             idTokenIATOffsetAllowed: 3000
         },
-        baseUrl: 'http://base-url/'
+        baseUrl: 'http://base-url/',
     };
 
     beforeEach(() => {
@@ -169,7 +169,7 @@ describe('OidcCodeFlowClientService', () => {
                     scope: config.scope,
                     redirectUri: redirectUri,
                     idTokenHint: idTokenHint,
-                    prompt: prompt
+                    prompt: prompt,
                 });
         }));
     });
