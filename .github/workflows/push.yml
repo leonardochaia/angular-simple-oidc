@@ -1,4 +1,8 @@
-on: push
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 name: Build and Run Tests
 jobs:
   buildAndRun:
@@ -20,7 +24,7 @@ jobs:
         name: Build angular-simple-oidc
 
       - name: Test angular-simple-oidc
-        uses: ianwalter/puppeteer@v2.0.0
+        uses: ianwalter/playwright-container@43940dfa7d309fe3569b9df407ae9e84dcbf2e7f
         with:
           entrypoint: yarn
           args: test-lib-ci
