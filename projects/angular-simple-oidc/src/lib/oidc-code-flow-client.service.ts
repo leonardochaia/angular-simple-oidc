@@ -50,16 +50,8 @@ export class OidcCodeFlowClient {
 
         return this.config.current$
             .pipe(
-                switchMap((config) => {
-                  const redirectUri = urlJoin(
-                      config.baseUrl,
-                      config.tokenCallbackRoute
-                  );
-                  return this.generateCodeFlowMetadata({
-                      ...config,
-                      redirectUri
-                  });
-                }),
+                map(config => urlJoin(config.baseUrl, config.tokenCallbackRoute)),
+                switchMap(redirectUri => this.generateCodeFlowMetadata({ redirectUri })),
                 tap(() => this.events.dispatch(new SimpleOidcInfoEvent(`Starting Code Flow`))),
                 switchMap((result) => {
                     this.events.dispatch(new SimpleOidcInfoEvent(`Authorize URL generated`, result));
@@ -82,22 +74,14 @@ export class OidcCodeFlowClient {
         return this.discoveryDocumentClient.current$
             .pipe(
                 withLatestFrom(this.config.current$),
-                map(([discoveryDocument, config]) => {
-                  const authorizationMetaData: CreateAuthorizeUrlParams = {
-                      clientId: config.clientId,
-                      scope: config.scope,
-                      responseType: 'code',
-                      ...params,
-                  }
-
-                  if(config.acrValues) {
-                    authorizationMetaData.acrValues = config.acrValues
-                  }
-
-                  return this.tokenUrl.createAuthorizeUrl(
-                      discoveryDocument.authorization_endpoint, authorizationMetaData)
-                  }
-                ),
+                map(([discoveryDocument, config]) => this.tokenUrl.createAuthorizeUrl(
+                    discoveryDocument.authorization_endpoint, {
+                    clientId: config.clientId,
+                    scope: config.scope,
+                    responseType: 'code',
+                    ...config.acrValues && { acrValues: config.acrValues },
+                    ...params,
+                })),
                 take(1),
             );
     }
