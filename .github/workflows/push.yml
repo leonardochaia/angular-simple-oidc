@@ -13,9 +13,9 @@ jobs:
       CHROME_BIN: 'google-chrome-unstable'
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
-        with:
-          node-version: '12.x'
+      # - uses: actions/setup-node@v1
+      #   with:
+      #     node-version: '12.x'
 
       - run: yarn install
         name: Install Packages using Yarn
