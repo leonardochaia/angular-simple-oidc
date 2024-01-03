@@ -8,29 +8,23 @@ jobs:
   buildAndRun:
     name: Build and Run Tests
     runs-on: ubuntu-latest
-    env:
-      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
-      CHROME_BIN: 'google-chrome-unstable'
     steps:
       - uses: actions/checkout@v1
-      # - uses: actions/setup-node@v1
-      #   with:
-      #     node-version: '12.x'
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '16.x'
 
       - run: yarn install
         name: Install Packages using Yarn
 
+      - name: Install Playwright Browsers
+        run: npx playwright install chromium --with-deps
+
       - run: yarn build angular-simple-oidc
         name: Build angular-simple-oidc
 
-      - name: Test angular-simple-oidc
-        uses: ianwalter/playwright-container@43940dfa7d309fe3569b9df407ae9e84dcbf2e7f
-        with:
-          entrypoint: yarn
-          args: test-lib-ci
+      - run: yarn test-lib-ci
+        name: Test angular-simple-oidc
 
-      - uses: actions/setup-node@v1
-        with:
-          node-version: '12.x'
       - run: yarn build angular-simple-oidc --prod
       - run: yarn build --prod
