@@ -1,6 +1,6 @@
 {
   "name": "angular-simple-oidc",
-  "version": "12.0.0-alpha",
+  "version": "12.0.1-alpha",
   "description": "Angular Library implementing Open Id Connect specification. Code Flow, Refresh Tokens, Session Management, Discovery Document.",
   "repository": {
     "type": "git",

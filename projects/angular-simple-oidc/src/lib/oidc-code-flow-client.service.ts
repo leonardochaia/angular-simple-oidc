@@ -79,6 +79,7 @@ export class OidcCodeFlowClient {
                     clientId: config.clientId,
                     scope: config.scope,
                     responseType: 'code',
+                    ...config.acrValues && { acrValues: config.acrValues },
                     ...params,
                 })),
                 take(1),

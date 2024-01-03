@@ -54,4 +54,9 @@ export interface AuthConfig {
      * `${window.location.protocol}//${window.location.host}${window.location.pathname}`
      */
     baseUrl?: string;
+
+    /**
+     * The authentication context class reference parameters.
+     */
+    acrValues?: string;
 }
