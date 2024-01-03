@@ -309,6 +309,44 @@ describe('OidcCodeFlowClientService', () => {
                 preRedirectUrl: currentLocation
             });
         }));
+
+        it('Should generate the url using provided acr values', fakeAsync(() => {
+          const doc: Partial<DiscoveryDocument> = {
+              authorization_endpoint: 'http://idp/authorize'
+          };
+
+          discoveryDocSpy.and.returnValue(of(doc));
+
+          const urlResult = {
+              codeChallenge: 'challenge',
+              codeVerifier: 'verifier',
+              nonce: 'nonce',
+              state: 'state',
+              url: 'url'
+          };
+
+          tokenUrlSpy.createAuthorizeUrl.and.returnValue(urlResult);
+
+          const redirectUri = 'redirect';
+          const idTokenHint = 'id-token-hint';
+          const prompt = 'prompt';
+          const acrValues = 'needs=wifi'
+
+          codeFlowClient.generateCodeFlowMetadata({ redirectUri, idTokenHint, prompt, acrValues })
+              .subscribe();
+          flush();
+
+          expect(tokenUrlSpy.createAuthorizeUrl)
+              .toHaveBeenCalledWith(doc.authorization_endpoint, {
+                  clientId: config.clientId,
+                  responseType: 'code',
+                  scope: config.scope,
+                  redirectUri: redirectUri,
+                  idTokenHint: idTokenHint,
+                  prompt: prompt,
+                  acrValues
+              });
+        }));
     });
 
     describe('Code Flow Callback', () => {
